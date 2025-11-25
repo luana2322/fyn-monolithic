@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -33,9 +34,19 @@ public class MessageService {
     private final MinioService minioService;
 
     @Transactional
-    public MessageResponse sendMessage(UUID conversationId, SendMessageRequest request, byte[] media) {
+    public MessageResponse sendMessage(UUID conversationId, SendMessageRequest request, MultipartFile media) {
         Conversation conversation = conversationService.getConversation(conversationId);
         User sender = userService.getCurrentUser();
+        
+        // Validate: at least one of content, media, or reaction must be present
+        boolean hasContent = request.getContent() != null && !request.getContent().trim().isEmpty();
+        boolean hasMedia = media != null && !media.isEmpty();
+        boolean hasReaction = request.getReaction() != null && !request.getReaction().trim().isEmpty();
+        
+        if (!hasContent && !hasMedia && !hasReaction) {
+            throw new IllegalArgumentException("Message must have at least content, media, or reaction");
+        }
+        
         Message message = new Message();
         message.setConversation(conversation);
         message.setSender(sender);
@@ -44,12 +55,15 @@ public class MessageService {
         Message saved = messageRepository.save(message);
 
         MessageResponse response = messageMapper.toMessageResponse(saved);
-        if (media != null) {
-            String objectKey = minioService.upload(media, "message-" + saved.getId());
+        if (media != null && !media.isEmpty()) {
+            // Upload media with proper content type and file name
+            String objectKey = minioService.upload(media);
+            // Detect media type from content type
+            MediaType detectedType = minioService.detectMediaType(media);
             MessageMedia mediaEntity = new MessageMedia();
             mediaEntity.setMessage(saved);
             mediaEntity.setObjectKey(objectKey);
-            mediaEntity.setMediaType(MediaType.FILE);
+            mediaEntity.setMediaType(detectedType);
             messageMediaRepository.save(mediaEntity);
             response = response.toBuilder()
                     .mediaUrl(minioService.getPresignedUrl(objectKey))

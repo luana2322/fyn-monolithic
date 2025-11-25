@@ -4,10 +4,10 @@ class SendMessageRequest {
   final String? reaction;
 
   SendMessageRequest({
-    required this.content,
+    String? content,
     this.mediaObjectKey,
     this.reaction,
-  });
+  }) : content = content ?? '';
 
   Map<String, dynamic> toJson() {
     return {

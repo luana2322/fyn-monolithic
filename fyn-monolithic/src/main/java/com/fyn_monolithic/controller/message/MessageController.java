@@ -33,8 +33,7 @@ public class MessageController {
             @PathVariable UUID conversationId,
             @Valid @RequestPart("payload") SendMessageRequest request,
             @RequestPart(value = "media", required = false) MultipartFile media) throws IOException {
-        byte[] mediaBytes = media != null ? media.getBytes() : null;
-        return ResponseEntity.ok(ApiResponse.ok(messageService.sendMessage(conversationId, request, mediaBytes)));
+        return ResponseEntity.ok(ApiResponse.ok(messageService.sendMessage(conversationId, request, media)));
     }
 
     @GetMapping

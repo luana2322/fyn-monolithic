@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -12,7 +11,6 @@ import '../../data/models/conversation_model.dart';
 import '../../data/models/conversation_type.dart';
 import '../../data/models/message_model.dart';
 import '../../data/models/message_status.dart';
-import '../../data/models/send_message_request.dart';
 
 class ChatDetailScreen extends ConsumerStatefulWidget {
   final ConversationModel conversation;
@@ -379,6 +377,15 @@ class _MessageBubble extends ConsumerWidget {
     this.showAvatar = false,
   });
 
+  String _getMediaUrl(String urlOrKey) {
+    // If it's already a full URL (presigned URL from MinIO), use it directly
+    if (urlOrKey.startsWith('http://') || urlOrKey.startsWith('https://')) {
+      return urlOrKey;
+    }
+    // Otherwise, build URL from object key
+    return ImageUtils.buildImageUrl(urlOrKey) ?? urlOrKey;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
@@ -461,19 +468,37 @@ class _MessageBubble extends ConsumerWidget {
                       const SizedBox(height: 8),
                   ],
                   if (message.mediaUrl != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: ImageUtils.buildImageUrl(message.mediaUrl!) ?? '',
-                        width: 200,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          width: 200,
-                          height: 200,
-                          color: Colors.grey.shade200,
-                          child: const Center(child: CircularProgressIndicator()),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: GestureDetector(
+                        onTap: () {
+                          // TODO: Open image in full screen viewer
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 250,
+                              maxHeight: 300,
+                            ),
+                            child: CachedNetworkImage(
+                              imageUrl: _getMediaUrl(message.mediaUrl!),
+                              fit: BoxFit.contain,
+                              placeholder: (context, url) => Container(
+                                width: 250,
+                                height: 200,
+                                color: Colors.grey.shade200,
+                                child: const Center(child: CircularProgressIndicator()),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                width: 250,
+                                height: 200,
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.broken_image, size: 48),
+                              ),
+                            ),
+                          ),
                         ),
-                        errorWidget: (context, url, error) => const Icon(Icons.broken_image),
                       ),
                     ),
                   if (message.content.isNotEmpty) ...[
