@@ -192,124 +192,234 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ),
       body: user == null
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
+          : Container(
+              color: AppColors.background,
+              child: Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 3 / 7,
+                  constraints: BoxConstraints(
+                    maxWidth: 600,
+                    minWidth: 400,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
                   children: [
-                    // Avatar Section
-                    Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundColor: AppColors.surfaceElevated,
-                            backgroundImage: _getImageProvider() ??
-                                (ImageUtils.getAvatarUrl(
-                                            user.profile.avatarUrl) !=
-                                        null
-                                    ? CachedNetworkImageProvider(
-                                        ImageUtils.getAvatarUrl(
-                                            user.profile.avatarUrl)!,
-                                      )
-                                    : null),
-                            child: (_getImageProvider() == null &&
-                                        _selectedImage == null &&
-                                        user.profile.avatarUrl == null) ||
-                                    (_selectedImage != null &&
-                                        _selectedImageBytes == null)
-                                ? Text(
-                                    user.username[0].toUpperCase(),
-                                    style: const TextStyle(fontSize: 40),
-                                  )
-                                : null,
+                    // Avatar Section với design đẹp hơn
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundColor: AppColors.secondary,
-                              child: IconButton(
-                                icon: const Icon(Icons.camera_alt, size: 20),
-                                color: AppColors.primaryText,
-                                onPressed: _pickImage,
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Ảnh đại diện',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primaryText,
+                                ),
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 60,
+                                  backgroundColor: AppColors.surfaceElevated,
+                                  backgroundImage: _getImageProvider() ??
+                                      (ImageUtils.getAvatarUrl(
+                                                  user.profile.avatarUrl) !=
+                                              null
+                                          ? CachedNetworkImageProvider(
+                                              ImageUtils.getAvatarUrl(
+                                                  user.profile.avatarUrl)!,
+                                            )
+                                          : null),
+                                  child: (_getImageProvider() == null &&
+                                              _selectedImage == null &&
+                                              user.profile.avatarUrl == null) ||
+                                          (_selectedImage != null &&
+                                              _selectedImageBytes == null)
+                                      ? Text(
+                                          user.username[0].toUpperCase(),
+                                          style: const TextStyle(fontSize: 40),
+                                        )
+                                      : null,
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.secondary,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 3,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      size: 20,
+                                      color: AppColors.primaryText,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            onPressed: _pickImage,
+                            icon: const Icon(Icons.photo_library),
+                            label: const Text('Chọn ảnh mới'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 32),
-
-                    // Full Name
-                    TextFormField(
-                      controller: _fullNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Họ và tên',
-                        hintText: 'Nhập họ và tên',
-                        border: OutlineInputBorder(),
-                      ),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Bio
-                    TextFormField(
-                      controller: _bioController,
-                      decoration: const InputDecoration(
-                        labelText: 'Bio',
-                        hintText: 'Giới thiệu về bản thân',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 3,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Website
-                    TextFormField(
-                      controller: _websiteController,
-                      decoration: const InputDecoration(
-                        labelText: 'Website',
-                        hintText: 'https://example.com',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.url,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Location
-                    TextFormField(
-                      controller: _locationController,
-                      decoration: const InputDecoration(
-                        labelText: 'Địa điểm',
-                        hintText: 'Thành phố, Quốc gia',
-                        border: OutlineInputBorder(),
-                      ),
-                      textInputAction: TextInputAction.done,
-                    ),
                     const SizedBox(height: 24),
 
-                    // Privacy Setting
-                    SwitchListTile(
-                      title: const Text('Tài khoản riêng tư'),
-                      subtitle: const Text(
-                        'Chỉ người theo dõi mới có thể xem bài viết của bạn',
+                    // Thông tin cá nhân Section
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      value: _isPrivate,
-                      onChanged: (value) {
-                        setState(() {
-                          _isPrivate = value;
-                        });
-                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Thông tin cá nhân',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primaryText,
+                                ),
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          // Full Name
+                          TextFormField(
+                            controller: _fullNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Họ và tên',
+                              hintText: 'Nhập họ và tên',
+                              prefixIcon: Icon(Icons.person_outline),
+                              border: OutlineInputBorder(),
+                            ),
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Bio
+                          TextFormField(
+                            controller: _bioController,
+                            decoration: const InputDecoration(
+                              labelText: 'Bio',
+                              hintText: 'Giới thiệu về bản thân',
+                              prefixIcon: Icon(Icons.description_outlined),
+                              border: OutlineInputBorder(),
+                            ),
+                            maxLines: 3,
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Website
+                          TextFormField(
+                            controller: _websiteController,
+                            decoration: const InputDecoration(
+                              labelText: 'Website',
+                              hintText: 'https://example.com',
+                              prefixIcon: Icon(Icons.link),
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.url,
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Location
+                          TextFormField(
+                            controller: _locationController,
+                            decoration: const InputDecoration(
+                              labelText: 'Địa điểm',
+                              hintText: 'Thành phố, Quốc gia',
+                              prefixIcon: Icon(Icons.location_on_outlined),
+                              border: OutlineInputBorder(),
+                            ),
+                            textInputAction: TextInputAction.done,
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(height: 16),
+
+                    // Privacy Setting
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: SwitchListTile(
+                        title: const Text(
+                          'Tài khoản riêng tư',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: const Text(
+                          'Chỉ người theo dõi mới có thể xem bài viết của bạn',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        value: _isPrivate,
+                        onChanged: (value) {
+                          setState(() {
+                            _isPrivate = value;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const SizedBox(height: 24                    ),
                   ],
+                    ),
+                  ),
                 ),
               ),
             ),
+          ),
     );
   }
 }

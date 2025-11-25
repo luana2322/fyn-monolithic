@@ -8,6 +8,7 @@ import '../features/post/presentation/screens/feed_screen.dart';
 import '../features/user/presentation/screens/profile_screen.dart';
 import '../features/user/presentation/screens/edit_profile_screen.dart';
 import '../features/user/presentation/screens/followers_following_screen.dart';
+import '../features/message/presentation/screens/chat_list_screen.dart';
 
 class AppConfig {
   static const String appName = 'FYN Social';
@@ -85,6 +86,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             type: extra?['type'] ?? 'followers',
           );
         },
+      ),
+      GoRoute(
+        path: '/chat',
+        name: 'chat',
+        builder: (context, state) => const ChatListScreen(),
       ),
     ],
   );

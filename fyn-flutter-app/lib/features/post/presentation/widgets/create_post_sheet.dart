@@ -30,7 +30,11 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
       final previews = await Future.wait(
         files.map((file) async {
           final bytes = await file.readAsBytes();
-          return _SelectedMedia(file: file, bytes: bytes);
+          return _SelectedMedia(
+            file: file,
+            bytes: bytes,
+            isVideo: false,
+          );
         }),
       );
 
@@ -47,11 +51,36 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
     }
   }
 
+  Future<void> _pickVideo() async {
+    try {
+      final file = await _picker.pickVideo(
+        source: ImageSource.gallery,
+        maxDuration: const Duration(minutes: 5),
+      );
+      if (file == null) return;
+
+      if (mounted) {
+        setState(() {
+          _media.add(_SelectedMedia(
+            file: file,
+            bytes: null,
+            isVideo: true,
+          ));
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể chọn video: $e')),
+      );
+    }
+  }
+
   Future<void> _submit() async {
     final content = _controller.text.trim();
     if (content.isEmpty && _media.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập nội dung hoặc chọn ảnh')),
+        const SnackBar(content: Text('Vui lòng nhập nội dung hoặc chọn media')),
       );
       return;
     }
@@ -168,7 +197,8 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
                         ],
                       ),
                     ),
-                    if (_media.length < 4)
+                    if (_media.length < 4) ...[
+                      // Button chọn ảnh
                       GestureDetector(
                         onTap: _isSubmitting ? null : _pickImages,
                         child: Container(
@@ -182,6 +212,21 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
                           child: const Icon(Icons.add_a_photo_outlined),
                         ),
                       ),
+                      // Button chọn video
+                      GestureDetector(
+                        onTap: _isSubmitting ? null : _pickVideo,
+                        child: Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: const Icon(Icons.videocam_outlined),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -207,6 +252,11 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
   }
 
   Widget _buildPreview(_SelectedMedia media) {
+    if (media.isVideo) {
+      return _VideoPreviewWidget(file: media.file);
+    }
+    
+    // Image preview
     if (kIsWeb || media.bytes != null) {
       return Image.memory(
         media.bytes!,
@@ -240,7 +290,72 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
 class _SelectedMedia {
   final XFile file;
   final Uint8List? bytes;
+  final bool isVideo;
 
-  _SelectedMedia({required this.file, this.bytes});
+  _SelectedMedia({
+    required this.file,
+    this.bytes,
+    this.isVideo = false,
+  });
+}
+
+class _VideoPreviewWidget extends StatelessWidget {
+  final XFile file;
+
+  const _VideoPreviewWidget({required this.file});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 90,
+      height: 90,
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.videocam,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Video',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 4,
+            left: 4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 

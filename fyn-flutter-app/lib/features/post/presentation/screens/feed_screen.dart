@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import '../providers/post_provider.dart';
 import '../widgets/create_post_card.dart';
 import '../widgets/create_post_sheet.dart';
 import '../widgets/post_card.dart';
+import '../widgets/post_comments_sheet.dart';
 import '../../../search/presentation/widgets/user_search_view.dart';
 import '../../../../theme/app_colors.dart';
 
@@ -192,7 +194,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       ),
       actions: [
         _buildAppBarButton(icon: Icons.notifications_outlined),
-        _buildAppBarButton(icon: Icons.chat_bubble_outline),
+        _buildAppBarButton(
+          icon: Icons.chat_bubble_outline,
+          onPressed: () {
+            context.go('/chat');
+          },
+        ),
         _buildAppBarButton(
           icon: Icons.logout,
           onPressed: () async {
@@ -229,7 +236,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildHomeTab(user, FeedState feedState) {
-    return RefreshIndicator(
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Feed chiếm khoảng 1/3 màn hình ở giữa như Facebook/Instagram
+    // Trên mobile: chiếm toàn bộ, trên desktop/tablet: chiếm 1/3 với margin hai bên
+    final isMobile = screenWidth < 768;
+    final feedMaxWidth = isMobile ? screenWidth : screenWidth * 0.33;
+    final feedWidth = feedMaxWidth.clamp(400.0, 600.0);
+
+    final content = RefreshIndicator(
       onRefresh: () async {
         await ref.read(postFeedProvider.notifier).refresh();
       },
@@ -293,8 +307,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   return PostCard(
                     post: post,
                     isOwnPost: isOwn,
+                    currentUserAvatarUrl: user?.profile?.avatarUrl != null
+                        ? ImageUtils.getAvatarUrl(user!.profile.avatarUrl)
+                        : null,
+                    currentUsername: user?.username,
                     onDelete: () => _confirmDeletePost(post),
                     onTapProfile: () => context.go('/profile/${post.author.id}'),
+                    onToggleReaction: () => ref
+                        .read(postFeedProvider.notifier)
+                        .toggleReaction(post.id, post.likedByCurrentUser),
+                    onOpenComments: () => _openCommentsSheet(post),
                   );
                 },
                 childCount: feedState.posts.length,
@@ -310,6 +332,28 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
+    );
+
+    // Feed nằm giữa màn hình với margin hai bên
+    return Container(
+      color: AppColors.background,
+      child: Center(
+        child: Container(
+          width: isMobile ? double.infinity : feedWidth,
+          constraints: BoxConstraints(
+            maxWidth: feedWidth,
+          ),
+          child: content,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openCommentsSheet(PostModel post) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => PostCommentsSheet(post: post),
     );
   }
 

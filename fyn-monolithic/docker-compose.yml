@@ -13,7 +13,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./docker-data/postgres:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - fyn-network
@@ -36,7 +36,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - minio_data:/data
+      - ./docker-data/minio:/data
     networks:
       - fyn-network
     healthcheck:
@@ -71,8 +71,10 @@ services:
       dockerfile: Dockerfile
     container_name: fyn-backend
     depends_on:
-      - fyn-postgres
-      - fyn-minio
+      fyn-postgres:
+        condition: service_healthy
+      fyn-minio:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://fyn-postgres:5432/fyn-monolithic
       SPRING_DATASOURCE_USERNAME: postgres
@@ -95,6 +97,3 @@ networks:
   fyn-network:
     driver: bridge
 
-volumes:
-  postgres_data:
-  minio_data:

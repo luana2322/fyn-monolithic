@@ -18,6 +18,7 @@ import java.util.stream.StreamSupport;
 public interface PostMapper {
 
     @Mapping(target = "media", expression = "java(toMediaResponses(post.getMedia()))")
+    @Mapping(target = "likedByCurrentUser", constant = "false")
     PostResponse toPostResponse(Post post);
 
     default List<PostMediaResponse> toMediaResponses(Iterable<PostMedia> media) {

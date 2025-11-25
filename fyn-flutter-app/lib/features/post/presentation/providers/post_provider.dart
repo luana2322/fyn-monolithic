@@ -5,6 +5,7 @@ import '../../../../core/models/page_response.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/create_post_request.dart';
 import '../../data/models/post_model.dart';
+import '../../data/models/post_reaction.dart';
 import '../../data/repositories/post_repository.dart';
 import '../../domain/post_service.dart';
 
@@ -129,6 +130,42 @@ class FeedNotifier extends StateNotifier<FeedState> {
       posts: state.posts.where((post) => post.id != postId).toList(),
     );
   }
+
+  Future<PostReaction> toggleReaction(String postId, bool isLiked) async {
+    final reaction = isLiked
+        ? await _postService.unlikePost(postId)
+        : await _postService.likePost(postId);
+    _applyReaction(reaction);
+    return reaction;
+  }
+
+  void applyReactionSnapshot(PostReaction reaction) {
+    _applyReaction(reaction);
+  }
+
+  void applyCommentDelta(String postId, int delta) {
+    state = state.copyWith(
+      posts: state.posts.map((post) {
+        if (post.id != postId) return post;
+        final nextCount = post.commentCount + delta;
+        return post.copyWith(
+          commentCount: nextCount < 0 ? 0 : nextCount,
+        );
+      }).toList(),
+    );
+  }
+
+  void _applyReaction(PostReaction reaction) {
+    state = state.copyWith(
+      posts: state.posts.map((post) {
+        if (post.id != reaction.postId) return post;
+        return post.copyWith(
+          likeCount: reaction.likeCount,
+          likedByCurrentUser: reaction.likedByCurrentUser,
+        );
+      }).toList(),
+    );
+  }
 }
 
 final postFeedProvider =
@@ -246,6 +283,42 @@ class UserPostsNotifier extends StateNotifier<UserPostsState> {
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }
+  }
+
+  Future<PostReaction> toggleReaction(String postId, bool isLiked) async {
+    final reaction = isLiked
+        ? await _postService.unlikePost(postId)
+        : await _postService.likePost(postId);
+    _applyReaction(reaction);
+    return reaction;
+  }
+
+  void applyReactionSnapshot(PostReaction reaction) {
+    _applyReaction(reaction);
+  }
+
+  void applyCommentDelta(String postId, int delta) {
+    state = state.copyWith(
+      posts: state.posts.map((post) {
+        if (post.id != postId) return post;
+        final nextCount = post.commentCount + delta;
+        return post.copyWith(
+          commentCount: nextCount < 0 ? 0 : nextCount,
+        );
+      }).toList(),
+    );
+  }
+
+  void _applyReaction(PostReaction reaction) {
+    state = state.copyWith(
+      posts: state.posts.map((post) {
+        if (post.id != reaction.postId) return post;
+        return post.copyWith(
+          likeCount: reaction.likeCount,
+          likedByCurrentUser: reaction.likedByCurrentUser,
+        );
+      }).toList(),
+    );
   }
 }
 

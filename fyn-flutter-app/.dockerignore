@@ -1,3 +1,16 @@
+.dart_tool
+.idea
+.vscode
+.git
+.gitignore
+build
+android
+ios
+linux
+macos
+windows
+test
+*.iml
 # Build artifacts
 build/
 .dart_tool/
@@ -37,5 +50,4 @@ coverage/
 # Misc
 *.log
 .packages
-pubspec.lock
 

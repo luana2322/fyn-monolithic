@@ -12,6 +12,7 @@ import com.fyn_monolithic.model.post.PostMedia;
 import com.fyn_monolithic.model.search.Hashtag;
 import com.fyn_monolithic.model.search.PostHashtag;
 import com.fyn_monolithic.model.user.User;
+import com.fyn_monolithic.repository.post.PostLikeRepository;
 import com.fyn_monolithic.repository.post.PostMediaRepository;
 import com.fyn_monolithic.repository.post.PostRepository;
 import com.fyn_monolithic.repository.search.HashtagRepository;
@@ -41,6 +42,7 @@ public class PostService {
     private final UserMapper userMapper;
     private final UserService userService;
     private final MinioService minioService;
+    private final PostLikeRepository postLikeRepository;
 
     @Transactional
     public PostResponse createPost(CreatePostRequest request, List<MultipartFile> mediaFiles) {
@@ -63,14 +65,16 @@ public class PostService {
         }
 
         upsertHashtags(saved, request.getHashtags());
-        return postMapper.toPostResponse(saved);
+        return postMapper.toPostResponse(saved).toBuilder()
+                .likedByCurrentUser(false)
+                .build();
     }
 
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> getFeed(int page, int size) {
         Page<Post> result = postRepository.findAll(PageRequest.of(page, size));
         return PageResponse.<PostResponse>builder()
-                .content(result.getContent().stream().map(postMapper::toPostResponse).toList())
+                .content(applyUserContext(result.getContent()))
                 .page(page)
                 .size(size)
                 .totalElements(result.getTotalElements())
@@ -83,7 +87,7 @@ public class PostService {
         User user = userService.findEntity(userId);
         Page<Post> result = postRepository.findByAuthor(user, PageRequest.of(page, size));
         return PageResponse.<PostResponse>builder()
-                .content(result.getContent().stream().map(postMapper::toPostResponse).toList())
+                .content(applyUserContext(result.getContent()))
                 .page(page)
                 .size(size)
                 .totalElements(result.getTotalElements())
@@ -123,5 +127,21 @@ public class PostService {
             relation.setHashtag(hashtag);
             postHashtagRepository.save(relation);
         });
+    }
+
+    private List<PostResponse> applyUserContext(List<Post> posts) {
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+        User currentUser = userService.getCurrentUser();
+        Set<UUID> likedPostIds = postLikeRepository.findPostIdsLikedByUser(currentUser, posts);
+        return posts.stream()
+                .map(post -> {
+                    PostResponse base = postMapper.toPostResponse(post);
+                    return base.toBuilder()
+                            .likedByCurrentUser(likedPostIds.contains(post.getId()))
+                            .build();
+                })
+                .toList();
     }
 }

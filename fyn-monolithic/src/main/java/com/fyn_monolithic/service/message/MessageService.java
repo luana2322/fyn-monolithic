@@ -39,7 +39,8 @@ public class MessageService {
         Message message = new Message();
         message.setConversation(conversation);
         message.setSender(sender);
-        message.setContent(request.getContent());
+        message.setContent(request.getContent() != null ? request.getContent() : "");
+        message.setReaction(request.getReaction());
         Message saved = messageRepository.save(message);
 
         MessageResponse response = messageMapper.toMessageResponse(saved);

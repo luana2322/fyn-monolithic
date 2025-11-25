@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import '../../../../core/utils/image_utils.dart';
@@ -11,6 +12,7 @@ import '../../../../theme/app_colors.dart';
 import '../../../post/presentation/providers/post_provider.dart';
 import '../../../post/data/models/post_model.dart';
 import '../../../post/presentation/widgets/post_card.dart';
+import '../../../post/presentation/widgets/post_comments_sheet.dart';
 
 class _PostsLoadTracker {
   final Set<String> loadedUserIds = <String>{};
@@ -120,23 +122,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ]
             : null,
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await profileNotifier.refresh();
-          final currentUserId = profileState.user?.id ?? userId;
-          if (currentUserId != null) {
-            await ref
-                .read(userPostsProvider(currentUserId).notifier)
-                .refresh();
-          }
-        },
-        child: _buildBody(
-          ref,
-          profileState,
-          isOwnProfile,
-          authState,
-          params,
-          profileNotifier,
+      body: Container(
+        color: AppColors.background,
+        child: Center(
+          child: Container(
+            width: MediaQuery.of(context).size.width * 3 / 7,
+            constraints: BoxConstraints(
+              maxWidth: 600,
+              minWidth: 400,
+            ),
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await profileNotifier.refresh();
+                final currentUserId = profileState.user?.id ?? userId;
+                if (currentUserId != null) {
+                  await ref
+                      .read(userPostsProvider(currentUserId).notifier)
+                      .refresh();
+                }
+              },
+              child: _buildBody(
+                ref,
+                profileState,
+                isOwnProfile,
+                authState,
+                params,
+                profileNotifier,
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -192,6 +206,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Profile Header
           _buildProfileHeader(user, profileState, isOwnProfile, authState),
@@ -199,24 +214,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // Stats
           _buildStats(profileState, user.id, userPostsState.posts.length),
           
-          // Bio
-          if (user.profile.bio != null && user.profile.bio!.isNotEmpty)
-            _buildBio(user),
+          // Action Buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: isOwnProfile
+                ? _buildEditProfileButton()
+                : _buildFollowButton(profileState, profileNotifier),
+          ),
           
-          // Action Button
-          if (!isOwnProfile)
-            _buildFollowButton(
-              profileState,
-              profileNotifier,
-            ),
-          
-          const Divider(),
+          const Divider(height: 1),
           
           _buildPostsSection(
             ref,
             user.id,
             isOwnProfile,
             userPostsState,
+            authState,
           ),
         ],
       ),
@@ -237,86 +250,247 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     bool isOwnProfile,
     AuthState authState,
   ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: AppColors.muted,
-            backgroundImage: ImageUtils.getAvatarUrl(user.profile.avatarUrl) != null
-                ? CachedNetworkImageProvider(ImageUtils.getAvatarUrl(user.profile.avatarUrl)!)
-                : null,
-            child: user.profile.avatarUrl == null
-                ? Text(
-                    user.username[0].toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      color: AppColors.primaryText,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 24),
-          
-          // User Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                  Text(
-                    user.fullName ?? user.username,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryText,
-                    ),
-                  ),
-                const SizedBox(height: 4),
-                    Text(
-                      '@${user.username}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.secondaryText,
-                      ),
-                    ),
-                if (user.profile.location != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on,
-                          size: 16, color: AppColors.secondaryText),
-                      const SizedBox(width: 4),
-                      Text(
-                        user.profile.location!,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.secondaryText,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+    final avatarUrl = ImageUtils.getAvatarUrl(user.profile.avatarUrl);
+    
+    return Column(
+      children: [
+        // Cover Photo Section (có thể thêm sau)
+        Container(
+          height: 180,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.primary,
+                AppColors.primaryLight,
+                AppColors.secondary,
               ],
             ),
           ),
-        ],
+          child: Stack(
+            children: [
+              // Có thể thêm cover photo sau
+              Positioned(
+                bottom: -60,
+                left: 16,
+                child: GestureDetector(
+                  onTap: isOwnProfile ? () => _changeAvatar() : null,
+                  child: Stack(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: AppColors.surface,
+                          backgroundImage: avatarUrl != null
+                              ? CachedNetworkImageProvider(avatarUrl)
+                              : null,
+                          child: avatarUrl == null
+                              ? Text(
+                                  user.username[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 48,
+                                    color: AppColors.primaryText,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                      if (isOwnProfile)
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.secondary,
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 20,
+                              color: AppColors.primaryText,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 70),
+        
+        // User Info Section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              // Full Name & Username
+              Text(
+                user.fullName ?? user.username,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryText,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '@${user.username}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.secondaryText,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Bio
+              if (user.profile.bio != null && user.profile.bio!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    user.profile.bio!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.primaryText,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              
+              // Location & Website
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  if (user.profile.location != null)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.location_on,
+                            size: 16, color: AppColors.secondaryText),
+                        const SizedBox(width: 4),
+                        Text(
+                          user.profile.location!,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.secondaryText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (user.profile.website != null)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.link, size: 16, color: AppColors.secondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          user.profile.website!,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Future<void> _changeAvatar() async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Chọn từ thư viện'),
+              onTap: () => Navigator.pop(context, 'gallery'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Chụp ảnh'),
+              onTap: () => Navigator.pop(context, 'camera'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel, color: Colors.red),
+              title: const Text('Hủy'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
       ),
     );
+    
+    if (result != null && mounted) {
+      final editNotifier = ref.read(editProfileProvider.notifier);
+      final imagePicker = ImagePicker();
+      XFile? image;
+      
+      if (result == 'gallery') {
+        image = await imagePicker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 85,
+        );
+      } else if (result == 'camera') {
+        image = await imagePicker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 85,
+        );
+      }
+      
+      if (image != null) {
+        final success = await editNotifier.uploadAvatar(image);
+        if (success && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cập nhật ảnh đại diện thành công'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Refresh profile
+          final authState = ref.read(authNotifierProvider);
+          if (authState.user != null) {
+            final params = UserProfileParams(userId: authState.user!.id);
+            await ref.read(userProfileProvider(params).notifier).refresh();
+          }
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                ref.read(editProfileProvider).error ?? 'Cập nhật ảnh đại diện thất bại',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildStats(
@@ -395,33 +569,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildBio(user) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            user.profile.bio!,
-            style: const TextStyle(fontSize: 14, color: AppColors.primaryText),
-          ),
-          if (user.profile.website != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.link, size: 16, color: AppColors.secondary),
-                const SizedBox(width: 4),
-                Text(
-                  user.profile.website!,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.secondary,
-                  ),
-                ),
-              ],
+
+  Widget _buildEditProfileButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const EditProfileScreen(),
             ),
-          ],
-        ],
+          ).then((_) {
+            // Refresh profile sau khi edit
+            final authState = ref.read(authNotifierProvider);
+            if (authState.user != null) {
+              final params = UserProfileParams(userId: authState.user!.id);
+              ref.read(userProfileProvider(params).notifier).refresh();
+            }
+          });
+        },
+        icon: const Icon(Icons.edit_outlined),
+        label: const Text('Chỉnh sửa hồ sơ'),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          side: BorderSide(color: AppColors.primary, width: 1.5),
+        ),
       ),
     );
   }
@@ -430,26 +603,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     UserProfileState profileState,
     UserProfileNotifier profileNotifier,
   ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: profileState.isLoading
-              ? null
-              : () {
-                  profileNotifier.toggleFollow();
-                },
-          child: profileState.isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(
-                  profileState.isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
-                ),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: profileState.isLoading
+            ? null
+            : () {
+                profileNotifier.toggleFollow();
+              },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: profileState.isFollowing
+              ? Colors.grey.shade300
+              : AppColors.secondary,
+          foregroundColor: profileState.isFollowing
+              ? AppColors.primaryText
+              : Colors.black,
+          padding: const EdgeInsets.symmetric(vertical: 12),
         ),
+        child: profileState.isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text(
+                profileState.isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
   }
@@ -459,6 +642,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     String userId,
     bool isOwnProfile,
     UserPostsState postsState,
+    AuthState authState,
   ) {
     Widget content;
     if (postsState.isLoading && postsState.posts.isEmpty) {
@@ -504,44 +688,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       );
     } else {
+      // Hiển thị posts theo chiều dọc (list view)
       content = Column(
         children: [
-          GridView.builder(
+          ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: postsState.posts.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 4,
-              childAspectRatio: 1,
-            ),
             itemBuilder: (context, index) {
               final post = postsState.posts[index];
-              final media = post.media.isNotEmpty ? post.media.first : null;
-              final imageUrl = media?.resolvedUrl;
-              return GestureDetector(
-                onTap: () {
-                  _openPostDetail(ref, post, isOwnProfile);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: imageUrl != null
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                        )
-                      : const Center(
-                          child: Icon(
-                            Icons.image_outlined,
-                            color: AppColors.secondaryText,
-                          ),
-                        ),
+              final isOwn = isOwnProfile;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: PostCard(
+                  post: post,
+                  isOwnPost: isOwn,
+                  currentUserAvatarUrl: authState.user?.profile?.avatarUrl != null
+                      ? ImageUtils.getAvatarUrl(authState.user!.profile.avatarUrl)
+                      : null,
+                  currentUsername: authState.user?.username,
+                  onDelete: isOwn
+                      ? () async {
+                          await ref.read(userPostsProvider(userId).notifier).deletePost(post.id);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Đã xóa bài viết')),
+                            );
+                          }
+                        }
+                      : null,
+                  onTapProfile: () {},
+                  onToggleReaction: () => ref
+                      .read(userPostsProvider(userId).notifier)
+                      .toggleReaction(post.id, post.likedByCurrentUser),
+                  onOpenComments: () => _openCommentsSheet(post),
                 ),
               );
             },
@@ -574,10 +755,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Text(
-            'Posts',
-            style: Theme.of(context).textTheme.titleLarge,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              const Icon(Icons.grid_view, color: AppColors.primaryText),
+              const SizedBox(width: 8),
+              Text(
+                'Posts',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryText,
+                    ),
+              ),
+            ],
           ),
         ),
         content,
@@ -614,8 +804,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           isOwnPost: isOwnProfile,
           onDelete: onDelete,
           onClose: () => Navigator.of(ctx).pop(),
+          onToggleReaction: () => _handleReactionFromProfile(post),
+          onOpenComments: () => _openCommentsSheet(post),
         );
       },
+    );
+  }
+
+  Future<void> _handleReactionFromProfile(PostModel post) async {
+    final reaction = await ref
+        .read(userPostsProvider(post.author.id).notifier)
+        .toggleReaction(post.id, post.likedByCurrentUser);
+    ref.read(postFeedProvider.notifier).applyReactionSnapshot(reaction);
+  }
+
+  Future<void> _openCommentsSheet(PostModel post) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => PostCommentsSheet(post: post),
     );
   }
 }
@@ -626,12 +833,16 @@ class _PostDetailSheet extends StatelessWidget {
     required this.isOwnPost,
     this.onDelete,
     this.onClose,
+    this.onToggleReaction,
+    this.onOpenComments,
   });
 
   final PostModel post;
   final bool isOwnPost;
   final VoidCallback? onDelete;
   final VoidCallback? onClose;
+  final Future<void> Function()? onToggleReaction;
+  final VoidCallback? onOpenComments;
 
   @override
   Widget build(BuildContext context) {
@@ -668,7 +879,9 @@ class _PostDetailSheet extends StatelessWidget {
                   post: post,
                   isOwnPost: isOwnPost,
                   onDelete: onDelete,
-                  onTapProfile: () {},
+              onTapProfile: () {},
+              onToggleReaction: onToggleReaction,
+              onOpenComments: onOpenComments,
                 ),
               ),
             ),

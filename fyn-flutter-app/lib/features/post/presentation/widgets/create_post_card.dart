@@ -13,103 +13,99 @@ class CreatePostCard extends ConsumerWidget {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
 
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.blue.shade100,
-                  child: user?.profile.avatarUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            ImageUtils.getAvatarUrl(user!.profile.avatarUrl) ?? '',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildAvatarInitials(user.username);
-                            },
-                          ),
-                        )
-                      : _buildAvatarInitials(user?.username ?? 'U'),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: onCreatePost ??
-                        () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Tạo bài viết mới')),
-                          );
-                        },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Text(
-                        'Bạn đang nghĩ gì?',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
+    return Container(
+      color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.blue.shade100,
+                backgroundImage: user?.profile.avatarUrl != null
+                    ? NetworkImage(
+                        ImageUtils.getAvatarUrl(user!.profile.avatarUrl) ?? '',
+                      )
+                    : null,
+                child: user?.profile.avatarUrl == null
+                    ? _buildAvatarInitials(user?.username ?? 'U')
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: onCreatePost ??
+                      () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Tạo bài viết mới')),
+                        );
+                      },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Text(
+                      'Bạn đang nghĩ gì?',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Divider(height: 1),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildActionButton(
-                  icon: Icons.videocam,
-                  label: 'Video',
-                  color: Colors.red,
-                  onTap: onCreatePost ??
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Tính năng đang phát triển')),
-                        );
-                      },
-                ),
-                _buildActionButton(
-                  icon: Icons.photo_library,
-                  label: 'Ảnh',
-                  color: Colors.green,
-                  onTap: onCreatePost ??
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Tính năng đang phát triển')),
-                        );
-                      },
-                ),
-                _buildActionButton(
-                  icon: Icons.emoji_emotions,
-                  label: 'Cảm xúc',
-                  color: Colors.orange,
-                  onTap: onCreatePost ??
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Tính năng đang phát triển')),
-                        );
-                      },
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildActionButton(
+                icon: Icons.videocam,
+                label: 'Video',
+                color: Colors.red,
+                onTap: onCreatePost ??
+                    () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tính năng đang phát triển')),
+                      );
+                    },
+              ),
+              _buildActionButton(
+                icon: Icons.photo_library,
+                label: 'Ảnh',
+                color: Colors.green,
+                onTap: onCreatePost ??
+                    () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tính năng đang phát triển')),
+                      );
+                    },
+              ),
+              _buildActionButton(
+                icon: Icons.emoji_emotions,
+                label: 'Cảm xúc',
+                color: Colors.orange,
+                onTap: onCreatePost ??
+                    () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tính năng đang phát triển')),
+                      );
+                    },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

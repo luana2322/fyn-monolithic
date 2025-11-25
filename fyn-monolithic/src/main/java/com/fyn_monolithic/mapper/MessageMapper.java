@@ -20,6 +20,7 @@ public interface MessageMapper {
     @Mapping(target = "conversationId", source = "conversation.id")
     @Mapping(target = "senderId", source = "sender.id")
     @Mapping(target = "mediaUrl", expression = "java(mediaUrl(message))")
+    @Mapping(target = "reaction", source = "reaction")
     MessageResponse toMessageResponse(Message message);
 
     default Set<String> memberIds(Set<ConversationMember> members) {

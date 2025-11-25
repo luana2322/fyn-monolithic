@@ -33,6 +33,9 @@ public class Message extends AbstractAuditableEntity {
     @Column(name = "content", length = 2048)
     private String content;
 
+    @Column(name = "reaction", length = 10)
+    private String reaction;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private MessageStatus status = MessageStatus.SENT;

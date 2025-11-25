@@ -74,6 +74,13 @@ This will start:
 - **PostgreSQL** on port `5432`
 - **MinIO** on port `9000` (API) and `9001` (Console)
 
+### Shared Docker Data
+
+- PostgreSQL data files are stored in `docker-data/postgres`
+- MinIO objects are stored in `docker-data/minio`
+
+Keep these folders under version control (or share them out-of-band) so teammates can pull identical seed data. Refreshing local datasets is as simple as replacing the contents of these folders before running `docker-compose up`.
+
 ### Step 3: Create Database Schema
 
 Connect to PostgreSQL and run the schema:

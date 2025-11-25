@@ -59,6 +59,11 @@ class DateUtils {
   static String formatDateTime(DateTime dateTime) {
     return DateFormat('dd/MM/yyyy HH:mm').format(dateTime);
   }
+
+  /// Format DateTime to time string (HH:mm)
+  static String formatTime(DateTime dateTime) {
+    return DateFormat('HH:mm').format(dateTime);
+  }
 }
 
 

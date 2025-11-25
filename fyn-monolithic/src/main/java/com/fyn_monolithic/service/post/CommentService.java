@@ -40,14 +40,17 @@ public class CommentService {
                     .orElseThrow(() -> new ResourceNotFoundException("Parent comment not found"));
             comment.setParentComment(parent);
         }
-        return postMapper.toCommentResponse(commentRepository.save(comment));
+        PostComment saved = commentRepository.save(comment);
+        post.increaseCommentCount();
+        postRepository.save(post);
+        return postMapper.toCommentResponse(saved);
     }
 
     @Transactional(readOnly = true)
     public List<CommentResponse> getComments(UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
-        return commentRepository.findByPost(post).stream()
+        return commentRepository.findByPostOrderByCreatedAtAsc(post).stream()
                 .map(postMapper::toCommentResponse)
                 .toList();
     }
@@ -56,6 +59,9 @@ public class CommentService {
     public void deleteComment(UUID commentId) {
         PostComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+        Post post = comment.getPost();
         commentRepository.delete(comment);
+        post.decreaseCommentCount();
+        postRepository.save(post);
     }
 }

@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/date_utils.dart' as app_date_utils;
@@ -6,11 +9,15 @@ import '../../../../theme/app_colors.dart';
 import '../../data/models/post_media.dart';
 import '../../data/models/post_model.dart';
 
-class PostCard extends StatelessWidget {
+class PostCard extends StatefulWidget {
   final PostModel post;
   final bool isOwnPost;
   final VoidCallback? onDelete;
   final VoidCallback? onTapProfile;
+  final Future<void> Function()? onToggleReaction;
+  final VoidCallback? onOpenComments;
+  final String? currentUserAvatarUrl;
+  final String? currentUsername;
 
   const PostCard({
     super.key,
@@ -18,10 +25,22 @@ class PostCard extends StatelessWidget {
     this.isOwnPost = false,
     this.onDelete,
     this.onTapProfile,
+    this.onToggleReaction,
+    this.onOpenComments,
+    this.currentUserAvatarUrl,
+    this.currentUsername,
   });
 
   @override
+  State<PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends State<PostCard> {
+  bool _isReacting = false;
+
+  @override
   Widget build(BuildContext context) {
+    final post = widget.post;
     final author = post.author;
     final avatarUrl = ImageUtils.getAvatarUrl(author.profile.avatarUrl);
     final createdAt = post.createdAt != null
@@ -29,208 +48,382 @@ class PostCard extends StatelessWidget {
         : '';
     final PostMedia? primaryMedia = _primaryMedia();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: onTapProfile,
-                child: _storyRing(
-                  child: CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Colors.white,
-                    backgroundImage:
-                        avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            author.username.substring(0, 1).toUpperCase(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          )
-                        : null,
+    return Container(
+      color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Profile Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: widget.onTapProfile,
+                  child: _storyRing(
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.white,
+                      backgroundImage:
+                          avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                      child: avatarUrl == null
+                          ? Text(
+                              author.username.substring(0, 1).toUpperCase(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                                fontSize: 16,
+                              ),
+                            )
+                          : null,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      author.username,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        author.username,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: AppColors.primaryText,
+                        ),
+                      ),
+                      // Hiển thị bio hoặc fullName như title (ví dụ: "Product Designer, slothUI")
+                      if (author.profile.bio != null && author.profile.bio!.isNotEmpty)
+                        Text(
+                          author.profile.bio!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      else if (author.fullName != null && author.fullName!.isNotEmpty)
+                        Text(
+                          author.fullName!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.more_vert, size: 20),
+                  color: Colors.black87,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: widget.isOwnPost
+                      ? () {
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (context) => Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.delete_outline, color: Colors.red),
+                                    title: const Text('Xóa bài viết'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      widget.onDelete?.call();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                      : () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tính năng đang phát triển'),
+                            ),
+                          );
+                        },
+                ),
+              ],
+            ),
+          ),
+          
+          // Text Content với hashtags
+          if (post.content.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _buildTextWithHashtags(post.content),
+            ),
+          
+          // Media Content
+          _PostMediaView(media: primaryMedia),
+          
+          // Engagement Metrics (Likes, Comments, Share, Bookmark)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                // Like button - có thể click
+                GestureDetector(
+                  onTap: widget.onToggleReaction != null && !_isReacting
+                      ? _handleToggleReaction
+                      : null,
+                  child: Row(
+                    children: [
+                      Icon(
+                        post.likedByCurrentUser
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        size: 18,
+                        color: post.likedByCurrentUser
+                            ? Colors.redAccent
+                            : AppColors.primaryText,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${post.likeCount}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: post.likedByCurrentUser
+                              ? Colors.redAccent
+                              : AppColors.primaryText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Comment button - có thể click
+                GestureDetector(
+                  onTap: widget.onOpenComments,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.mode_comment_outlined,
+                        size: 18,
                         color: AppColors.primaryText,
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      createdAt,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
+                      const SizedBox(width: 6),
+                      Text(
+                        '${post.commentCount}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: AppColors.primaryText,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isOwnPost)
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'delete') {
-                      onDelete?.call();
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Xóa bài viết'),
-                    ),
-                  ],
-                  icon: const Icon(Icons.more_vert),
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tính năng đang phát triển'),
-                      ),
-                    );
-                  },
-                ),
-            ],
-          ),
-        ),
-        if (primaryMedia != null && primaryMedia.resolvedUrl != null)
-          AspectRatio(
-            aspectRatio: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              clipBehavior: Clip.antiAlias,
-              child: Image.network(
-                primaryMedia.resolvedUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _mediaPlaceholder();
-                },
-              ),
-            ),
-          )
-        else
-          AspectRatio(
-            aspectRatio: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFfdfbfb),
-                    Color(0xFFebedee),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              child: _mediaPlaceholder(),
-            ),
-          ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            children: [
-              _iconButton(context, icon: Icons.favorite_border),
-              _iconButton(context, icon: Icons.mode_comment_outlined),
-              _iconButton(context, icon: Icons.send_outlined),
-              const Spacer(),
-              _iconButton(context, icon: Icons.bookmark_border),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            '${post.likeCount} lượt thích',
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        if (post.content.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(color: Colors.grey.shade900, fontSize: 14),
-                children: [
-                  TextSpan(
-                    text: '${author.username} ',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    ],
                   ),
-                  TextSpan(text: post.content),
-                ],
-              ),
+                ),
+                const Spacer(),
+                Text(
+                  '187 Share',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppColors.primaryText,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: const Icon(Icons.bookmark_border, size: 20),
+                  color: Colors.black87,
+                  onPressed: () {},
+                ),
+              ],
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            '${post.commentCount} bình luận',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 13,
+          
+          // Comment Input Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 14,
+                  backgroundColor: Colors.grey.shade300,
+                  backgroundImage: widget.currentUserAvatarUrl != null
+                      ? NetworkImage(widget.currentUserAvatarUrl!)
+                      : null,
+                  child: widget.currentUserAvatarUrl == null
+                      ? Text(
+                          (widget.currentUsername ?? 'U').substring(0, 1).toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade700,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: const InputDecoration(
+                              hintText: 'Write your comment...',
+                              hintStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            style: const TextStyle(fontSize: 14),
+                            maxLines: null,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          icon: const Icon(Icons.attach_file, size: 18),
+                          color: Colors.grey.shade600,
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          icon: const Icon(Icons.emoji_emotions_outlined, size: 18),
+                          color: Colors.grey.shade600,
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          icon: const Icon(Icons.send, size: 18),
+                          color: Colors.blue,
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            createdAt,
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 11,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ),
-        const Divider(height: 1, color: Color(0xFFE0E0E0)),
-      ],
+          
+          const Divider(height: 1, color: Color(0xFFE0E0E0), thickness: 0.5),
+        ],
+      ),
     );
+  }
+
+  Future<void> _handleToggleReaction() async {
+    if (widget.onToggleReaction == null) return;
+    setState(() => _isReacting = true);
+    try {
+      await widget.onToggleReaction!.call();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể cập nhật: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isReacting = false);
+      }
+    }
   }
 
   PostMedia? _primaryMedia() {
-    if (post.media.isEmpty) return null;
-    return post.media.firstWhere(
+    final mediaList = widget.post.media;
+    if (mediaList.isEmpty) return null;
+    return mediaList.firstWhere(
       (media) => media.isImage,
-      orElse: () => post.media.first,
+      orElse: () => mediaList.first,
     );
   }
 
-  Widget _mediaPlaceholder() {
-    return const Center(
-      child: Icon(Icons.image, size: 72, color: Colors.black26),
-    );
-  }
+  Widget _buildTextWithHashtags(String text) {
+    // Regex để tìm hashtags (#hashtag)
+    final hashtagRegex = RegExp(r'#\w+');
+    final parts = <TextSpan>[];
+    int lastIndex = 0;
 
-  Widget _iconButton(
-    BuildContext context, {
-    required IconData icon,
-  }) {
-    return IconButton(
-      icon: Icon(icon, color: Colors.black87),
-      splashRadius: 20,
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tính năng đang phát triển')),
-        );
-      },
+    for (final match in hashtagRegex.allMatches(text)) {
+      // Text trước hashtag
+      if (match.start > lastIndex) {
+        parts.add(TextSpan(
+          text: text.substring(lastIndex, match.start),
+          style: const TextStyle(
+            fontSize: 14,
+            color: AppColors.primaryText,
+            height: 1.4,
+          ),
+        ));
+      }
+
+      // Hashtag với màu xanh
+      parts.add(TextSpan(
+        text: match.group(0),
+        style: const TextStyle(
+          fontSize: 14,
+          color: Colors.blue,
+          fontWeight: FontWeight.w500,
+          height: 1.4,
+        ),
+      ));
+
+      lastIndex = match.end;
+    }
+
+    // Text còn lại sau hashtag cuối
+    if (lastIndex < text.length) {
+      parts.add(TextSpan(
+        text: text.substring(lastIndex),
+        style: const TextStyle(
+          fontSize: 14,
+          color: AppColors.primaryText,
+          height: 1.4,
+        ),
+      ));
+    }
+
+    // Nếu không có hashtag, hiển thị text bình thường
+    if (parts.isEmpty) {
+      return Text(
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          color: AppColors.primaryText,
+          height: 1.4,
+        ),
+      );
+    }
+
+    return RichText(
+      text: TextSpan(children: parts),
     );
   }
 
@@ -253,3 +446,90 @@ class PostCard extends StatelessWidget {
     );
   }
 }
+
+class _PostMediaView extends StatelessWidget {
+  const _PostMediaView({this.media});
+
+  final PostMedia? media;
+
+  static const double _defaultHeight = 360;
+
+  @override
+  Widget build(BuildContext context) {
+    final double mediaHeight = _calculateHeight(context);
+
+    return Container(
+      height: mediaHeight,
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: _buildContent(),
+    );
+  }
+
+  double _calculateHeight(BuildContext context) {
+    if (!kIsWeb) return _defaultHeight;
+    final screenHeight = MediaQuery.of(context).size.height;
+    if (screenHeight <= 0) return _defaultHeight;
+    final target = screenHeight / 3;
+    return math.max(280, math.min(target, 520));
+  }
+
+  Widget _buildContent() {
+    if (media == null) {
+      return _placeholder(icon: Icons.insert_photo_outlined);
+    }
+
+    if (media!.isImage && media!.resolvedUrl != null) {
+      return Image.network(
+        media!.resolvedUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) =>
+            _placeholder(icon: Icons.broken_image_outlined),
+      );
+    }
+
+    if (media!.isVideo) {
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            color: Colors.black87,
+          ),
+          const Icon(
+            Icons.play_circle_fill,
+            color: Colors.white,
+            size: 64,
+          ),
+        ],
+      );
+    }
+
+    return _placeholder(icon: Icons.insert_drive_file_outlined);
+  }
+
+  Widget _placeholder({required IconData icon}) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFFfdfbfb),
+            Color(0xFFebedee),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          icon,
+          size: 56,
+          color: Colors.black26,
+        ),
+      ),
+    );
+  }
+}
+

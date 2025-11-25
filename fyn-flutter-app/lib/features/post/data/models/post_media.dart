@@ -49,5 +49,7 @@ class PostMedia {
   }
 
   bool get isImage => mediaType == PostMediaType.image;
+
+  bool get isVideo => mediaType == PostMediaType.video;
 }
 

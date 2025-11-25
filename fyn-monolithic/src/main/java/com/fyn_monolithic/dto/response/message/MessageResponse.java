@@ -14,6 +14,7 @@ public class MessageResponse {
     UUID conversationId;
     String senderId;
     String content;
+    String reaction;
     MessageStatus status;
     Instant createdAt;
     String mediaUrl;

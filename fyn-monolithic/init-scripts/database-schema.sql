@@ -153,6 +153,7 @@ CREATE TABLE messages (
     conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
     sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT,
+    reaction VARCHAR(10),
     status VARCHAR(20) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ,

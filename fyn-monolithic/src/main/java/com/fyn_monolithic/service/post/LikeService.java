@@ -1,5 +1,6 @@
 package com.fyn_monolithic.service.post;
 
+import com.fyn_monolithic.dto.response.post.PostReactionResponse;
 import com.fyn_monolithic.exception.ResourceNotFoundException;
 import com.fyn_monolithic.model.post.Post;
 import com.fyn_monolithic.model.post.PostLike;
@@ -22,7 +23,7 @@ public class LikeService {
     private final UserService userService;
 
     @Transactional
-    public void like(UUID postId) {
+    public PostReactionResponse like(UUID postId) {
         User user = userService.getCurrentUser();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
@@ -33,14 +34,30 @@ public class LikeService {
         like.setPost(post);
         like.setUser(user);
         likeRepository.save(like);
+        post.increaseLikeCount();
+        postRepository.save(post);
+        return buildReaction(post, true);
     }
 
     @Transactional
-    public void unlike(UUID postId) {
+    public PostReactionResponse unlike(UUID postId) {
         User user = userService.getCurrentUser();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
         likeRepository.findByPostAndUser(post, user)
-                .ifPresent(likeRepository::delete);
+                .ifPresent(like -> {
+                    likeRepository.delete(like);
+                    post.decreaseLikeCount();
+                });
+        postRepository.save(post);
+        return buildReaction(post, false);
+    }
+
+    private PostReactionResponse buildReaction(Post post, boolean liked) {
+        return PostReactionResponse.builder()
+                .postId(post.getId())
+                .likeCount(post.getLikeCount())
+                .likedByCurrentUser(liked)
+                .build();
     }
 }

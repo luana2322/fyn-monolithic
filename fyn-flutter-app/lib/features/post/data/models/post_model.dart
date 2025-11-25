@@ -12,6 +12,7 @@ class PostModel {
   final int commentCount;
   final DateTime? createdAt;
   final List<PostMedia> media;
+  final bool likedByCurrentUser;
 
   PostModel({
     required this.id,
@@ -22,6 +23,7 @@ class PostModel {
     required this.commentCount,
     required this.createdAt,
     required this.media,
+    required this.likedByCurrentUser,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -32,10 +34,29 @@ class PostModel {
       visibility: PostVisibility.fromServerValue(json['visibility'] as String?),
       likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
       commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
+      likedByCurrentUser: json['likedByCurrentUser'] as bool? ?? false,
       createdAt: DateUtils.parseIso8601(json['createdAt'] as String?),
       media: (json['media'] as List<dynamic>? ?? [])
           .map((item) => PostMedia.fromJson(item as Map<String, dynamic>))
           .toList(),
+    );
+  }
+
+  PostModel copyWith({
+    int? likeCount,
+    int? commentCount,
+    bool? likedByCurrentUser,
+  }) {
+    return PostModel(
+      id: id,
+      author: author,
+      content: content,
+      visibility: visibility,
+      likeCount: likeCount ?? this.likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      createdAt: createdAt,
+      media: media,
+      likedByCurrentUser: likedByCurrentUser ?? this.likedByCurrentUser,
     );
   }
 }

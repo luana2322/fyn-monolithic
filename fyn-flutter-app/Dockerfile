@@ -1,23 +1,28 @@
 # Build stage
+# syntax=docker/dockerfile:1.6
+
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app
 
-# Copy pubspec file
-COPY pubspec.yaml ./
+# Copy dependency graph first to maximize Docker layer caching
+COPY pubspec.yaml pubspec.lock ./
 
-# Get dependencies (this will create pubspec.lock if it doesn't exist)
-RUN flutter pub get
+# Pre-fetch packages (lockfile enforced) and cache artifacts
+RUN --mount=type=cache,target=/root/.pub-cache \
+    flutter pub get --suppress-analytics
 
-# Copy source code
+# Copy the rest of the source code
 COPY . .
 
 # Create .env file from build arg (if provided)
 ARG BASE_URL=http://localhost:8080
 RUN echo "BASE_URL=$BASE_URL" > .env
 
-# Build Flutter web app
-RUN flutter build web --release
+# Build Flutter web app (cache Gradle/artifacts between builds)
+RUN --mount=type=cache,target=/root/.pub-cache \
+    --mount=type=cache,target=/root/.gradle \
+    flutter build web --release
 
 # Production stage
 FROM nginx:alpine

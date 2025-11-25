@@ -52,4 +52,24 @@ public class Post extends AbstractAuditableEntity {
 
     @OneToMany(mappedBy = "post")
     private Set<PostHashtag> hashtags = new LinkedHashSet<>();
+
+    public void increaseLikeCount() {
+        this.likeCount = this.likeCount + 1;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount = this.likeCount - 1;
+        }
+    }
+
+    public void increaseCommentCount() {
+        this.commentCount = this.commentCount + 1;
+    }
+
+    public void decreaseCommentCount() {
+        if (this.commentCount > 0) {
+            this.commentCount = this.commentCount - 1;
+        }
+    }
 }

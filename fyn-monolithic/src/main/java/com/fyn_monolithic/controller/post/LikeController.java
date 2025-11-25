@@ -1,6 +1,7 @@
 package com.fyn_monolithic.controller.post;
 
 import com.fyn_monolithic.dto.response.common.ApiResponse;
+import com.fyn_monolithic.dto.response.post.PostReactionResponse;
 import com.fyn_monolithic.service.post.LikeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,14 +21,12 @@ public class LikeController {
     private final LikeService likeService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> like(@PathVariable UUID postId) {
-        likeService.like(postId);
-        return ResponseEntity.ok(ApiResponse.message("Post liked"));
+    public ResponseEntity<ApiResponse<PostReactionResponse>> like(@PathVariable UUID postId) {
+        return ResponseEntity.ok(ApiResponse.ok(likeService.like(postId)));
     }
 
     @DeleteMapping
-    public ResponseEntity<ApiResponse<Void>> unlike(@PathVariable UUID postId) {
-        likeService.unlike(postId);
-        return ResponseEntity.ok(ApiResponse.message("Post unliked"));
+    public ResponseEntity<ApiResponse<PostReactionResponse>> unlike(@PathVariable UUID postId) {
+        return ResponseEntity.ok(ApiResponse.ok(likeService.unlike(postId)));
     }
 }

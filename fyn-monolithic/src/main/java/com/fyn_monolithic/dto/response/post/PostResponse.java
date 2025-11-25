@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class PostResponse {
     UUID id;
     UserResponse author;
@@ -20,4 +20,5 @@ public class PostResponse {
     long commentCount;
     Instant createdAt;
     List<PostMediaResponse> media;
+    boolean likedByCurrentUser;
 }

@@ -8,5 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface PostCommentRepository extends JpaRepository<PostComment, UUID> {
-    List<PostComment> findByPost(Post post);
+    List<PostComment> findByPostOrderByCreatedAtAsc(Post post);
+
+    long countByPost(Post post);
 }

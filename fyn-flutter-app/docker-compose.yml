@@ -1,13 +1,14 @@
 services:
   flutter-web:
+    image: fyn-flutter-web:latest
+    container_name: fyn-flutter-web
     build:
       context: .
       dockerfile: Dockerfile
+      cache_from:
+        - fyn-flutter-web:latest
       args:
-        # Frontend chạy trên browser nên cần kết nối qua localhost
-        # Backend đã expose port 8080 ra ngoài
-        - BASE_URL=${BASE_URL:-http://localhost:8080}
-    container_name: fyn-flutter-web
+        BASE_URL: ${BASE_URL:-http://localhost:8080}
     ports:
       - "3000:80"
     restart: unless-stopped
