@@ -1,0 +1,18 @@
+spring:
+  datasource:
+#    url: jdbc:postgresql://fyn-postgres:5432/fyn-monolithic
+    url: jdbc:postgresql://localhost:5432/fyn-monolithic
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+
