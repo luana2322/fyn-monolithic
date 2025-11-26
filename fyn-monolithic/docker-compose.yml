@@ -96,4 +96,3 @@ services:
 networks:
   fyn-network:
     driver: bridge
-
