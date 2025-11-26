@@ -7,6 +7,7 @@ import '../../../../config/app_config.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../data/models/post_model.dart';
 import '../providers/post_provider.dart';
+import '../../../notification/presentation/providers/notification_provider.dart';
 import '../widgets/create_post_card.dart';
 import '../widgets/create_post_sheet.dart';
 import '../widgets/post_card.dart';
@@ -32,6 +33,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(postFeedProvider.notifier).loadInitial();
+      // Khởi động notifier thông báo để bắt đầu polling realtime số thông báo
+      ref.read(notificationProvider.notifier).loadInitial();
     });
   }
 
@@ -193,7 +196,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         ],
       ),
       actions: [
-        _buildAppBarButton(icon: Icons.notifications_outlined),
+        Consumer(
+          builder: (context, ref, _) {
+            final notificationState = ref.watch(notificationProvider);
+            final unread = notificationState.unreadCount;
+            return _buildNotificationButton(
+              count: unread,
+              onPressed: () {
+                context.go('/notifications');
+              },
+            );
+          },
+        ),
         _buildAppBarButton(
           icon: Icons.chat_bubble_outline,
           onPressed: () {
@@ -231,6 +245,60 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       child: IconButton(
         icon: Icon(icon, color: Colors.white),
         onPressed: onPressed ?? () {},
+      ),
+    );
+  }
+
+  Widget _buildNotificationButton({
+    required int count,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+            onPressed: onPressed,
+          ),
+          if (count > 0)
+            Positioned(
+              right: 4,
+              top: 4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 18,
+                  minHeight: 16,
+                ),
+                child: Text(
+                  count > 9 ? '9+' : '$count',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

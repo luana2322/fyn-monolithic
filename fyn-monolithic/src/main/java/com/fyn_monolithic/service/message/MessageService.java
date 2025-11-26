@@ -8,9 +8,11 @@ import com.fyn_monolithic.model.message.Conversation;
 import com.fyn_monolithic.model.message.Message;
 import com.fyn_monolithic.model.message.MessageMedia;
 import com.fyn_monolithic.model.storage.MediaType;
+import com.fyn_monolithic.model.notification.NotificationType;
 import com.fyn_monolithic.model.user.User;
 import com.fyn_monolithic.repository.message.MessageRepository;
 import com.fyn_monolithic.repository.message.MessageMediaRepository;
+import com.fyn_monolithic.service.notification.NotificationService;
 import com.fyn_monolithic.service.storage.MinioService;
 import com.fyn_monolithic.service.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class MessageService {
     private final UserService userService;
     private final MessageMapper messageMapper;
     private final MinioService minioService;
+    private final NotificationService notificationService;
 
     @Transactional
     public MessageResponse sendMessage(UUID conversationId, SendMessageRequest request, MultipartFile media) {
@@ -66,9 +69,24 @@ public class MessageService {
             mediaEntity.setMediaType(detectedType);
             messageMediaRepository.save(mediaEntity);
             response = response.toBuilder()
-                    .mediaUrl(minioService.getPresignedUrl(objectKey))
+                    // Trả về objectKey để frontend tự build URL qua /api/files/{objectKey}
+                    .mediaUrl(objectKey)
                     .build();
         }
+
+        // Tạo thông báo cho các thành viên khác trong cuộc trò chuyện
+        conversation.getMembers().forEach(member -> {
+            User recipient = member.getMember();
+            if (!recipient.getId().equals(sender.getId())) {
+                String preview = hasContent ? request.getContent() : "Bạn có tin nhắn mới";
+                notificationService.notifyNewMessage(
+                        recipient,
+                        conversation.getId(),
+                        preview
+                );
+            }
+        });
+
         return mapMediaUrl(response);
     }
 
@@ -92,11 +110,8 @@ public class MessageService {
         if (response.getMediaUrl() == null) {
             return response;
         }
-        if (response.getMediaUrl().startsWith("http")) {
-            return response;
-        }
-        return response.toBuilder()
-                .mediaUrl(minioService.getPresignedUrl(response.getMediaUrl()))
-                .build();
+        // Giữ nguyên mediaUrl (objectKey hoặc URL đầy đủ) để frontend tự xử lý.
+        // Nếu là objectKey, FE sẽ build URL dạng `${baseUrl}/api/files/{objectKey}`.
+        return response;
     }
 }

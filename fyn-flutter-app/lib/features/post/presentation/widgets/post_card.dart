@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../../../core/utils/date_utils.dart' as app_date_utils;
 import '../../../../core/utils/image_utils.dart';
@@ -447,12 +448,76 @@ class _PostCardState extends State<PostCard> {
   }
 }
 
-class _PostMediaView extends StatelessWidget {
+class _PostMediaView extends StatefulWidget {
   const _PostMediaView({this.media});
 
   final PostMedia? media;
 
   static const double _defaultHeight = 360;
+
+  @override
+  State<_PostMediaView> createState() => _PostMediaViewState();
+}
+
+class _PostMediaViewState extends State<_PostMediaView> {
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
+  bool _isVideoError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initVideoIfNeeded();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PostMediaView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.media?.resolvedUrl != widget.media?.resolvedUrl) {
+      _disposeVideo();
+      _initVideoIfNeeded();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeVideo();
+    super.dispose();
+  }
+
+  void _disposeVideo() {
+    _videoController?.dispose();
+    _videoController = null;
+    _isVideoInitialized = false;
+    _isVideoError = false;
+  }
+
+  Future<void> _initVideoIfNeeded() async {
+    if (widget.media == null ||
+        !widget.media!.isVideo ||
+        widget.media!.resolvedUrl == null) {
+      return;
+    }
+
+    final url = widget.media!.resolvedUrl!;
+    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    _videoController = controller;
+    try {
+      await controller.initialize();
+      controller.setLooping(true);
+      if (mounted) {
+        setState(() {
+          _isVideoInitialized = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isVideoError = true;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -472,40 +537,69 @@ class _PostMediaView extends StatelessWidget {
   }
 
   double _calculateHeight(BuildContext context) {
-    if (!kIsWeb) return _defaultHeight;
+    if (!kIsWeb) return _PostMediaView._defaultHeight;
     final screenHeight = MediaQuery.of(context).size.height;
-    if (screenHeight <= 0) return _defaultHeight;
+    if (screenHeight <= 0) return _PostMediaView._defaultHeight;
     final target = screenHeight / 3;
     return math.max(280, math.min(target, 520));
   }
 
   Widget _buildContent() {
+    final media = widget.media;
     if (media == null) {
       return _placeholder(icon: Icons.insert_photo_outlined);
     }
 
-    if (media!.isImage && media!.resolvedUrl != null) {
+    if (media.isImage && media.resolvedUrl != null) {
       return Image.network(
-        media!.resolvedUrl!,
+        media.resolvedUrl!,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) =>
             _placeholder(icon: Icons.broken_image_outlined),
       );
     }
 
-    if (media!.isVideo) {
-      return Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            color: Colors.black87,
-          ),
-          const Icon(
-            Icons.play_circle_fill,
-            color: Colors.white,
-            size: 64,
-          ),
-        ],
+    if (media.isVideo) {
+      if (_isVideoError || _videoController == null) {
+        return _placeholder(icon: Icons.videocam_off_outlined);
+      }
+      if (!_isVideoInitialized) {
+        return const Center(
+          child: CircularProgressIndicator(strokeWidth: 2),
+        );
+      }
+      return GestureDetector(
+        onTap: () {
+          if (_videoController == null) return;
+          if (_videoController!.value.isPlaying) {
+            _videoController!.pause();
+          } else {
+            _videoController!.play();
+          }
+          setState(() {});
+        },
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _videoController!.value.size.width,
+                height: _videoController!.value.size.height,
+                child: VideoPlayer(_videoController!),
+              ),
+            ),
+            if (!_videoController!.value.isPlaying)
+              Container(
+                color: Colors.black26,
+                child: const Icon(
+                  Icons.play_circle_fill,
+                  color: Colors.white,
+                  size: 64,
+                ),
+              ),
+          ],
+        ),
       );
     }
 

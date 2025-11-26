@@ -7,6 +7,7 @@ import com.fyn_monolithic.mapper.UserMapper;
 import com.fyn_monolithic.model.user.User;
 import com.fyn_monolithic.model.user.UserFollower;
 import com.fyn_monolithic.repository.user.UserFollowerRepository;
+import com.fyn_monolithic.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class FollowerService {
     private final UserFollowerRepository followerRepository;
     private final UserService userService;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
 
     @Transactional
     public void follow(UUID userId) {
@@ -37,6 +39,9 @@ public class FollowerService {
         relation.setUser(target);
         relation.setFollower(currentUser);
         followerRepository.save(relation);
+
+        // Tạo thông báo cho người bị follow
+        notificationService.notifyNewFollower(target, currentUser);
     }
 
     @Transactional

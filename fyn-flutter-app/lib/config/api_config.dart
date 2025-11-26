@@ -57,6 +57,7 @@ class ApiEndpoints {
   static const String notifications = '/api/notifications';
   static String markNotificationRead(String notificationId) => 
       '/api/notifications/$notificationId/read';
+  static const String unreadNotificationCount = '/api/notifications/unread-count';
   
   // Search endpoints
   static const String searchHashtags = '/api/search/hashtags';

@@ -7,6 +7,7 @@ import com.fyn_monolithic.model.post.PostLike;
 import com.fyn_monolithic.model.user.User;
 import com.fyn_monolithic.repository.post.PostLikeRepository;
 import com.fyn_monolithic.repository.post.PostRepository;
+import com.fyn_monolithic.service.notification.NotificationService;
 import com.fyn_monolithic.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class LikeService {
     private final PostRepository postRepository;
     private final PostLikeRepository likeRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Transactional
     public PostReactionResponse like(UUID postId) {
@@ -36,6 +38,12 @@ public class LikeService {
         likeRepository.save(like);
         post.increaseLikeCount();
         postRepository.save(post);
+
+        // Tạo thông báo cho tác giả bài viết (nếu không phải tự like bài mình)
+        User author = post.getAuthor();
+        if (author != null && !author.getId().equals(user.getId())) {
+            notificationService.notifyPostLiked(author, user, post.getId());
+        }
         return buildReaction(post, true);
     }
 

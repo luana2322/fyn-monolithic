@@ -9,6 +9,7 @@ import '../features/user/presentation/screens/profile_screen.dart';
 import '../features/user/presentation/screens/edit_profile_screen.dart';
 import '../features/user/presentation/screens/followers_following_screen.dart';
 import '../features/message/presentation/screens/chat_list_screen.dart';
+import '../features/notification/presentation/screens/notification_screen.dart';
 
 class AppConfig {
   static const String appName = 'FYN Social';
@@ -91,6 +92,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/chat',
         name: 'chat',
         builder: (context, state) => const ChatListScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationScreen(),
       ),
     ],
   );

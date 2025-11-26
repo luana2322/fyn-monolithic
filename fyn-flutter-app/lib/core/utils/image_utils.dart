@@ -13,8 +13,9 @@ class ImageUtils {
 
     // If it's already a full URL (starts with http:// or https://), return as is
     if (urlOrKey.startsWith('http://') || urlOrKey.startsWith('https://')) {
-      // Still need to encode special characters in the path
-      return _encodeUrl(urlOrKey);
+      // Với các URL đã được backend/presigned URL generate, không encode lại
+      // để tránh làm hỏng chữ ký hoặc path đã được mã hóa sẵn.
+      return urlOrKey;
     }
 
     // If it's an object key, build full URL
