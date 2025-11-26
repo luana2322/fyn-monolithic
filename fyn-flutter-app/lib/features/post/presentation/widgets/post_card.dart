@@ -463,6 +463,8 @@ class _PostMediaViewState extends State<_PostMediaView> {
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
   bool _isVideoError = false;
+  bool _isVideoPlaying = false;
+  bool _hasUserInteracted = false;
 
   @override
   void initState() {
@@ -486,10 +488,24 @@ class _PostMediaViewState extends State<_PostMediaView> {
   }
 
   void _disposeVideo() {
+    _videoController?.removeListener(_videoListener);
     _videoController?.dispose();
     _videoController = null;
     _isVideoInitialized = false;
     _isVideoError = false;
+    _isVideoPlaying = false;
+    _hasUserInteracted = false;
+  }
+
+  void _videoListener() {
+    if (_videoController != null && mounted) {
+      final isPlaying = _videoController!.value.isPlaying;
+      if (isPlaying != _isVideoPlaying) {
+        setState(() {
+          _isVideoPlaying = isPlaying;
+        });
+      }
+    }
   }
 
   Future<void> _initVideoIfNeeded() async {
@@ -501,6 +517,7 @@ class _PostMediaViewState extends State<_PostMediaView> {
 
     final url = widget.media!.resolvedUrl!;
     final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    controller.addListener(_videoListener);
     _videoController = controller;
     try {
       await controller.initialize();
@@ -508,6 +525,7 @@ class _PostMediaViewState extends State<_PostMediaView> {
       if (mounted) {
         setState(() {
           _isVideoInitialized = true;
+          _isVideoPlaying = false; // Không tự động phát (web autoplay policy)
         });
       }
     } catch (_) {
@@ -570,13 +588,25 @@ class _PostMediaViewState extends State<_PostMediaView> {
       }
       return GestureDetector(
         onTap: () {
-          if (_videoController == null) return;
+          if (_videoController == null || !_isVideoInitialized) return;
+          
+          // Đánh dấu user đã tương tác
+          if (!_hasUserInteracted) {
+            setState(() => _hasUserInteracted = true);
+          }
+          
+          // Toggle play/pause
           if (_videoController!.value.isPlaying) {
             _videoController!.pause();
           } else {
-            _videoController!.play();
+            _videoController!.play().then((_) {
+              if (mounted) {
+                setState(() => _isVideoPlaying = true);
+              }
+            }).catchError((e) {
+              debugPrint('Error playing video: $e');
+            });
           }
-          setState(() {});
         },
         child: Stack(
           alignment: Alignment.center,
@@ -584,12 +614,16 @@ class _PostMediaViewState extends State<_PostMediaView> {
             FittedBox(
               fit: BoxFit.cover,
               child: SizedBox(
-                width: _videoController!.value.size.width,
-                height: _videoController!.value.size.height,
+                width: _videoController!.value.size.width > 0
+                    ? _videoController!.value.size.width
+                    : double.infinity,
+                height: _videoController!.value.size.height > 0
+                    ? _videoController!.value.size.height
+                    : double.infinity,
                 child: VideoPlayer(_videoController!),
               ),
             ),
-            if (!_videoController!.value.isPlaying)
+            if (!_isVideoPlaying)
               Container(
                 color: Colors.black26,
                 child: const Icon(

@@ -4,6 +4,7 @@ import '../../data/models/comment_model.dart';
 import '../../data/models/create_comment_request.dart';
 import '../../domain/post_service.dart';
 import 'post_provider.dart';
+import 'reels_provider.dart';
 
 class CommentState {
   final List<CommentModel> comments;
@@ -108,6 +109,7 @@ class CommentNotifier extends StateNotifier<CommentState> {
     _ref
         .read(userPostsProvider(_ownerId).notifier)
         .applyCommentDelta(_postId, delta);
+    _ref.read(reelsProvider.notifier).applyCommentDelta(_postId, delta);
   }
 }
 

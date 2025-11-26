@@ -14,6 +14,7 @@ import '../widgets/post_card.dart';
 import '../widgets/post_comments_sheet.dart';
 import '../../../search/presentation/widgets/user_search_view.dart';
 import '../../../../theme/app_colors.dart';
+import 'reels_screen.dart' show ReelsScreen, _ReelsScreenState;
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -116,11 +117,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         children: [
           _buildHomeTab(user, feedState),
           const UserSearchView(),
-          const _PlaceholderTab(
-            icon: Icons.movie_creation_outlined,
-            title: 'Reels',
-            subtitle: 'Tính năng đang phát triển',
-          ),
+          const ReelsScreen(),
           const _PlaceholderTab(
             icon: Icons.shopping_bag_outlined,
             title: 'Shop',
@@ -138,6 +135,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           backgroundColor: AppColors.primary,
           elevation: 0,
           onTap: (index) {
+            // Nếu đang rời khỏi tab Reels (index 2), pause tất cả video
+            if (_currentIndex == 2 && index != 2) {
+              // Pause tất cả video khi rời khỏi tab Reels
+              ReelsScreen.pauseAllVideos();
+            }
             setState(() {
               _currentIndex = index;
             });
