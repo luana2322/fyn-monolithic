@@ -609,8 +609,8 @@ class _PostMediaViewState extends State<_PostMediaView> {
           }
         },
         child: Stack(
-          alignment: Alignment.center,
-          children: [
+        alignment: Alignment.center,
+        children: [
             FittedBox(
               fit: BoxFit.cover,
               child: SizedBox(
@@ -624,15 +624,15 @@ class _PostMediaViewState extends State<_PostMediaView> {
               ),
             ),
             if (!_isVideoPlaying)
-              Container(
+          Container(
                 color: Colors.black26,
                 child: const Icon(
-                  Icons.play_circle_fill,
-                  color: Colors.white,
-                  size: 64,
+            Icons.play_circle_fill,
+            color: Colors.white,
+            size: 64,
                 ),
-              ),
-          ],
+          ),
+        ],
         ),
       );
     }

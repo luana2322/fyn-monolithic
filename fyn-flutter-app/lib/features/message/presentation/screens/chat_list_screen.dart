@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/data/models/user_response.dart';
 import '../../../user/presentation/providers/user_provider.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/utils/date_utils.dart' as app_date_utils;
@@ -63,13 +63,15 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         child: Center(
           child: Container(
             width: MediaQuery.of(context).size.width * 3 / 7,
-            constraints: BoxConstraints(
+            constraints: const BoxConstraints(
               maxWidth: 600,
               minWidth: 400,
             ),
             child: RefreshIndicator(
               onRefresh: () async {
-                await ref.read(conversationListProvider.notifier).loadConversations();
+                await ref
+                    .read(conversationListProvider.notifier)
+                    .loadConversations();
               },
               child: _buildBody(conversationState, currentUserId),
             ),
@@ -89,8 +91,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
-                size: 64, color: AppColors.error),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               state.error!,
@@ -100,7 +101,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                ref.read(conversationListProvider.notifier).loadConversations();
+                ref
+                    .read(conversationListProvider.notifier)
+                    .loadConversations();
               },
               child: const Text('Thử lại'),
             ),
@@ -114,8 +117,11 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.chat_bubble_outline,
-                size: 64, color: AppColors.secondaryText.withOpacity(0.5)),
+            Icon(
+              Icons.chat_bubble_outline,
+              size: 64,
+              color: AppColors.secondaryText.withOpacity(0.5),
+            ),
             const SizedBox(height: 16),
             const Text(
               'Chưa có cuộc trò chuyện nào',
@@ -146,9 +152,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ChatDetailScreen(
-                  conversation: conversation,
-                ),
+                builder: (context) => ChatDetailScreen(conversation: conversation),
               ),
             );
           },
@@ -158,7 +162,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   }
 }
 
-class _ConversationListItem extends ConsumerWidget {
+class _ConversationListItem extends ConsumerStatefulWidget {
   final ConversationModel conversation;
   final String currentUserId;
   final VoidCallback onTap;
@@ -170,41 +174,87 @@ class _ConversationListItem extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Lấy thông tin user khác (không phải current user)
-    final otherUserId = conversation.memberIds
-        .where((id) => id != currentUserId)
-        .firstOrNull;
+  ConsumerState<_ConversationListItem> createState() =>
+      _ConversationListItemState();
+}
 
-    // Load user info nếu cần
-    String? displayName;
-    String? avatarUrl;
-    
+class _ConversationListItemState extends ConsumerState<_ConversationListItem> {
+  String? _requestedUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeLoadOtherUser();
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _ConversationListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.conversation.id != oldWidget.conversation.id) {
+      _requestedUserId = null;
+      _maybeLoadOtherUser();
+    }
+  }
+
+  void _maybeLoadOtherUser() {
+    final otherUserId = _findOtherUserId();
+    if (widget.conversation.type != ConversationType.direct ||
+        otherUserId == null) {
+      return;
+    }
+
+    if (_requestedUserId == otherUserId) {
+      return;
+    }
+
+    final params = UserProfileParams(userId: otherUserId);
+    final profileState = ref.read(userProfileProvider(params));
+    if (profileState.user == null && !profileState.isLoading) {
+      _requestedUserId = otherUserId;
+      ref.read(userProfileProvider(params).notifier).loadUser();
+    }
+  }
+
+  String? _findOtherUserId() {
+    for (final memberId in widget.conversation.memberIds) {
+      if (memberId != widget.currentUserId) {
+        return memberId;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final conversation = widget.conversation;
+    final otherUserId = _findOtherUserId();
+
+    String? displayName = conversation.otherUserName;
+    String? avatarUrl = conversation.otherUserAvatar;
+
     if (conversation.type == ConversationType.direct && otherUserId != null) {
-      // Try to get from conversation data first
-      displayName = conversation.otherUserName;
-      avatarUrl = conversation.otherUserAvatar;
-      
-      // If not available, load from API
-      if (displayName == null) {
-        final userParams = UserProfileParams(userId: otherUserId);
-        final userState = ref.watch(userProfileProvider(userParams));
-        if (userState.user != null) {
-          displayName = userState.user!.fullName ?? userState.user!.username;
-          avatarUrl = userState.user!.profile.avatarUrl;
-        }
+      final params = UserProfileParams(userId: otherUserId);
+      final userState = ref.watch(userProfileProvider(params));
+      final user = userState.user;
+
+      if (user != null) {
+        displayName ??= user.fullName ?? user.username;
+        avatarUrl ??= user.profile.avatarUrl;
+      } else if (!userState.isLoading) {
+        _maybeLoadOtherUser();
       }
     } else {
-      displayName = conversation.title ?? 'Nhóm chat';
+      displayName ??= conversation.title ?? 'Nhóm chat';
     }
 
     final lastMessageTime = conversation.lastMessageAt != null
         ? app_date_utils.DateUtils.formatTime(conversation.lastMessageAt!)
         : '';
-    
 
     return InkWell(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
@@ -215,13 +265,13 @@ class _ConversationListItem extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            // Avatar
             CircleAvatar(
               radius: 28,
               backgroundColor: AppColors.muted,
               backgroundImage: avatarUrl != null
                   ? CachedNetworkImageProvider(
-                      ImageUtils.getAvatarUrl(avatarUrl)!)
+                      ImageUtils.getAvatarUrl(avatarUrl) ?? avatarUrl,
+                    )
                   : null,
               child: avatarUrl == null
                   ? Text(
@@ -235,7 +285,6 @@ class _ConversationListItem extends ConsumerWidget {
                   : null,
             ),
             const SizedBox(width: 16),
-            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,4 +337,3 @@ class _ConversationListItem extends ConsumerWidget {
     );
   }
 }
-

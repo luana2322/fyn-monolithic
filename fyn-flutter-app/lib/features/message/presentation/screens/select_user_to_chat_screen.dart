@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/models/user_response.dart';
@@ -67,6 +68,28 @@ class _SelectUserToChatScreenState
     if (currentUserId == null) return;
 
     try {
+      final conversationState = ref.read(conversationListProvider);
+      final existingConversation =
+          conversationState.conversations.firstWhereOrNull(
+        (conversation) =>
+            conversation.type == ConversationType.direct &&
+            conversation.memberIds.contains(currentUserId) &&
+            conversation.memberIds.contains(user.id),
+      );
+
+      if (existingConversation != null) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ChatDetailScreen(conversation: existingConversation),
+            ),
+          );
+        }
+        return;
+      }
+
       final request = CreateConversationRequest(
         participantIds: {currentUserId, user.id},
         type: ConversationType.direct,
