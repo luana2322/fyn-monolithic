@@ -13,18 +13,56 @@ class FollowerRepository {
   /// Follow user
   Future<void> follow(String userId) async {
     try {
-      await _apiClient.post(ApiEndpoints.follow(userId));
+      final response = await _apiClient.post(
+        ApiEndpoints.follow(userId),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+      // Log response để debug
+      if (const bool.fromEnvironment('dart.vm.product') == false) {
+        print('Follow response: ${response.statusCode}');
+      }
     } on DioException catch (e) {
+      if (const bool.fromEnvironment('dart.vm.product') == false) {
+        print('Follow error: ${e.response?.statusCode} - ${e.response?.data}');
+      }
       throw _handleError(e);
+    } catch (e) {
+      if (const bool.fromEnvironment('dart.vm.product') == false) {
+        print('Follow unexpected error: $e');
+      }
+      rethrow;
     }
   }
 
   /// Unfollow user
   Future<void> unfollow(String userId) async {
     try {
-      await _apiClient.delete(ApiEndpoints.unfollow(userId));
+      final response = await _apiClient.delete(
+        ApiEndpoints.unfollow(userId),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+      // Log response để debug
+      if (const bool.fromEnvironment('dart.vm.product') == false) {
+        print('Unfollow response: ${response.statusCode}');
+      }
     } on DioException catch (e) {
+      if (const bool.fromEnvironment('dart.vm.product') == false) {
+        print('Unfollow error: ${e.response?.statusCode} - ${e.response?.data}');
+      }
       throw _handleError(e);
+    } catch (e) {
+      if (const bool.fromEnvironment('dart.vm.product') == false) {
+        print('Unfollow unexpected error: $e');
+      }
+      rethrow;
     }
   }
 
@@ -121,23 +159,39 @@ class FollowerRepository {
     if (error.response != null) {
       final data = error.response?.data;
       if (data is Map<String, dynamic>) {
+        // Kiểm tra message trong data
         if (data['message'] != null) {
-          return data['message'] as String;
+          final message = data['message'] as String;
+          if (const bool.fromEnvironment('dart.vm.product') == false) {
+            print('Error message from backend: $message');
+          }
+          return message;
         }
+        // Kiểm tra errors array
         if (data['errors'] != null && data['errors'] is List) {
           final errors = data['errors'] as List;
           if (errors.isNotEmpty) {
             return errors.join(', ');
           }
         }
+        // Kiểm tra error field
         if (data['error'] != null) {
           return data['error'].toString();
+        }
+        // Nếu có data nhưng không có message, log toàn bộ data
+        if (const bool.fromEnvironment('dart.vm.product') == false) {
+          print('Error response data: $data');
         }
       }
       final statusCode = error.response?.statusCode;
       final statusMessage = error.response?.statusMessage ?? 'Có lỗi xảy ra';
       if (statusCode == 400) {
-        return 'Dữ liệu không hợp lệ: $statusMessage';
+        // Lấy message từ response body nếu có
+        String message = 'Dữ liệu không hợp lệ';
+        if (data is Map<String, dynamic> && data['message'] != null) {
+          message = data['message'] as String;
+        }
+        return message;
       } else if (statusCode == 401) {
         return 'Không có quyền truy cập';
       } else if (statusCode == 404) {
