@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:collection/collection.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -26,6 +27,7 @@ class _SelectUserToChatScreenState
   final TextEditingController _searchController = TextEditingController();
   List<UserResponse> _users = [];
   bool _isLoading = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -35,6 +37,7 @@ class _SelectUserToChatScreenState
 
   @override
   void dispose() {
+    _isDisposed = true;
     _searchController.dispose();
     super.dispose();
   }
@@ -48,13 +51,15 @@ class _SelectUserToChatScreenState
     try {
       final userService = ref.read(userServiceProvider);
       final result = await userService.getFollowing(currentUserId, page: 0, size: 100);
-      setState(() {
-        _users = result.content;
-        _isLoading = false;
-      });
+      if (!_isDisposed && mounted) {
+        setState(() {
+          _users = result.content;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
+      if (!_isDisposed && mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Không thể tải danh sách: $e')),
         );
@@ -133,6 +138,7 @@ class _SelectUserToChatScreenState
       backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
+        automaticallyImplyLeading: false,
         title: const Text('Chọn người để chat'),
       ),
       body: Container(
