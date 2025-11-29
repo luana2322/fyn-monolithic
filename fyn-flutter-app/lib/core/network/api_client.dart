@@ -8,9 +8,16 @@ class ApiClient {
   late final Dio _dio;
 
   ApiClient() {
+    final baseUrl = AppConfig.baseUrl;
+    
+    // Log để debug (chỉ trong debug mode)
+    if (const bool.fromEnvironment('dart.vm.product') == false) {
+      print('ApiClient initialized with baseUrl: $baseUrl');
+    }
+    
     _dio = Dio(
       BaseOptions(
-        baseUrl: AppConfig.baseUrl,
+        baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         headers: {

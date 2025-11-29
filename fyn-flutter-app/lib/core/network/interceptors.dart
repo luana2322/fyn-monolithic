@@ -89,7 +89,7 @@ class LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (const bool.fromEnvironment('dart.vm.product') == false) {
-      print('REQUEST[${options.method}] => PATH: ${options.path}');
+      print('REQUEST[${options.method}] => ${options.baseUrl}${options.path}');
       if (options.data != null) {
         print('DATA: ${options.data}');
       }
@@ -114,9 +114,17 @@ class LoggingInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (const bool.fromEnvironment('dart.vm.product') == false) {
       print(
-        'ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}',
+        'ERROR[${err.response?.statusCode}] => ${err.requestOptions.baseUrl}${err.requestOptions.path}',
       );
       print('MESSAGE: ${err.message}');
+      if (err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.sendTimeout) {
+        print('⚠ Connection timeout - Check if backend is running at ${err.requestOptions.baseUrl}');
+      }
+      if (err.type == DioExceptionType.connectionError) {
+        print('⚠ Connection error - Cannot reach ${err.requestOptions.baseUrl}');
+      }
     }
     handler.next(err);
   }

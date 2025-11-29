@@ -169,21 +169,32 @@ class _UserListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatarUrl = ImageUtils.getAvatarUrl(user.profile.avatarUrl);
     return ListTile(
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundColor: AppColors.surfaceElevated,
-        backgroundImage:
-            avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
-        child: avatarUrl == null
-            ? Text(
-                user.username[0].toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryText,
-                ),
-              )
-            : null,
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppColors.border.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: CircleAvatar(
+          radius: 23,
+          backgroundColor: AppColors.muted,
+          backgroundImage:
+              avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
+          child: avatarUrl == null
+              ? Text(
+                  user.username[0].toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryText,
+                  ),
+                )
+              : null,
+        ),
       ),
       title: Text(
         user.fullName ?? user.username,

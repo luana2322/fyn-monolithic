@@ -15,6 +15,7 @@ import '../widgets/post_comments_sheet.dart';
 import '../../../search/presentation/widgets/user_search_view.dart';
 import '../../../../theme/app_colors.dart';
 import 'reels_screen.dart' show ReelsScreen, _ReelsScreenState;
+import '../../../user/presentation/screens/followers_following_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -113,7 +114,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(user),
       body: IndexedStack(
-        index: _currentIndex,
+        index: _currentIndex > 3 ? 3 : _currentIndex, // Giới hạn index để không vượt quá số tab
         children: [
           _buildHomeTab(user, feedState),
           const UserSearchView(),
@@ -123,7 +124,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             title: 'Shop',
             subtitle: 'Tính năng đang phát triển',
           ),
-          _buildProfileShortcut(user),
         ],
       ),
       bottomNavigationBar: Container(
@@ -140,6 +140,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               // Pause tất cả video khi rời khỏi tab Reels
               ReelsScreen.pauseAllVideos();
             }
+            
+            // Nếu click vào Profile (index 4), navigate đến FollowersFollowingScreen
+            if (index == 4) {
+              final userId = authState.user?.id;
+              if (userId != null) {
+                context.go('/profile/$userId');
+              }
+              return; // Không thay đổi _currentIndex
+            }
+            
             setState(() {
               _currentIndex = index;
             });
