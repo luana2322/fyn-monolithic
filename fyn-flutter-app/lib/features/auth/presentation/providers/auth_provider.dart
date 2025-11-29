@@ -78,9 +78,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
+      // Extract error message properly
+      String errorMessage = 'Đăng nhập thất bại';
+      
+      if (e is String) {
+        errorMessage = e;
+      } else if (e is Exception) {
+        errorMessage = e.toString().replaceAll('Exception: ', '');
+      } else {
+        errorMessage = e.toString();
+      }
+      
+      // Clean up error message
+      errorMessage = errorMessage.replaceAll('Exception: ', '');
+      errorMessage = errorMessage.trim();
+      
+      if (errorMessage.isEmpty) {
+        errorMessage = 'Đăng nhập thất bại';
+      }
+      
       state = state.copyWith(
         isLoading: false,
-        error: e.toString().replaceAll('Exception: ', ''),
+        error: errorMessage,
       );
       return false;
     }

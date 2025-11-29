@@ -52,10 +52,14 @@ class AuthRepository {
 
       return apiResponse.data!;
     } on DioException catch (e) {
-      throw _handleError(e);
+      final errorMessage = _handleError(e);
+      throw Exception(errorMessage);
     } catch (e) {
       // Handle other errors (parsing errors, etc.)
-      throw 'Lỗi xử lý dữ liệu: ${e.toString()}';
+      final errorMessage = e is String 
+          ? e 
+          : 'Lỗi xử lý dữ liệu: ${e.toString()}';
+      throw Exception(errorMessage);
     }
   }
 
@@ -94,10 +98,14 @@ class AuthRepository {
 
       return apiResponse.data!;
     } on DioException catch (e) {
-      throw _handleError(e);
+      final errorMessage = _handleError(e);
+      throw Exception(errorMessage);
     } catch (e) {
       // Handle other errors (parsing errors, etc.)
-      throw 'Lỗi xử lý dữ liệu: ${e.toString()}';
+      final errorMessage = e is String 
+          ? e 
+          : 'Lỗi xử lý dữ liệu: ${e.toString()}';
+      throw Exception(errorMessage);
     }
   }
 
@@ -124,7 +132,8 @@ class AuthRepository {
 
       return apiResponse.data!;
     } on DioException catch (e) {
-      throw _handleError(e);
+      final errorMessage = _handleError(e);
+      throw Exception(errorMessage);
     }
   }
 
@@ -136,7 +145,8 @@ class AuthRepository {
         data: request.toJson(),
       );
     } on DioException catch (e) {
-      throw _handleError(e);
+      final errorMessage = _handleError(e);
+      throw Exception(errorMessage);
     }
   }
 
@@ -160,7 +170,8 @@ class AuthRepository {
 
       return apiResponse.data!;
     } on DioException catch (e) {
-      throw _handleError(e);
+      final errorMessage = _handleError(e);
+      throw Exception(errorMessage);
     }
   }
 

@@ -40,6 +40,16 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
         title: const Text(
           'Tin nhắn',
           style: TextStyle(fontWeight: FontWeight.w600),

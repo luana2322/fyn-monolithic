@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        # For web, use localhost:8080 (browser connects to host)
+        # For Android emulator, use 10.0.2.2:8080
         BASE_URL: ${BASE_URL:-http://localhost:8080}
     ports:
       - "3000:80"
@@ -16,4 +18,8 @@ services:
 networks:
   fyn-monolithic_fyn-network:
     external: true
+
+# Note: This docker-compose assumes backend is running in parent directory
+# If backend is not running, start it first:
+# cd ../fyn-monolithic && docker compose up -d fyn-backend
 

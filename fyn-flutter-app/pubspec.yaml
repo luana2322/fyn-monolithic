@@ -28,7 +28,7 @@ dependencies:
   cached_network_image: ^3.3.0
   image_picker: ^1.0.5
   video_player: ^2.8.1
-  file_picker: ^6.1.1
+  file_picker: ^8.1.2
   
   # UI Components
   flutter_svg: ^2.0.9
