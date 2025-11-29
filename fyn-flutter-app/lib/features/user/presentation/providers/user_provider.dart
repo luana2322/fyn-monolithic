@@ -77,9 +77,11 @@ class UserProfileNotifier extends StateNotifier<UserProfileState> {
   final UserService _userService;
   final String? userId;
   final String? username;
+  final Ref? _ref;
 
-  UserProfileNotifier(this._userService, {this.userId, this.username})
-      : super(UserProfileState());
+  UserProfileNotifier(this._userService, {this.userId, this.username, Ref? ref})
+      : _ref = ref,
+        super(UserProfileState());
 
   Future<void> loadUser() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -97,11 +99,35 @@ class UserProfileNotifier extends StateNotifier<UserProfileState> {
       final followers = await _userService.getFollowers(user.id, size: 1);
       final following = await _userService.getFollowing(user.id, size: 1);
 
+      // Check if current user is following this user
+      bool isFollowing = false;
+      if (_ref != null) {
+        try {
+          final authState = _ref!.read(authNotifierProvider);
+          final currentUserId = authState.user?.id;
+          if (currentUserId != null && currentUserId != user.id) {
+            // Check xem user này có trong danh sách following của current user không
+            final currentUserFollowing = await _userService.getFollowing(
+              currentUserId,
+              page: 0,
+              size: 100, // Check trong 100 user đầu tiên
+            );
+            isFollowing = currentUserFollowing.content.any((u) => u.id == user.id);
+          }
+        } catch (e) {
+          // Ignore error khi check following status
+          if (const bool.fromEnvironment('dart.vm.product') == false) {
+            print('Error checking follow status: $e');
+          }
+        }
+      }
+
       state = state.copyWith(
         user: user,
         isLoading: false,
         followersCount: followers.totalElements,
         followingCount: following.totalElements,
+        isFollowing: isFollowing,
       );
     } catch (e) {
       state = state.copyWith(
@@ -118,17 +144,24 @@ class UserProfileNotifier extends StateNotifier<UserProfileState> {
   Future<void> toggleFollow() async {
     if (state.user == null) return;
 
+    final wasFollowing = state.isFollowing;
+    
     try {
-      if (state.isFollowing) {
+      if (wasFollowing) {
         await _userService.unfollow(state.user!.id);
       } else {
         await _userService.follow(state.user!.id);
       }
 
-      // Reload để cập nhật trạng thái
+      // Reload để đảm bảo sync với server và cập nhật trạng thái chính xác
       await loadUser();
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      // Không rollback, chỉ set error để UI hiển thị
+      state = state.copyWith(
+        error: e.toString(),
+      );
+      // Re-throw để UI có thể xử lý
+      rethrow;
     }
   }
 }
@@ -166,6 +199,7 @@ final userProfileProvider = StateNotifierProvider.family<UserProfileNotifier,
     userService,
     userId: params.userId,
     username: params.username,
+    ref: ref,
   );
 });
 
