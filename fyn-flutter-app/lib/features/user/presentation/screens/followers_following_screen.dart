@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/user_provider.dart';
 import '../../../auth/data/models/user_response.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../theme/app_colors.dart';
-import 'profile_screen.dart';
 
 class FollowersFollowingScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -142,8 +142,9 @@ class _FollowersFollowingScreenState
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ProfileScreen(
+                              builder: (context) => FollowersFollowingScreen(
                                 userId: _users[index].id,
+                                type: 'followers',
                               ),
                             ),
                           );
@@ -156,7 +157,7 @@ class _FollowersFollowingScreenState
   }
 }
 
-class _UserListItem extends StatelessWidget {
+class _UserListItem extends ConsumerStatefulWidget {
   final UserResponse user;
   final VoidCallback onTap;
 
@@ -166,8 +167,121 @@ class _UserListItem extends StatelessWidget {
   });
 
   @override
+  ConsumerState<_UserListItem> createState() => _UserListItemState();
+}
+
+class _UserListItemState extends ConsumerState<_UserListItem> {
+  bool _isFollowing = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFollowingStatus();
+  }
+
+  Future<void> _checkFollowingStatus() async {
+    final authState = ref.read(authNotifierProvider);
+    final currentUserId = authState.user?.id;
+    if (currentUserId == null || currentUserId == widget.user.id) {
+      return;
+    }
+
+    try {
+      final userService = ref.read(userServiceProvider);
+      // Check xem user này có trong danh sách following của current user không
+      final following = await userService.getFollowing(
+        currentUserId,
+        page: 0,
+        size: 100,
+      );
+      final isFollowing = following.content.any((u) => u.id == widget.user.id);
+      if (mounted) {
+        setState(() {
+          _isFollowing = isFollowing;
+        });
+      }
+    } catch (e) {
+      // Ignore error
+    }
+  }
+
+  Future<void> _toggleFollow() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userService = ref.read(userServiceProvider);
+      final wasFollowing = _isFollowing;
+      
+      if (_isFollowing) {
+        await userService.unfollow(widget.user.id);
+      } else {
+        await userService.follow(widget.user.id);
+      }
+
+      // Reload trạng thái để đảm bảo đồng bộ
+      await _checkFollowingStatus();
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              wasFollowing ? 'Đã bỏ theo dõi' : 'Đã theo dõi',
+            ),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Parse error message để hiển thị rõ ràng hơn
+        String errorMessage = 'Có lỗi xảy ra';
+        final errorString = e.toString();
+        if (errorString.contains('Already following')) {
+          errorMessage = 'Bạn đã theo dõi người dùng này rồi';
+        } else if (errorString.contains('Not following')) {
+          errorMessage = 'Bạn chưa theo dõi người dùng này';
+        } else if (errorString.contains('Cannot follow yourself') || 
+                   errorString.contains('Cannot unfollow yourself')) {
+          errorMessage = 'Không thể thực hiện thao tác này';
+        } else if (errorString.contains('Bad Request') || 
+                   errorString.contains('400')) {
+          errorMessage = 'Yêu cầu không hợp lệ. Vui lòng thử lại';
+        } else {
+          errorMessage = errorString.replaceAll('Exception: ', '');
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: $errorMessage'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final avatarUrl = ImageUtils.getAvatarUrl(user.profile.avatarUrl);
+    final authState = ref.watch(authNotifierProvider);
+    final currentUserId = authState.user?.id;
+    final isOwnProfile = currentUserId == widget.user.id;
+    final avatarUrl = ImageUtils.getAvatarUrl(widget.user.profile.avatarUrl);
+
     return ListTile(
       leading: Container(
         width: 48,
@@ -186,7 +300,7 @@ class _UserListItem extends StatelessWidget {
               avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
           child: avatarUrl == null
               ? Text(
-                  user.username[0].toUpperCase(),
+                  widget.user.username[0].toUpperCase(),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -197,17 +311,50 @@ class _UserListItem extends StatelessWidget {
         ),
       ),
       title: Text(
-        user.fullName ?? user.username,
+        widget.user.fullName ?? widget.user.username,
         style: const TextStyle(
           fontWeight: FontWeight.w600,
           color: AppColors.primaryText,
         ),
       ),
       subtitle: Text(
-        '@${user.username}',
+        '@${widget.user.username}',
         style: const TextStyle(color: AppColors.secondaryText),
       ),
-      onTap: onTap,
+      trailing: isOwnProfile
+          ? null
+          : _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : TextButton(
+                  onPressed: _toggleFollow,
+                  style: TextButton.styleFrom(
+                    backgroundColor: _isFollowing
+                        ? Colors.grey.shade300
+                        : AppColors.secondary,
+                    foregroundColor: _isFollowing
+                        ? AppColors.primaryText
+                        : Colors.black,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: Text(
+                    _isFollowing ? 'Đã theo dõi' : 'Theo dõi',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+      onTap: widget.onTap,
     );
   }
 }
