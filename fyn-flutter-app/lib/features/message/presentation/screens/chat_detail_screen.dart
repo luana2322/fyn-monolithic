@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -11,6 +12,7 @@ import '../../data/models/conversation_model.dart';
 import '../../data/models/conversation_type.dart';
 import '../../data/models/message_model.dart';
 import '../../data/models/message_status.dart';
+import '../../data/models/send_message_request.dart';
 
 class ChatDetailScreen extends ConsumerStatefulWidget {
   final ConversationModel conversation;
@@ -66,32 +68,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   Future<void> _pickAndSendImage() async {
     try {
-      // Hiển thị dialog để chọn nguồn ảnh
-      final source = await showModalBottomSheet<ImageSource>(
-        context: context,
-        builder: (context) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Chọn từ thư viện'),
-                onTap: () => Navigator.pop(context, ImageSource.gallery),
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Chụp ảnh'),
-                onTap: () => Navigator.pop(context, ImageSource.camera),
-              ),
-            ],
-          ),
-        ),
-      );
-
-      if (source == null) return;
-
       final image = await _imagePicker.pickImage(
-        source: source,
+        source: ImageSource.gallery,
         maxWidth: 1024,
         maxHeight: 1024,
         imageQuality: 85,
@@ -104,39 +82,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Không thể gửi ảnh: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text('Không thể chọn ảnh: $e')),
         );
       }
-    }
-  }
-
-  Future<void> _showReactionPicker() async {
-    final reactions = ['❤️', '😂', '😮', '😢', '👍', '👎'];
-    final selected = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: reactions.map((reaction) {
-            return GestureDetector(
-              onTap: () => Navigator.pop(context, reaction),
-              child: Text(
-                reaction,
-                style: const TextStyle(fontSize: 32),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-    if (selected != null) {
-      final messageNotifier = ref.read(messageProvider(widget.conversation.id).notifier);
-      await messageNotifier.sendMessage('', reaction: selected);
-      _scrollToBottom();
     }
   }
 
@@ -282,22 +230,18 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       );
     }
 
-    // Messages đã được sắp xếp theo createdAt (cũ nhất trước)
-    // Sử dụng reverse: true để hiển thị tin nhắn mới nhất ở dưới
-    // Với reverse: true, index 0 là tin nhắn cuối cùng trong danh sách
+    // Reverse để hiển thị tin nhắn mới nhất ở dưới
+    final reversedMessages = state.messages.reversed.toList();
+
     return ListView.builder(
       controller: _scrollController,
       reverse: true,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      itemCount: state.messages.length,
+      itemCount: reversedMessages.length,
       itemBuilder: (context, index) {
-        // Với reverse: true, index 0 = message cuối cùng (mới nhất)
-        final messageIndex = state.messages.length - 1 - index;
-        final message = state.messages[messageIndex];
-        // Hiển thị avatar nếu là tin nhắn đầu tiên (index 0) hoặc sender khác với tin nhắn trước đó
-        final showAvatar = index == 0 ||
-            (messageIndex < state.messages.length - 1 &&
-                state.messages[messageIndex + 1].senderId != message.senderId);
+        final message = reversedMessages[index];
+        final showAvatar = index == reversedMessages.length - 1 ||
+            reversedMessages[index + 1].senderId != message.senderId;
         return _MessageBubble(
           message: message,
           showAvatar: showAvatar,
@@ -321,13 +265,6 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             icon: const Icon(Icons.image_outlined),
             onPressed: state.isSending ? null : _pickAndSendImage,
             color: AppColors.primary,
-            tooltip: 'Gửi ảnh',
-          ),
-          IconButton(
-            icon: const Icon(Icons.emoji_emotions_outlined),
-            onPressed: state.isSending ? null : _showReactionPicker,
-            color: AppColors.primary,
-            tooltip: 'Gửi cảm xúc',
           ),
           Expanded(
             child: TextField(
@@ -368,7 +305,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   }
 }
 
-class _MessageBubble extends ConsumerWidget {
+class _MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool showAvatar;
 
@@ -377,19 +314,8 @@ class _MessageBubble extends ConsumerWidget {
     this.showAvatar = false,
   });
 
-  String _getMediaUrl(String urlOrKey) {
-    // If it's already a full URL (presigned URL from MinIO), use it directly
-    if (urlOrKey.startsWith('http://') || urlOrKey.startsWith('https://')) {
-      return urlOrKey;
-    }
-    // Otherwise, build URL from object key
-    return ImageUtils.buildImageUrl(urlOrKey) ?? urlOrKey;
-  }
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
-    final currentUser = authState.user;
+  Widget build(BuildContext context) {
     final isFromMe = message.isFromCurrentUser;
     final time = message.createdAt != null
         ? app_date_utils.DateUtils.formatTime(message.createdAt!)
@@ -406,23 +332,14 @@ class _MessageBubble extends ConsumerWidget {
             CircleAvatar(
               radius: 12,
               backgroundColor: AppColors.muted,
-              backgroundImage: message.senderAvatar != null
-                  ? CachedNetworkImageProvider(
-                      ImageUtils.getAvatarUrl(message.senderAvatar!)!)
-                  : null,
-              child: message.senderAvatar == null
-                  ? Text(
-                      (message.senderName?.isNotEmpty == true
-                              ? message.senderName![0]
-                              : 'U')
-                          .toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryText,
-                      ),
-                    )
-                  : null,
+              child: Text(
+                'U',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryText,
+                ),
+              ),
             ),
           if (!isFromMe && showAvatar) const SizedBox(width: 8),
           Flexible(
@@ -447,63 +364,18 @@ class _MessageBubble extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hiển thị tên người gửi nếu không phải tin nhắn của mình
-                  if (!isFromMe && showAvatar && message.senderName != null) ...[
-                    Text(
-                      message.senderName!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isFromMe ? Colors.white70 : AppColors.primaryText,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-                  if (message.reaction != null) ...[
-                    Text(
-                      message.reaction!,
-                      style: const TextStyle(fontSize: 32),
-                    ),
-                    if (message.content.isNotEmpty || message.mediaUrl != null)
-                      const SizedBox(height: 8),
-                  ],
                   if (message.mediaUrl != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: GestureDetector(
-                        onTap: () {
-                          // TODO: Open image in full screen viewer
-                        },
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: 250,
-                              maxHeight: 300,
-                            ),
-                            child: CachedNetworkImage(
-                              imageUrl: _getMediaUrl(message.mediaUrl!),
-                              fit: BoxFit.contain,
-                              placeholder: (context, url) => Container(
-                                width: 250,
-                                height: 200,
-                                color: Colors.grey.shade200,
-                                child: const Center(child: CircularProgressIndicator()),
-                              ),
-                              errorWidget: (context, url, error) => Container(
-                                width: 250,
-                                height: 200,
-                                color: Colors.grey.shade200,
-                                child: const Icon(Icons.broken_image, size: 48),
-                              ),
-                            ),
-                          ),
-                        ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        ImageUtils.buildImageUrl(message.mediaUrl!) ?? '',
+                        width: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
                       ),
                     ),
                   if (message.content.isNotEmpty) ...[
-                    if (message.mediaUrl != null || message.reaction != null)
-                      const SizedBox(height: 8),
+                    if (message.mediaUrl != null) const SizedBox(height: 8),
                     Text(
                       message.content,
                       style: TextStyle(
@@ -550,25 +422,14 @@ class _MessageBubble extends ConsumerWidget {
             CircleAvatar(
               radius: 12,
               backgroundColor: AppColors.secondary,
-              backgroundImage: currentUser?.profile.avatarUrl != null
-                  ? CachedNetworkImageProvider(
-                      ImageUtils.getAvatarUrl(currentUser!.profile.avatarUrl!)!)
-                  : null,
-              child: currentUser?.profile.avatarUrl == null
-                  ? Text(
-                      (currentUser?.fullName?.isNotEmpty == true
-                              ? currentUser!.fullName![0]
-                              : currentUser?.username.isNotEmpty == true
-                                  ? currentUser!.username[0]
-                                  : 'M')
-                          .toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryText,
-                      ),
-                    )
-                  : null,
+              child: Text(
+                'M',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryText,
+                ),
+              ),
             ),
         ],
       ),

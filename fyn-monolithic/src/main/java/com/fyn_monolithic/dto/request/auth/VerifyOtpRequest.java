@@ -1,15 +1,15 @@
-package com.fyn_monolithic.dto.request.auth;
+    package com.fyn_monolithic.dto.request.auth;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+    import jakarta.validation.constraints.NotBlank;
+    import lombok.Data;
 
-@Data
-public class VerifyOtpRequest {
+    @Data
+    public class VerifyOtpRequest {
 
-    @NotBlank
-    private String email;
+        @NotBlank
+        private String email;
 
-    @NotBlank
-    private String otp;
-}
+        @NotBlank
+        private String otp;
+    }
 

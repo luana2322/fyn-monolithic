@@ -42,7 +42,8 @@ public class User extends AbstractAuditableEntity {
 
     @Column(name = "full_name")
     private String fullName;
-
+    @Column(name = "otp")
+    private String otp;
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private UserStatus status = UserStatus.PENDING_VERIFICATION;

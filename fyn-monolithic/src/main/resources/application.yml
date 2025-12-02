@@ -64,3 +64,4 @@ logging:
     root: INFO
     org.hibernate.SQL: DEBUG
     com.fyn_monolithic: DEBUG
+

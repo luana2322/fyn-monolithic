@@ -1,12 +1,11 @@
 package com.fyn_monolithic.controller.auth;
 
-import com.fyn_monolithic.dto.request.auth.LoginRequest;
-import com.fyn_monolithic.dto.request.auth.RefreshTokenRequest;
-import com.fyn_monolithic.dto.request.auth.RegisterRequest;
+import com.fyn_monolithic.dto.request.auth.*;
 import com.fyn_monolithic.dto.response.auth.AuthResponse;
 import com.fyn_monolithic.dto.response.auth.TokenResponse;
 import com.fyn_monolithic.dto.response.common.ApiResponse;
 import com.fyn_monolithic.service.auth.AuthService;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +26,7 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(authService.register(request)));
     }
 
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(authService.login(request)));
@@ -42,4 +42,34 @@ public class AuthController {
         authService.logout(request.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.message("Logged out"));
     }
-}
+    @PostMapping("/verify")
+    public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        boolean verified = authService.verifyOtp(request);
+
+        if (verified) {
+            return ResponseEntity.ok(
+                    ApiResponse.message("OTP verified successfully, user is now ACTIVE")
+            );
+        }
+
+        return ResponseEntity.badRequest().body(
+                ApiResponse.<Void>builder()
+                        .success(false)
+                        .message("Invalid OTP or email")
+                        .build()
+        );
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<ApiResponse<Void>> sendOtp(@Valid @RequestBody SendOtpRequest request)
+            throws MessagingException {
+
+        // Trim và gửi OTP
+        authService.sendOtp(request.getEmail().trim());
+
+        return ResponseEntity.ok(
+                ApiResponse.message("OTP has been sent to your email")
+        );
+    }
+    }
+

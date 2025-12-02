@@ -16,3 +16,14 @@ logging:
   level:
     root: INFO
 
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: thailuanpy1234@gmail.com
+#    password: zeqp xalz nmsr zojc
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          starttls:
+#            enable: true
