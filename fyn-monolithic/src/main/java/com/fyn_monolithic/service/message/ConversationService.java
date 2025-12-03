@@ -54,14 +54,20 @@ public class ConversationService {
             saved.getMembers().add(member);
         });
 
-        return messageMapper.toConversationResponse(saved);
+        ConversationResponse base = messageMapper.toConversationResponse(saved);
+        return messageMapper.withOtherUserInfo(saved, base, initiator.getId());
     }
 
     @Transactional(readOnly = true)
     public List<ConversationResponse> listConversations() {
         User user = userService.getCurrentUser();
         List<Conversation> conversations = conversationRepository.findDistinctByMembers_Member(user);
-        return conversations.stream().map(messageMapper::toConversationResponse).toList();
+        return conversations.stream()
+                .map(conv -> {
+                    ConversationResponse base = messageMapper.toConversationResponse(conv);
+                    return messageMapper.withOtherUserInfo(conv, base, user.getId());
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)

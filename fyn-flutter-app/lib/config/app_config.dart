@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +17,39 @@ class AppConfig {
   
   // Base URL từ .env hoặc default
   static String get baseUrl {
-    return dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
+    // Lấy từ .env nếu có và dotenv đã được khởi tạo
+    String? envUrl;
+    try {
+      envUrl = dotenv.env['BASE_URL'];
+    } catch (e) {
+      // dotenv chưa được khởi tạo, bỏ qua
+      envUrl = null;
+    }
+    
+    // Nếu đang chạy trên web, luôn override thành localhost
+    // (vì browser không thể truy cập 10.0.2.2)
+    if (kIsWeb) {
+      envUrl = 'http://localhost:8080';
+    } else if (envUrl == null || envUrl.isEmpty) {
+      // Nếu không có trong .env và không phải web, dùng default cho mobile
+      // (Android emulator sẽ cần 10.0.2.2, nhưng để user set trong .env)
+      envUrl = 'http://localhost:8080';
+    }
+    
+    // Log để debug (chỉ trong debug mode)
+    if (const bool.fromEnvironment('dart.vm.product') == false) {
+      print('AppConfig.baseUrl: $envUrl (Platform: ${kIsWeb ? 'Web' : 'Mobile'})');
+      try {
+        if (kIsWeb && dotenv.env['BASE_URL'] != null && 
+            dotenv.env['BASE_URL'] != 'http://localhost:8080') {
+          print('⚠ Overriding BASE_URL from .env for web platform');
+        }
+      } catch (e) {
+        // dotenv chưa khởi tạo, bỏ qua
+      }
+    }
+    
+    return envUrl;
   }
 }
 

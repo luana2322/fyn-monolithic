@@ -54,6 +54,10 @@ class AuthInterceptor extends Interceptor {
     return path.startsWith('/api/auth/register') ||
         path.startsWith('/api/auth/login') ||
         path.startsWith('/api/auth/refresh') ||
+        // OTP register / activation
+        path.startsWith('/api/auth/send-otp') ||
+        path.startsWith('/api/auth/verify') ||
+        // Forgot password OTP
         path.startsWith('/api/auth/password/forgot') ||
         path.startsWith('/api/auth/password/verify-otp') ||
         path.startsWith('/health') ||

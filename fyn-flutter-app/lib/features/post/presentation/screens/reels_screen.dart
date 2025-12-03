@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/utils/image_utils.dart';
 import '../../../../theme/app_colors.dart';
+import 'package:fyn_flutter_app/shared/themes/app_spacing.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/post_media.dart';
 import '../../data/models/post_model.dart';
 import '../providers/post_provider.dart';
 import '../providers/reels_provider.dart';
-import '../widgets/post_comments_sheet.dart';
+import '../widgets/post_comments_sheet.dart'; // Đảm bảo đường dẫn này đúng
 
 class ReelsScreen extends ConsumerStatefulWidget {
   const ReelsScreen({super.key});
@@ -39,7 +41,6 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
     _pageController = PageController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(reelsProvider.notifier).loadInitial();
-      // Không tự động phát video đầu tiên - chờ user interaction
     });
   }
 
@@ -62,7 +63,6 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
     for (var controller in _videoControllers.values) {
       controller?.pause();
     }
-    debugPrint('Reels: All videos paused');
   }
 
   void _onPageChanged(int index) {
@@ -72,8 +72,8 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
     
     setState(() => _currentIndex = index);
     
-    // Không tự động phát video mới - chờ user interaction
-    // Video sẽ hiển thị nút play để user tap vào
+    // Play video hiện tại nếu có controller (được tạo trong _ReelVideoItem)
+    // Lưu ý: Logic play/pause chi tiết hơn nằm trong _ReelVideoItem
     
     final state = ref.read(reelsProvider);
     // Load more khi gần cuối
@@ -87,12 +87,11 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
     final reelsState = ref.watch(reelsProvider);
     final authState = ref.watch(authNotifierProvider);
 
+    // Giao diện Loading / Error / Empty tối giản trên nền đen
     if (reelsState.isLoading && reelsState.videos.isEmpty) {
       return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+        backgroundColor: Colors.black, 
+        body: Center(child: CircularProgressIndicator(color: Colors.white))
       );
     }
 
@@ -103,18 +102,21 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: Colors.white, size: 48),
+              const Icon(Icons.error_outline_rounded, color: Colors.white54, size: 48),
               const SizedBox(height: 16),
               Text(
                 reelsState.error!,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white70),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  ref.read(reelsProvider.notifier).refresh();
-                },
+              const SizedBox(height: 24),
+              OutlinedButton(
+                onPressed: () => ref.read(reelsProvider.notifier).refresh(),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white30),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
                 child: const Text('Thử lại'),
               ),
             ],
@@ -124,12 +126,12 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
     }
 
     if (reelsState.videos.isEmpty) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: Colors.black,
-        body: const Center(
+        body: Center(
           child: Text(
             'Chưa có video nào',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.white54),
           ),
         ),
       );
@@ -137,6 +139,7 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
+      // Stack để PageView nằm dưới, các overlay (nếu có) nằm trên
       body: PageView.builder(
         controller: _pageController,
         scrollDirection: Axis.vertical,
@@ -145,15 +148,11 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
         itemBuilder: (context, index) {
           final post = reelsState.videos[index];
           final videoMediaList = post.media.where((m) => m.isVideo).toList();
+          
           if (videoMediaList.isEmpty) {
-            debugPrint('Reels: Post ${post.id} has no video media');
-            return const Center(
-              child: Text(
-                'Không có video',
-                style: TextStyle(color: Colors.white),
-              ),
-            );
+            return const Center(child: Text('Không có video', style: TextStyle(color: Colors.white)));
           }
+          
           final videoMedia = videoMediaList.first;
           return _ReelVideoItem(
             key: ValueKey(post.id),
@@ -163,8 +162,6 @@ class _ReelsScreenState extends ConsumerState<ReelsScreen> {
             isActive: index == _currentIndex,
             onControllerCreated: (controller) {
               _videoControllers[index] = controller;
-              // Không tự động phát - chờ user interaction (web autoplay policy)
-              debugPrint('Reels: Video controller created for index $index');
             },
             onToggleReaction: () async {
               await ref.read(reelsProvider.notifier).toggleReaction(
@@ -211,36 +208,51 @@ class _ReelVideoItem extends StatefulWidget {
   State<_ReelVideoItem> createState() => _ReelVideoItemState();
 }
 
-class _ReelVideoItemState extends State<_ReelVideoItem> {
+class _ReelVideoItemState extends State<_ReelVideoItem> with SingleTickerProviderStateMixin {
   VideoPlayerController? _controller;
   bool _isInitialized = false;
   bool _isPlaying = false;
-  bool _showControls = true;
-  bool _hasUserInteracted = false; // Track user interaction for web autoplay policy
+  bool _hasUserInteracted = false;
+  
+  // Animation cho nút Like (Heart pulse)
+  late AnimationController _heartAnimationController;
+  late Animation<double> _heartAnimation;
+  bool _showHeartOverlay = false;
 
   @override
   void initState() {
     super.initState();
     _initVideo();
+    
+    _heartAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _heartAnimation = Tween<double>(begin: 0.5, end: 1.2).animate(
+      CurvedAnimation(parent: _heartAnimationController, curve: Curves.elasticOut),
+    );
+    
+    _heartAnimationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() => _showHeartOverlay = false);
+        _heartAnimationController.reset();
+      }
+    });
   }
 
   @override
   void dispose() {
     _controller?.removeListener(_videoListener);
     _controller?.dispose();
+    _heartAnimationController.dispose();
     super.dispose();
   }
 
   void _videoListener() {
     if (_controller != null && mounted) {
       final isPlaying = _controller!.value.isPlaying;
-      final hasError = _controller!.value.hasError;
-      if (hasError) {
-        debugPrint('Reels: Video error: ${_controller!.value.errorDescription}');
-      }
       if (isPlaying != _isPlaying) {
         setState(() => _isPlaying = isPlaying);
-        debugPrint('Reels: Video playing state changed: $isPlaying');
       }
     }
   }
@@ -250,24 +262,12 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.isActive != widget.isActive) {
       if (widget.isActive && _controller != null && _isInitialized) {
-        // Chỉ phát nếu user đã tương tác trước đó
-        if (_hasUserInteracted) {
-          _controller!.play().then((_) {
-            if (mounted) {
-              setState(() => _isPlaying = true);
-            }
-            debugPrint('Reels: Video started playing after becoming active for post ${widget.post.id}');
-          }).catchError((e) {
-            debugPrint('Reels: Error playing video after becoming active: $e');
-          });
-        }
+        // Tự động phát khi lướt tới nếu đã có tương tác trước đó (hoặc chính sách cho phép)
+        // Để UX tốt nhất, nên auto-play
+        _controller!.play();
       } else if (!widget.isActive && _controller != null) {
-        // Tạm dừng khi video không còn active
         _controller!.pause();
-        if (mounted) {
-          setState(() => _isPlaying = false);
-        }
-        debugPrint('Reels: Video paused after becoming inactive for post ${widget.post.id}');
+        // Reset về đầu nếu cần: _controller!.seekTo(Duration.zero);
       }
     }
   }
@@ -275,12 +275,9 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
   Future<void> _initVideo() async {
     final url = widget.videoMedia.resolvedUrl;
     if (url == null || url.isEmpty) {
-      debugPrint('Reels: Video URL is null or empty for post ${widget.post.id}');
       widget.onControllerCreated(null);
       return;
     }
-
-    debugPrint('Reels: Initializing video for post ${widget.post.id} with URL: $url');
 
     try {
       final controller = VideoPlayerController.networkUrl(Uri.parse(url));
@@ -293,367 +290,276 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
           _controller = controller;
           _isInitialized = true;
         });
+        
+        // Auto-play nếu đây là video đang active ngay khi init xong
+        if (widget.isActive) {
+          controller.play();
+        }
       }
-      
-      // Gọi callback để parent có thể quản lý controller
       widget.onControllerCreated(controller);
-      
-      // Không tự động phát ngay - chờ user interaction (web autoplay policy)
-      // Video sẽ được phát khi user tap vào màn hình lần đầu
-      if (mounted) {
-        setState(() {
-          _isPlaying = false;
-        });
-      }
-      debugPrint('Reels: Video initialized for post ${widget.post.id}, waiting for user interaction');
-      
-      debugPrint('Reels: Video initialized successfully for post ${widget.post.id}');
-      debugPrint('Reels: Video size: ${controller.value.size}');
-      debugPrint('Reels: Video aspect ratio: ${controller.value.aspectRatio}');
-      debugPrint('Reels: Video duration: ${controller.value.duration}');
-      debugPrint('Reels: Video isActive: ${widget.isActive}');
-      debugPrint('Reels: Video isPlaying: ${controller.value.isPlaying}');
-    } catch (e, stackTrace) {
-      debugPrint('Reels: Error initializing video for post ${widget.post.id}: $e');
-      debugPrint('Reels: Stack trace: $stackTrace');
-      widget.onControllerCreated(null);
-      if (mounted) {
-        setState(() {
-          _isInitialized = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _playVideo() async {
-    if (_controller == null || !_isInitialized) return;
-    
-    // Đánh dấu user đã tương tác
-    if (!_hasUserInteracted) {
-      setState(() => _hasUserInteracted = true);
-    }
-    
-    try {
-      await _controller!.play();
-      if (mounted) {
-        setState(() => _isPlaying = true);
-      }
     } catch (e) {
-      debugPrint('Reels: Error playing video: $e');
-      if (mounted) {
-        setState(() => _isPlaying = false);
-      }
-    }
-  }
-
-  void _pauseVideo() {
-    if (_controller == null || !_isInitialized) return;
-    _controller!.pause();
-    if (mounted) {
-      setState(() => _isPlaying = false);
+      debugPrint('Reels Error: $e');
+      widget.onControllerCreated(null);
     }
   }
 
   void _togglePlayPause() {
     if (_controller == null || !_isInitialized) return;
     if (_controller!.value.isPlaying) {
-      _pauseVideo();
+      _controller!.pause();
     } else {
-      _playVideo();
+      _controller!.play();
     }
+  }
+
+  void _handleDoubleTap() {
+    if (!widget.post.likedByCurrentUser) {
+      widget.onToggleReaction();
+    }
+    setState(() => _showHeartOverlay = true);
+    _heartAnimationController.forward();
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    final size = MediaQuery.of(context).size;
 
     return GestureDetector(
-      onTap: () {
-        // Nếu chưa có user interaction, phát video khi tap lần đầu
-        if (!_hasUserInteracted && _isInitialized && _controller != null) {
-          _playVideo();
-        } else {
-          // Nếu đã có interaction, toggle controls
-          setState(() => _showControls = !_showControls);
-          if (!_showControls) {
-            Future.delayed(const Duration(seconds: 3), () {
-              if (mounted) setState(() => _showControls = true);
-            });
-          }
-        }
-      },
+      onTap: _togglePlayPause,
+      onDoubleTap: _handleDoubleTap,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Background màu đen
+          // 1. Video Layer
           Container(color: Colors.black),
-          
-          // Video player - nhỏ hơn một chút với padding
-          if (_isInitialized && _controller != null && _controller!.value.isInitialized)
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: _controller!.value.aspectRatio > 0
-                        ? _controller!.value.aspectRatio
-                        : 9 / 16,
-                    child: FittedBox(
-                      fit: BoxFit.contain, // Đổi từ cover sang contain để video nhỏ hơn
-                      child: SizedBox(
-                        width: _controller!.value.size.width > 0
-                            ? _controller!.value.size.width
-                            : screenSize.width * 0.95, // Nhỏ hơn 5%
-                        height: _controller!.value.size.height > 0
-                            ? _controller!.value.size.height
-                            : screenSize.height * 0.95, // Nhỏ hơn 5%
-                        child: VideoPlayer(_controller!),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            )
-          else if (_controller != null && _controller!.value.hasError)
+          if (_isInitialized && _controller != null)
             Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white, size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Lỗi phát video: ${_controller!.value.errorDescription ?? "Unknown error"}',
-                    style: const TextStyle(color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'URL: ${widget.videoMedia.resolvedUrl ?? "N/A"}',
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+              child: AspectRatio(
+                aspectRatio: _controller!.value.aspectRatio,
+                child: VideoPlayer(_controller!),
               ),
-            )
-          else if (!_isInitialized && widget.videoMedia.resolvedUrl != null)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.white),
             )
           else
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.white, size: 48),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Không thể tải video',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  if (widget.videoMedia.resolvedUrl == null)
-                    const Text(
-                      'URL video không hợp lệ',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        'URL: ${widget.videoMedia.resolvedUrl}',
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                ],
-              ),
-            ),
+            const Center(child: CircularProgressIndicator(color: Colors.white30, strokeWidth: 2)),
 
-          // Gradient overlay bottom
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 200,
+          // 2. Gradient Overlay (Bottom & Top) for better text visibility
+          Positioned.fill(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
                   colors: [
+                    Colors.black.withOpacity(0.6),
                     Colors.transparent,
-                    Colors.black.withOpacity(0.7),
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.6),
                   ],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  stops: const [0.0, 0.2, 0.8, 1.0],
                 ),
               ),
             ),
           ),
 
-          // Content overlay
+          // 3. Play/Pause Icon Overlay (Central)
+          if (_isInitialized && !_isPlaying)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.4),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 48),
+              ),
+            ),
+
+          // 4. Double Tap Heart Animation
+          if (_showHeartOverlay)
+            Center(
+              child: ScaleTransition(
+                scale: _heartAnimation,
+                child: const Icon(Icons.favorite, color: Colors.white, size: 100),
+              ),
+            ),
+
+          // 5. Right Action Bar
           Positioned(
-            bottom: 0,
+            right: 12,
+            bottom: 100, // Cách đáy một khoảng để chừa chỗ cho info
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildActionItem(
+                  icon: widget.post.likedByCurrentUser ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                  label: '${widget.post.likeCount}',
+                  color: widget.post.likedByCurrentUser ? Colors.redAccent : Colors.white,
+                  onTap: widget.onToggleReaction,
+                ),
+                const SizedBox(height: 20),
+                _buildActionItem(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  label: '${widget.post.commentCount}',
+                  onTap: widget.onOpenComments,
+                ),
+                const SizedBox(height: 20),
+                _buildActionItem(
+                  icon: Icons.send_rounded, // Share icon
+                  label: 'Share',
+                  onTap: () {},
+                ),
+                const SizedBox(height: 20),
+                _buildActionItem(
+                  icon: Icons.more_horiz_rounded,
+                  label: '',
+                  onTap: () {}, // More options
+                ),
+                const SizedBox(height: 20),
+                // Music Disc Animation (Static for now)
+                _buildMusicDisc(widget.post.author.profile.avatarUrl),
+              ],
+            ),
+          ),
+
+          // 6. Bottom Info Area
+          Positioned(
+            left: 16,
+            right: 80, // Chừa chỗ cho action bar bên phải
+            bottom: 32, // Bottom padding
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // User Info
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Colors.white24,
+                      backgroundImage: widget.post.author.profile.avatarUrl != null
+                          ? CachedNetworkImageProvider(ImageUtils.getAvatarUrl(widget.post.author.profile.avatarUrl!)!)
+                          : null,
+                      child: widget.post.author.profile.avatarUrl == null
+                          ? Text(widget.post.author.username[0].toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))
+                          : null,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      widget.post.author.username,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Follow Button (Small & Clean)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white70),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Follow',
+                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                
+                // Caption / Description
+                if (widget.post.content.isNotEmpty)
+                  Text(
+                    widget.post.content,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                
+                const SizedBox(height: 12),
+                
+                // Music Tag
+                Row(
+                  children: const [
+                    Icon(Icons.music_note_rounded, color: Colors.white70, size: 14),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Original Audio - Fyn Social',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          // 7. Top Navigation (Transparent)
+          Positioned(
+            top: 0,
             left: 0,
             right: 0,
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Left: Author info & caption
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundColor: Colors.white,
-                                backgroundImage: widget.post.author.profile
-                                            .avatarUrl !=
-                                        null
-                                    ? NetworkImage(ImageUtils.getAvatarUrl(
-                                            widget.post.author.profile.avatarUrl!) ??
-                                        '')
-                                    : null,
-                                child: widget.post.author.profile.avatarUrl == null
-                                    ? Text(
-                                        widget.post.author.username
-                                            .substring(0, 1)
-                                            .toUpperCase(),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.post.author.username,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    if (widget.post.content.isNotEmpty)
-                                      Text(
-                                        widget.post.content,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                    const Text(
+                      'Reels',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-
-                    // Right: Action buttons
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _ActionButton(
-                          icon: widget.post.likedByCurrentUser
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          label: '${widget.post.likeCount}',
-                          color: widget.post.likedByCurrentUser
-                              ? Colors.redAccent
-                              : Colors.white,
-                          onTap: widget.onToggleReaction,
-                        ),
-                        const SizedBox(height: 24),
-                        _ActionButton(
-                          icon: Icons.mode_comment_outlined,
-                          label: '${widget.post.commentCount}',
-                          onTap: widget.onOpenComments,
-                        ),
-                        const SizedBox(height: 24),
-                        _ActionButton(
-                          icon: Icons.share_outlined,
-                          label: 'Share',
-                          onTap: () {},
-                        ),
-                        const SizedBox(height: 24),
-                        _ActionButton(
-                          icon: Icons.more_vert,
-                          label: '',
-                          onTap: () {},
-                        ),
-                      ],
+                    IconButton(
+                      icon: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 28),
+                      onPressed: () {},
                     ),
                   ],
                 ),
               ),
             ),
           ),
-
-          // Play button overlay - hiển thị khi chưa play hoặc đang pause
-          if (_isInitialized && (!_isPlaying || !_hasUserInteracted) && _controller != null)
-            Center(
-              child: GestureDetector(
-                onTap: _playVideo,
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow,
-                    color: Colors.white,
-                    size: 64,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
-}
 
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    this.color = Colors.white,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildActionItem({
+    required IconData icon,
+    required String label,
+    Color color = Colors.white,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 28),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.2), // Glass effect background for buttons
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 30),
+          ),
           if (label.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
               label,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
+                shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
               ),
             ),
           ],
@@ -661,5 +567,24 @@ class _ActionButton extends StatelessWidget {
       ),
     );
   }
-}
 
+  Widget _buildMusicDisc(String? avatarUrl) {
+    return Container(
+      width: 48,
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white24, width: 8),
+      ),
+      child: CircleAvatar(
+        backgroundColor: Colors.grey[800],
+        backgroundImage: avatarUrl != null 
+            ? CachedNetworkImageProvider(ImageUtils.getAvatarUrl(avatarUrl)!) 
+            : null,
+        child: avatarUrl == null ? const Icon(Icons.music_note, color: Colors.white, size: 16) : null,
+      ),
+    );
+  }
+}

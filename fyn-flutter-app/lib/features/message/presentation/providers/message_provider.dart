@@ -1,11 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/repositories/message_repository.dart';
 import '../../domain/message_service.dart';
 import '../../data/models/conversation_model.dart';
+import '../../data/models/conversation_type.dart';
 import '../../data/models/message_model.dart';
-import '../../data/models/create_conversation_request.dart';
 import '../../data/models/send_message_request.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:async';
@@ -63,8 +62,38 @@ class ConversationListNotifier extends StateNotifier<ConversationListState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final conversations = await _service.getConversations();
+
+      // Gộp các cuộc trò chuyện DIRECT trùng cặp user thành 1 bản (lấy mới nhất)
+      final Map<String, ConversationModel> deduped = {};
+      for (final c in conversations) {
+        if (c.type == ConversationType.direct) {
+          final sortedMembers = c.memberIds.toList()..sort();
+          final key = 'DIRECT:${sortedMembers.join('-')}';
+          final existing = deduped[key];
+          if (existing == null) {
+            deduped[key] = c;
+          } else {
+            final existingTime = existing.lastMessageAt ?? existing.createdAt;
+            final currentTime = c.lastMessageAt ?? c.createdAt;
+            if (currentTime != null &&
+                (existingTime == null || currentTime.isAfter(existingTime))) {
+              deduped[key] = c;
+            }
+          }
+        } else {
+          // Group chat: giữ theo id
+          deduped['GROUP:${c.id}'] = c;
+        }
+      }
+
+      final normalizedConversations = deduped.values.toList()
+        ..sort((a, b) {
+          final at = a.lastMessageAt ?? a.createdAt ?? DateTime(1970);
+          final bt = b.lastMessageAt ?? b.createdAt ?? DateTime(1970);
+          return bt.compareTo(at); // mới nhất lên đầu
+        });
       state = state.copyWith(
-        conversations: conversations,
+        conversations: normalizedConversations,
         isLoading: false,
         clearError: true,
       );

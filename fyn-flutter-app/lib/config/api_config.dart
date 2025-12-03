@@ -9,6 +9,9 @@ class ApiEndpoints {
   static const String login = '/api/auth/login';
   static const String refresh = '/api/auth/refresh';
   static const String logout = '/api/auth/logout';
+  // OTP register/activation
+  static const String sendRegisterOtp = '/api/auth/send-otp';
+  static const String verifyRegisterOtp = '/api/auth/verify';
   
   // Password endpoints
   static const String changePassword = '/api/auth/password/change';
@@ -52,6 +55,11 @@ class ApiEndpoints {
       '/api/conversations/$conversationId/messages';
   static String sendMessage(String conversationId) => 
       '/api/conversations/$conversationId/messages';
+
+  // Video call
+  static const String startCall = '/api/calls';
+  static String acceptCall(String callId) => '/api/calls/$callId/accept';
+  static String endCall(String callId) => '/api/calls/$callId/end';
   
   // Notification endpoints
   static const String notifications = '/api/notifications';

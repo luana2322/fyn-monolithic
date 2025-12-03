@@ -13,6 +13,8 @@ public class MessageResponse {
     UUID id;
     UUID conversationId;
     String senderId;
+    String senderName;
+    String senderAvatar;
     String content;
     String reaction;
     MessageStatus status;

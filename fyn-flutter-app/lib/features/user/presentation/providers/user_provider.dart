@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../auth/data/models/user_response.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/repositories/user_repository.dart';
@@ -8,7 +7,6 @@ import '../../data/repositories/follower_repository.dart';
 import '../../domain/user_service.dart';
 import '../../data/models/update_profile_request.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/models/page_response.dart';
 
 // Repositories
 final userRepositoryProvider = Provider<UserRepository>((ref) {
@@ -75,10 +73,16 @@ class UserProfileState {
 // Notifier cho user profile
 class UserProfileNotifier extends StateNotifier<UserProfileState> {
   final UserService _userService;
+  final Ref _ref;
   final String? userId;
   final String? username;
 
-  UserProfileNotifier(this._userService, {this.userId, this.username})
+  UserProfileNotifier(
+    this._userService,
+    this._ref, {
+    this.userId,
+    this.username,
+  })
       : super(UserProfileState());
 
   Future<void> loadUser() async {
@@ -93,15 +97,27 @@ class UserProfileNotifier extends StateNotifier<UserProfileState> {
         throw Exception('userId hoặc username phải được cung cấp');
       }
 
-      // Load followers/following count
+      // Load followers/following count của user đang xem
       final followers = await _userService.getFollowers(user.id, size: 1);
       final following = await _userService.getFollowing(user.id, size: 1);
+
+      // Xác định xem current user đã follow user này chưa
+      bool isFollowing = false;
+      final currentUser = _ref.read(authNotifierProvider).user;
+      if (currentUser != null && currentUser.id != user.id) {
+        // Lấy danh sách người current user đang theo dõi (page đầu)
+        final myFollowing =
+            await _userService.getFollowing(currentUser.id, page: 0, size: 50);
+        isFollowing = myFollowing.content
+            .any((u) => u.id == user.id);
+      }
 
       state = state.copyWith(
         user: user,
         isLoading: false,
         followersCount: followers.totalElements,
         followingCount: following.totalElements,
+        isFollowing: isFollowing,
       );
     } catch (e) {
       state = state.copyWith(
@@ -164,6 +180,7 @@ final userProfileProvider = StateNotifierProvider.family<UserProfileNotifier,
   final userService = ref.watch(userServiceProvider);
   return UserProfileNotifier(
     userService,
+    ref,
     userId: params.userId,
     username: params.username,
   );

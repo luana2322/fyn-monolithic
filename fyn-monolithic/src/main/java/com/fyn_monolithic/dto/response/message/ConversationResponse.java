@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class ConversationResponse {
     UUID id;
     ConversationType type;
@@ -17,4 +17,9 @@ public class ConversationResponse {
     Set<String> memberIds;
     Instant createdAt;
     Instant updatedAt;
+
+    // New fields for frontend display
+    String otherUserId;
+    String otherUserName;
+    String otherUserAvatar;
 }

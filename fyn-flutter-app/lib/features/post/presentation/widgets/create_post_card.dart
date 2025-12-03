@@ -1,156 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../theme/app_colors.dart';
+import 'create_post_sheet.dart';
 
 class CreatePostCard extends ConsumerWidget {
-  final VoidCallback? onCreatePost;
-
   const CreatePostCard({super.key, this.onCreatePost});
+  final VoidCallback? onCreatePost;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
-    final user = authState.user;
+    final user = ref.watch(authNotifierProvider).user;
+    final avatarUrl = ImageUtils.getAvatarUrl(user?.profile.avatarUrl);
+
+    void handlePress() async {
+      if (onCreatePost != null) {
+        onCreatePost!();
+      } else {
+         await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          builder: (context) => const CreatePostSheet(),
+        );
+      }
+    }
 
     return Container(
-      color: Colors.white,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      child: Column(
+      color: AppColors.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: Colors.blue.shade100,
-                backgroundImage: user?.profile.avatarUrl != null
-                    ? NetworkImage(
-                        ImageUtils.getAvatarUrl(user!.profile.avatarUrl) ?? '',
-                      )
-                    : null,
-                child: user?.profile.avatarUrl == null
-                    ? _buildAvatarInitials(user?.username ?? 'U')
-                    : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: GestureDetector(
-                  onTap: onCreatePost ??
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Tạo bài viết mới')),
-                        );
-                      },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Text(
-                      'Bạn đang nghĩ gì?',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: AppColors.surfaceHighlight,
+            backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
+            child: avatarUrl == null ? Text(user?.username[0] ?? '?', style: const TextStyle(fontWeight: FontWeight.bold)) : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: handlePress,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceHighlight, // Màu nền xám nhạt
+                  borderRadius: BorderRadius.circular(24), // Pill shape
+                ),
+                child: Text(
+                  'Bạn đang nghĩ gì thế?',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.secondaryText),
                 ),
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 12),
-          const Divider(height: 1),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildActionButton(
-                icon: Icons.videocam,
-                label: 'Video',
-                color: Colors.red,
-                onTap: onCreatePost ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng đang phát triển')),
-                      );
-                    },
-              ),
-              _buildActionButton(
-                icon: Icons.photo_library,
-                label: 'Ảnh',
-                color: Colors.green,
-                onTap: onCreatePost ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng đang phát triển')),
-                      );
-                    },
-              ),
-              _buildActionButton(
-                icon: Icons.emoji_emotions,
-                label: 'Cảm xúc',
-                color: Colors.orange,
-                onTap: onCreatePost ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng đang phát triển')),
-                      );
-                    },
-              ),
-            ],
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.image_outlined, color: AppColors.secondary),
+            onPressed: handlePress,
+            tooltip: 'Thêm ảnh',
           ),
         ],
       ),
     );
   }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey.shade700,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatarInitials(String username) {
-    final initials = username.isNotEmpty
-        ? username.substring(0, 1).toUpperCase()
-        : 'U';
-    return Text(
-      initials,
-      style: TextStyle(
-        color: Colors.blue.shade700,
-        fontWeight: FontWeight.bold,
-        fontSize: 14,
-      ),
-    );
-  }
 }
-
