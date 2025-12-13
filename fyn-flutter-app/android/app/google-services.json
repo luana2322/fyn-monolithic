@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "343493141222",
+    "project_id": "fyn-7517d",
+    "storage_bucket": "fyn-7517d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:343493141222:android:c0abe1fd52ff9c478cd127",
+        "android_client_info": {
+          "package_name": "com.fyn_monolithic.fyn_flutter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYvQnZqMNAyTjiioo6UYQsixILj_uCCyo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

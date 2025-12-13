@@ -1,60 +1,40 @@
-#spring:
-#  datasource:
-#    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://fyn-postgres:5432/fyn-monolithic}
-#    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-#    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
-#    driver-class-name: org.postgresql.Driver
-#    hikari:
-#      maximum-pool-size: 20
-#      minimum-idle: 10
-#      connection-timeout: 30000
-#      idle-timeout: 600000
-#      max-lifetime: 1800000
-#
-#  jpa:
-#    hibernate:
-#      ddl-auto: update
-#      dialect: org.hibernate.dialect.PostgreSQLDialect
-#      format_sql: true
-#    show-sql: true
-#    open-in-view: false
 spring:
+  application:
+    name: fyn-monolithic
+  
   datasource:
-    url: jdbc:postgresql://localhost:5432/fyn-monolithic
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:fyn_db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+  
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  jackson:
-    time-zone: UTC
-    date-format: yyyy-MM-dd'T'HH:mm:ss'Z'
-    default-property-inclusion: non_null
+        format_sql: true
+    open-in-view: false
+  
+  flyway:
+    enabled: false
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
 
   servlet:
     multipart:
-      enabled: true
-      max-file-size: 50MB
-      max-request-size: 50MB
-
-server:
-  port: 8080
-  compression:
-    enabled: true
-
-jwt:
-  secret: ${JWT_SECRET:ZmFuLXN1cGVyLXNlY3JldC1jaGFuZ2UtdGhpcy1pbi1wcm9k}
-  expiration: 86400000
-  refresh-expiration: 604800000
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 minio:
-  endpoint: ${MINIO_ENDPOINT:http://fyn-minio:9000}
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket-name: ${MINIO_BUCKET:fyn-data}
@@ -62,6 +42,12 @@ minio:
 logging:
   level:
     root: INFO
-    org.hibernate.SQL: DEBUG
     com.fyn_monolithic: DEBUG
+    
+jwt:
+  secret: ${JWT_SECRET:verysecretkeyMustBeLongEnoughForHS512EncryptionAlgorithm}
+  expiration: 86400000 # 24 hours
+  refresh-expiration: 604800000 # 7 days
 
+server:
+  port: 8080

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -14,6 +15,7 @@
     This is a placeholder for base href that will be replaced by the value of
     the `--base-href` argument provided to `flutter build`.
   -->
+
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
@@ -27,12 +29,41 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>fyn_flutter_app</title>
   <link rel="manifest" href="manifest.json">
 </head>
+
 <body>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <!-- Firebase Configuration -->
+  <script>
+    // Firebase Configuration - Using Compat API
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsOoeAIIpjgFhQqy4ETp8M3M2f_BIjRAM",
+      authDomain: "fyn-7517d.firebaseapp.com",
+      projectId: "fyn-7517d",
+      storageBucket: "fyn-7517d.firebasestorage.app",
+      messagingSenderId: "343493141222",
+      appId: "1:343493141222:web:dae2333363dc23ba8cd127",
+      measurementId: "G-TXB42PZ0K8"
+    };
+
+    // Initialize Firebase with Compat API
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+      console.log("✅ Firebase initialized successfully!");
+      console.log("Project ID:", firebaseConfig.projectId);
+    } else {
+      console.log("Firebase already initialized");
+    }
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
+
 </html>

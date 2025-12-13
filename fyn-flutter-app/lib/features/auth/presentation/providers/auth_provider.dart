@@ -4,10 +4,10 @@ import '../../domain/auth_service.dart';
 import '../../data/models/user_response.dart';
 import '../../data/models/login_request.dart';
 import '../../data/models/register_request.dart';
-import '../../../../core/network/api_client.dart';
+import '../../../../core/network/dio_provider.dart';
 
 // Providers
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+// Local apiClientProvider removed to use shared one from dio_provider.dart
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(apiClientProvider));

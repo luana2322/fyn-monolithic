@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:video_thumbnail/video_thumbnail.dart' as vt;
 
 import '../../data/models/create_post_request.dart';
 import '../../data/models/post_visibility.dart';
@@ -299,10 +300,49 @@ class _SelectedMedia {
   });
 }
 
-class _VideoPreviewWidget extends StatelessWidget {
+class _VideoPreviewWidget extends StatefulWidget {
   final XFile file;
 
   const _VideoPreviewWidget({required this.file});
+
+  @override
+  State<_VideoPreviewWidget> createState() => _VideoPreviewWidgetState();
+}
+
+class _VideoPreviewWidgetState extends State<_VideoPreviewWidget> {
+  Uint8List? _thumbnailData;
+  bool _isLoading = true;
+  
+  @override
+  void initState() {
+    super.initState();
+    _generateThumbnail();
+  }
+  
+  Future<void> _generateThumbnail() async {
+    try {
+      final thumbnail = await vt.VideoThumbnail.thumbnailData(
+        video: widget.file.path,
+        imageFormat: vt.ImageFormat.JPEG,
+        maxWidth: 200,
+        quality: 75,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _thumbnailData = thumbnail;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error generating thumbnail: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -316,27 +356,62 @@ class _VideoPreviewWidget extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.videocam,
-                  color: Colors.white,
-                  size: 32,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Video',
-                  style: const TextStyle(
+          // Thumbnail or loading indicator
+          if (_isLoading)
+            const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          else if (_thumbnailData != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.memory(
+                _thumbnailData!,
+                fit: BoxFit.cover,
+              ),
+            )
+          else
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.videocam,
                     color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                    size: 32,
                   ),
-                ),
-              ],
+                  SizedBox(height: 4),
+                  Text(
+                    'Video',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          
+          // Play button overlay
+          if (!_isLoading)
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.black26,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.play_circle_fill,
+                  color: Colors.white,
+                  size: 36,
+                ),
+              ),
+            ),
+          
+          // Video badge
           Positioned(
             top: 4,
             left: 4,
@@ -346,10 +421,24 @@ class _VideoPreviewWidget extends StatelessWidget {
                 color: Colors.red,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Icon(
-                Icons.play_arrow,
-                color: Colors.white,
-                size: 12,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.videocam,
+                    color: Colors.white,
+                    size: 10,
+                  ),
+                  SizedBox(width: 2),
+                  Text(
+                    'VIDEO',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -358,4 +447,5 @@ class _VideoPreviewWidget extends StatelessWidget {
     );
   }
 }
+
 

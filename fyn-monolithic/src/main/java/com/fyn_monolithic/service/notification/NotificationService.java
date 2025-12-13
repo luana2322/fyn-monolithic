@@ -24,6 +24,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserService userService;
     private final NotificationMapper notificationMapper;
+    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
     @Transactional(readOnly = true)
     public PageResponse<NotificationResponse> list(int page, int size) {
@@ -60,7 +61,14 @@ public class NotificationService {
         notification.setStatus(NotificationStatus.UNREAD);
         notification.setReferenceId(referenceId);
         notification.setMessage(message);
-        notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+
+        // Push to WebSocket
+        NotificationResponse response = notificationMapper.toResponse(saved);
+        messagingTemplate.convertAndSendToUser(
+                recipient.getUsername(), // Or ID depending on Principal
+                "/queue/notifications",
+                response);
     }
 
     /**

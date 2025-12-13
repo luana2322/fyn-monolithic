@@ -1,0 +1,1388 @@
+openapi: 3.0.3
+info:
+  title: FYN Social Connection API
+  description: REST API for FYN Social Connection App
+  version: 2.0.0
+  contact:
+    name: FYN Development Team
+
+servers:
+  - url: https://api.fyn.app/v2
+    description: Production
+  - url: http://localhost:8080/v2
+    description: Development
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Matching
+  - name: Connections
+  - name: Groups
+  - name: Events
+  - name: Chat
+  - name: Reviews
+  - name: Safety
+  - name: Notifications
+
+paths:
+  # ============================================
+  # USER & PROFILE
+  # ============================================
+  /users/me/profile:
+    get:
+      tags: [Users]
+      summary: Get current user's extended profile
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileExtended'
+    put:
+      tags: [Users]
+      summary: Update profile
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        200:
+          description: Updated
+
+  /users/me/preferences:
+    patch:
+      tags: [Users]
+      summary: Update matching preferences
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchingPreferences'
+      responses:
+        200:
+          description: Updated
+
+  /users/me/location:
+    post:
+      tags: [Users]
+      summary: Update current location
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lat: { type: number, example: 10.7769 }
+                lng: { type: number, example: 106.7009 }
+                city: { type: string, example: "Ho Chi Minh City" }
+      responses:
+        200:
+          description: Updated
+
+  /users/me/availability:
+    put:
+      tags: [Users]
+      summary: Set availability schedule
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilitySchedule'
+      responses:
+        200:
+          description: Updated
+
+  /users/{userId}/profile:
+    get:
+      tags: [Users]
+      summary: Get user's public profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfile'
+
+  # ============================================
+  # MATCHING
+  # ============================================
+  /matching/discover:
+    get:
+      tags: [Matching]
+      summary: Get matched users for discovery
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [dating, friendship, activity, study, networking]
+        - name: distance
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 50 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoverResponse'
+
+  /matching/suggestions:
+    get:
+      tags: [Matching]
+      summary: Get AI-powered suggestions
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [people, events, groups]
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10 }
+      responses:
+        200:
+          description: Success
+
+  /matching/swipe:
+    post:
+      tags: [Matching]
+      summary: Record swipe action
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetUserId, action]
+              properties:
+                targetUserId: { type: string, format: uuid }
+                action: { type: string, enum: [like, pass, super_like] }
+                context: { type: string, enum: [dating, friendship, activity] }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isMatch: { type: boolean }
+                  connection:
+                    $ref: '#/components/schemas/Connection'
+
+  # ============================================
+  # CONNECTIONS
+  # ============================================
+  /connections:
+    get:
+      tags: [Connections]
+      summary: List connections
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, accepted, all]
+        - name: type
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionListResponse'
+
+    post:
+      tags: [Connections]
+      summary: Send connection request
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConnectionRequest'
+      responses:
+        201:
+          description: Created
+
+  /connections/{id}:
+    put:
+      tags: [Connections]
+      summary: Accept or reject connection
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [accept, reject] }
+                message: { type: string }
+      responses:
+        200:
+          description: Updated
+
+    delete:
+      tags: [Connections]
+      summary: Remove connection
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        204:
+          description: Deleted
+
+  /connections/{id}/block:
+    post:
+      tags: [Connections]
+      summary: Block user from connection
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Blocked
+
+  # ============================================
+  # GROUPS
+  # ============================================
+  /groups:
+    get:
+      tags: [Groups]
+      summary: List groups
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: type
+          in: query
+          schema: { type: string }
+        - name: visibility
+          in: query
+          schema: { type: string, enum: [public, private] }
+        - name: near_lat
+          in: query
+          schema: { type: number }
+        - name: near_lng
+          in: query
+          schema: { type: number }
+        - name: distance
+          in: query
+          schema: { type: integer }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupListResponse'
+
+    post:
+      tags: [Groups]
+      summary: Create group
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+      responses:
+        201:
+          description: Created
+
+  /groups/{id}:
+    get:
+      tags: [Groups]
+      summary: Get group details
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDetail'
+
+    put:
+      tags: [Groups]
+      summary: Update group
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGroupRequest'
+      responses:
+        200:
+          description: Updated
+
+    delete:
+      tags: [Groups]
+      summary: Delete group
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        204:
+          description: Deleted
+
+  /groups/{id}/join:
+    post:
+      tags: [Groups]
+      summary: Join or request to join group
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+      responses:
+        200:
+          description: Joined or request sent
+
+  /groups/{id}/leave:
+    post:
+      tags: [Groups]
+      summary: Leave group
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Left
+
+  /groups/{id}/members:
+    get:
+      tags: [Groups]
+      summary: List group members
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: role
+          in: query
+          schema: { type: string }
+      responses:
+        200:
+          description: Success
+
+  /groups/{id}/members/{userId}:
+    put:
+      tags: [Groups]
+      summary: Update member role
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string, enum: [admin, moderator, member] }
+      responses:
+        200:
+          description: Updated
+
+    delete:
+      tags: [Groups]
+      summary: Remove member
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        204:
+          description: Removed
+
+  # ============================================
+  # EVENTS
+  # ============================================
+  /events:
+    get:
+      tags: [Events]
+      summary: List public events
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: activity
+          in: query
+          schema: { type: string }
+        - name: near_lat
+          in: query
+          schema: { type: number }
+        - name: near_lng
+          in: query
+          schema: { type: number }
+        - name: distance
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: from_date
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to_date
+          in: query
+          schema: { type: string, format: date-time }
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, full, waiting_list] }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventListResponse'
+
+    post:
+      tags: [Events]
+      summary: Create event
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+
+  /events/{id}:
+    get:
+      tags: [Events]
+      summary: Get event details
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+
+    put:
+      tags: [Events]
+      summary: Update event
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventRequest'
+      responses:
+        200:
+          description: Updated
+
+    delete:
+      tags: [Events]
+      summary: Cancel event
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        200:
+          description: Cancelled
+
+  /events/{id}/status:
+    patch:
+      tags: [Events]
+      summary: Change event status
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [open, full, ongoing, completed, cancelled] }
+      responses:
+        200:
+          description: Updated
+
+  /events/{id}/join:
+    post:
+      tags: [Events]
+      summary: Request to join event
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                intro_message: { type: string }
+                occurrence_id: { type: string, format: uuid }
+      responses:
+        200:
+          description: Request sent
+
+    delete:
+      tags: [Events]
+      summary: Cancel join request
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Cancelled
+
+  /events/{id}/participants:
+    get:
+      tags: [Events]
+      summary: List event participants
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantListResponse'
+
+  /events/{id}/participants/{userId}:
+    put:
+      tags: [Events]
+      summary: Approve/reject/waitlist participant
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [approved, rejected, waitlisted] }
+                message: { type: string }
+                alternative_time: { type: string, format: date-time }
+      responses:
+        200:
+          description: Updated
+
+  # Recurring event occurrences
+  /events/{id}/occurrences:
+    get:
+      tags: [Events]
+      summary: List event occurrences
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: from_date
+          in: query
+          schema: { type: string, format: date }
+        - name: to_date
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  occurrences:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventOccurrence'
+
+  /events/{id}/occurrences/{occurrenceId}:
+    get:
+      tags: [Events]
+      summary: Get occurrence details
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: occurrenceId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Success
+
+    patch:
+      tags: [Events]
+      summary: Update single occurrence
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: occurrenceId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                start_time: { type: string, format: date-time }
+                end_time: { type: string, format: date-time }
+                location_name: { type: string }
+                max_participants: { type: integer }
+                is_cancelled: { type: boolean }
+                cancellation_reason: { type: string }
+      responses:
+        200:
+          description: Updated
+
+  # My events
+  /users/me/events:
+    get:
+      tags: [Events]
+      summary: Events I'm participating in
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [upcoming, past, pending] }
+      responses:
+        200:
+          description: Success
+
+  /users/me/events/created:
+    get:
+      tags: [Events]
+      summary: Events I created
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: Success
+
+  # ============================================
+  # CHAT
+  # ============================================
+  /chats:
+    get:
+      tags: [Chat]
+      summary: List conversations
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: Success
+
+    post:
+      tags: [Chat]
+      summary: Create direct chat
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string, format: uuid }
+      responses:
+        201:
+          description: Created
+
+  /chats/{id}/messages:
+    get:
+      tags: [Chat]
+      summary: Get messages
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: before
+          in: query
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        200:
+          description: Success
+
+    post:
+      tags: [Chat]
+      summary: Send message
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content: { type: string }
+                message_type: { type: string, enum: [text, image, video, location] }
+                media_urls: { type: array, items: { type: string } }
+                reply_to_id: { type: string, format: uuid }
+      responses:
+        201:
+          description: Sent
+
+  # ============================================
+  # REVIEWS
+  # ============================================
+  /reviews:
+    post:
+      tags: [Reviews]
+      summary: Submit review
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        201:
+          description: Created
+
+  /reviews/pending:
+    get:
+      tags: [Reviews]
+      summary: Get reviews I need to give
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: Success
+
+  /users/{userId}/reviews:
+    get:
+      tags: [Reviews]
+      summary: Get user's reviews
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        200:
+          description: Success
+
+  # ============================================
+  # SAFETY
+  # ============================================
+  /reports:
+    post:
+      tags: [Safety]
+      summary: Report user
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReportRequest'
+      responses:
+        201:
+          description: Created
+
+  /blocks:
+    get:
+      tags: [Safety]
+      summary: List blocked users
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: Success
+
+    post:
+      tags: [Safety]
+      summary: Block user
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string, format: uuid }
+                reason: { type: string }
+      responses:
+        201:
+          description: Blocked
+
+  /blocks/{userId}:
+    delete:
+      tags: [Safety]
+      summary: Unblock user
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        204:
+          description: Unblocked
+
+  /safety/checkin:
+    post:
+      tags: [Safety]
+      summary: Safety check-in
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_id: { type: string, format: uuid }
+                lat: { type: number }
+                lng: { type: number }
+                checkin_type: { type: string, enum: [arriving, ongoing, leaving] }
+      responses:
+        201:
+          description: Checked in
+
+  /safety/sos:
+    post:
+      tags: [Safety]
+      summary: Emergency SOS
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_id: { type: string, format: uuid }
+                lat: { type: number }
+                lng: { type: number }
+                message: { type: string }
+      responses:
+        201:
+          description: SOS sent
+
+  /safety/contacts:
+    get:
+      tags: [Safety]
+      summary: Get emergency contacts
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: Success
+
+    put:
+      tags: [Safety]
+      summary: Update emergency contacts
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmergencyContact'
+      responses:
+        200:
+          description: Updated
+
+  # ============================================
+  # NOTIFICATIONS
+  # ============================================
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get notifications
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: unread_only
+          in: query
+          schema: { type: boolean }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        200:
+          description: Success
+
+  /notifications/read:
+    post:
+      tags: [Notifications]
+      summary: Mark notifications as read
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notification_ids: { type: array, items: { type: string, format: uuid } }
+                all: { type: boolean }
+      responses:
+        200:
+          description: Marked
+
+# ============================================
+# COMPONENTS
+# ============================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserProfileExtended:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid }
+        date_of_birth: { type: string, format: date }
+        gender: { type: string }
+        looking_for: { type: array, items: { type: string } }
+        location_city: { type: string }
+        interests: { type: array, items: { type: string } }
+        personality_type: { type: string }
+        reputation_score: { type: number }
+        is_verified: { type: boolean }
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        date_of_birth: { type: string, format: date }
+        gender: { type: string }
+        looking_for: { type: array, items: { type: string } }
+        interests: { type: array, items: { type: string } }
+        personality_type: { type: string }
+        occupation: { type: string }
+        education: { type: string }
+        languages: { type: array, items: { type: string } }
+
+    MatchingPreferences:
+      type: object
+      properties:
+        max_distance_km: { type: integer }
+        preferred_age_min: { type: integer }
+        preferred_age_max: { type: integer }
+        preferred_genders: { type: array, items: { type: string } }
+
+    AvailabilitySchedule:
+      type: object
+      properties:
+        available_days: { type: array, items: { type: string } }
+        available_time_slots:
+          type: object
+          properties:
+            morning: { type: boolean }
+            afternoon: { type: boolean }
+            evening: { type: boolean }
+            night: { type: boolean }
+        timezone: { type: string }
+
+    PublicProfile:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        age: { type: integer }
+        avatar_url: { type: string }
+        bio: { type: string }
+        interests: { type: array, items: { type: string } }
+        reputation_score: { type: number }
+        is_verified: { type: boolean }
+        distance_km: { type: number }
+
+    DiscoverResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchedUser'
+        next_cursor: { type: string }
+
+    MatchedUser:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        age: { type: integer }
+        avatar_url: { type: string }
+        distance_km: { type: number }
+        match_score: { type: number }
+        matched_interests: { type: array, items: { type: string } }
+        looking_for: { type: array, items: { type: string } }
+        is_verified: { type: boolean }
+        reputation_score: { type: number }
+
+    Connection:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        requester_id: { type: string, format: uuid }
+        receiver_id: { type: string, format: uuid }
+        connection_type: { type: string }
+        status: { type: string }
+        match_score: { type: number }
+        created_at: { type: string, format: date-time }
+
+    ConnectionListResponse:
+      type: object
+      properties:
+        connections: { type: array, items: { $ref: '#/components/schemas/Connection' } }
+        next_cursor: { type: string }
+
+    CreateConnectionRequest:
+      type: object
+      required: [receiver_id, connection_type]
+      properties:
+        receiver_id: { type: string, format: uuid }
+        connection_type: { type: string }
+        intro_message: { type: string }
+
+    GroupListResponse:
+      type: object
+      properties:
+        groups: { type: array, items: { $ref: '#/components/schemas/GroupSummary' } }
+        next_cursor: { type: string }
+
+    GroupSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        cover_image_url: { type: string }
+        group_type: { type: string }
+        visibility: { type: string }
+        member_count: { type: integer }
+
+    GroupDetail:
+      allOf:
+        - $ref: '#/components/schemas/GroupSummary'
+        - type: object
+          properties:
+            rules: { type: array, items: { type: string } }
+            location_name: { type: string }
+            is_member: { type: boolean }
+            my_role: { type: string }
+
+    CreateGroupRequest:
+      type: object
+      required: [name, group_type]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        group_type: { type: string }
+        visibility: { type: string }
+        rules: { type: array, items: { type: string } }
+        max_members: { type: integer }
+        requires_approval: { type: boolean }
+
+    UpdateGroupRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        rules: { type: array, items: { type: string } }
+        max_members: { type: integer }
+
+    EventListResponse:
+      type: object
+      properties:
+        events: { type: array, items: { $ref: '#/components/schemas/EventSummary' } }
+        next_cursor: { type: string }
+
+    EventSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        activity_type: { type: string }
+        cover_image_url: { type: string }
+        start_time: { type: string, format: date-time }
+        location_name: { type: string }
+        distance_km: { type: number }
+        max_participants: { type: integer }
+        current_participants: { type: integer }
+        status: { type: string }
+        is_recurring: { type: boolean }
+        creator:
+          $ref: '#/components/schemas/UserBasic'
+
+    EventDetail:
+      allOf:
+        - $ref: '#/components/schemas/EventSummary'
+        - type: object
+          properties:
+            description: { type: string }
+            location_lat: { type: number }
+            location_lng: { type: number }
+            location_address: { type: string }
+            end_time: { type: string, format: date-time }
+            requires_approval: { type: boolean }
+            age_min: { type: integer }
+            age_max: { type: integer }
+            recurrence_frequency: { type: string }
+            recurrence_days: { type: array, items: { type: string } }
+            my_participation_status: { type: string }
+
+    CreateEventRequest:
+      type: object
+      required: [title, activity_type, start_time, max_participants]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        activity_type: { type: string }
+        visibility: { type: string }
+        location:
+          type: object
+          properties:
+            lat: { type: number }
+            lng: { type: number }
+            name: { type: string }
+            address: { type: string }
+        start_time: { type: string, format: date-time }
+        end_time: { type: string, format: date-time }
+        max_participants: { type: integer }
+        min_participants: { type: integer }
+        requires_approval: { type: boolean }
+        age_min: { type: integer }
+        age_max: { type: integer }
+        group_id: { type: string, format: uuid }
+        is_recurring: { type: boolean }
+        recurrence:
+          type: object
+          properties:
+            frequency: { type: string, enum: [daily, weekly, biweekly, monthly] }
+            days: { type: array, items: { type: string } }
+            end_date: { type: string, format: date }
+            count: { type: integer }
+
+    UpdateEventRequest:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        location: { type: object }
+        start_time: { type: string, format: date-time }
+        max_participants: { type: integer }
+
+    EventOccurrence:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        event_id: { type: string, format: uuid }
+        occurrence_number: { type: integer }
+        start_time: { type: string, format: date-time }
+        end_time: { type: string, format: date-time }
+        status: { type: string }
+        current_participants: { type: integer }
+        is_cancelled: { type: boolean }
+
+    ParticipantListResponse:
+      type: object
+      properties:
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventParticipant'
+
+    EventParticipant:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user:
+          $ref: '#/components/schemas/UserBasic'
+        status: { type: string }
+        intro_message: { type: string }
+        requested_at: { type: string, format: date-time }
+
+    UserBasic:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        avatar_url: { type: string }
+        is_verified: { type: boolean }
+
+    CreateReviewRequest:
+      type: object
+      required: [reviewed_user_id, context_type, context_id, rating]
+      properties:
+        reviewed_user_id: { type: string, format: uuid }
+        context_type: { type: string, enum: [event, connection, group] }
+        context_id: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        feedback: { type: string }
+        tags: { type: array, items: { type: string } }
+
+    CreateReportRequest:
+      type: object
+      required: [reported_user_id, reason]
+      properties:
+        reported_user_id: { type: string, format: uuid }
+        reason: { type: string }
+        description: { type: string }
+        evidence_urls: { type: array, items: { type: string } }
+        context_type: { type: string }
+        context_id: { type: string, format: uuid }
+
+    EmergencyContact:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        relationship: { type: string }
+        is_primary: { type: boolean }

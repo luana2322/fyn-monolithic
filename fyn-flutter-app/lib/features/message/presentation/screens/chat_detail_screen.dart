@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../video_call/providers/call_provider.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/utils/date_utils.dart' as app_date_utils;
 import '../../../../theme/app_colors.dart';
@@ -102,6 +103,80 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     return null;
   }
 
+  Future<void> _initiateVideoCall() async {
+    try {
+      // Get current user ID from auth
+      final authState = ref.read(authNotifierProvider);
+      final currentUserId = authState.user?.id;
+
+      if (currentUserId == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể xác định user ID'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Get other user info - try otherUserId first, fallback to memberIds
+      String? otherUserId = widget.conversation.otherUserId;
+      
+      // If otherUserId is null, calculate from memberIds (for group chats or missing field)
+      if (otherUserId == null) {
+        final memberIds = widget.conversation.memberIds.toList();
+        // Remove current user ID to get other user ID
+        memberIds.remove(currentUserId);
+        
+        if (memberIds.isNotEmpty) {
+          otherUserId = memberIds.first;
+        }
+      }
+      
+      if (otherUserId == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể xác định người nhận cuộc gọi'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Initialize call provider with current user
+      ref.read(callProvider.notifier).initialize(currentUserId);
+
+      // Initiate call
+      final callId = await ref.read(callProvider.notifier).initiateCall(
+        calleeId: otherUserId,
+        calleeName: _getDisplayName(),
+        calleeAvatar: _getAvatarUrl(),
+      );
+
+      if (callId != null && mounted) {
+        // Navigate to outgoing call screen
+        context.push('/video-call/outgoing', extra: {'callId': callId});
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể khởi tạo cuộc gọi'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
@@ -149,6 +224,28 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             ),
           ],
         ),
+        actions: [
+          // Voice call button
+          IconButton(
+            icon: const Icon(Icons.call),
+            tooltip: 'Gọi thoại',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Chức năng gọi thoại đang phát triển'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+          // Video call button
+          IconButton(
+            icon: const Icon(Icons.videocam),
+            tooltip: 'Gọi video',
+            onPressed: _initiateVideoCall,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Container(
         color: AppColors.background,
