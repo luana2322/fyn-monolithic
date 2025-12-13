@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # PostgreSQL Database
   fyn-postgres:
-    image: postgres:16-alpine
+    image: postgis/postgis:16-3.5-alpine
     container_name: fyn-postgres
     environment:
       POSTGRES_DB: fyn-monolithic
@@ -14,11 +14,27 @@ services:
       - "5432:5432"
     volumes:
       - ./docker-data/postgres:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - fyn-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis Cache
+  fyn-redis:
+    image: redis:7-alpine
+    container_name: fyn-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker-data/redis:/data
+    networks:
+      - fyn-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -75,6 +91,8 @@ services:
         condition: service_healthy
       fyn-minio:
         condition: service_started
+      fyn-redis:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://fyn-postgres:5432/fyn-monolithic
       SPRING_DATASOURCE_USERNAME: postgres
@@ -84,6 +102,9 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: fyn-data
+
+      REDIS_HOST: fyn-redis
+      REDIS_PORT: 6379
 
       JWT_SECRET: ZmFuLXN1cGVyLXNlY3JldC1jaGFuZ2UtdGhpcy1pbi1wcm9k
     ports:

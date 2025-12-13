@@ -8,7 +8,6 @@ import com.fyn_monolithic.model.message.Conversation;
 import com.fyn_monolithic.model.message.Message;
 import com.fyn_monolithic.model.message.MessageMedia;
 import com.fyn_monolithic.model.storage.MediaType;
-import com.fyn_monolithic.model.notification.NotificationType;
 import com.fyn_monolithic.model.user.User;
 import com.fyn_monolithic.repository.message.MessageRepository;
 import com.fyn_monolithic.repository.message.MessageMediaRepository;
@@ -40,16 +39,16 @@ public class MessageService {
     public MessageResponse sendMessage(UUID conversationId, SendMessageRequest request, MultipartFile media) {
         Conversation conversation = conversationService.getConversation(conversationId);
         User sender = userService.getCurrentUser();
-        
+
         // Validate: at least one of content, media, or reaction must be present
         boolean hasContent = request.getContent() != null && !request.getContent().trim().isEmpty();
         boolean hasMedia = media != null && !media.isEmpty();
         boolean hasReaction = request.getReaction() != null && !request.getReaction().trim().isEmpty();
-        
+
         if (!hasContent && !hasMedia && !hasReaction) {
             throw new IllegalArgumentException("Message must have at least content, media, or reaction");
         }
-        
+
         Message message = new Message();
         message.setConversation(conversation);
         message.setSender(sender);
@@ -82,8 +81,7 @@ public class MessageService {
                 notificationService.notifyNewMessage(
                         recipient,
                         conversation.getId(),
-                        preview
-                );
+                        preview);
             }
         });
 

@@ -23,12 +23,14 @@ dependencies:
   
   # JSON Serialization
   json_annotation: ^4.8.1
+  freezed_annotation: ^2.4.1
   
   # Image/Video
   cached_network_image: ^3.3.0
   image_picker: ^1.0.5
   video_player: ^2.8.1
   file_picker: ^6.1.1
+  video_thumbnail: ^0.5.3
   
   # UI Components
   flutter_svg: ^2.0.9
@@ -49,6 +51,16 @@ dependencies:
   
   # Environment
   flutter_dotenv: ^5.1.0
+  
+  # WebRTC for video calls
+  flutter_webrtc: ^0.11.7
+  
+  # Firebase for signaling (compatible versions)
+  firebase_core: ^2.15.0
+  cloud_firestore: ^4.9.0
+  
+  # Permissions
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +68,7 @@ dev_dependencies:
   flutter_lints: ^3.0.1
   build_runner: ^2.4.7
   json_serializable: ^6.7.1
+  freezed: ^2.4.6
 
 flutter:
   uses-material-design: true

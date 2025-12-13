@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/models/page_response.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/network/dio_provider.dart';
 import '../../data/models/post_model.dart';
 import '../../data/models/post_reaction.dart';
 import '../../data/repositories/post_repository.dart';

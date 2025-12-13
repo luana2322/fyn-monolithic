@@ -15,6 +15,9 @@ import '../widgets/post_comments_sheet.dart';
 import '../../../search/presentation/widgets/user_search_view.dart';
 import '../../../../theme/app_colors.dart';
 import 'reels_screen.dart' show ReelsScreen, _ReelsScreenState;
+import '../../../connections/presentation/screens/connection_hub_screen.dart';
+import '../../../story/presentation/widgets/story_widgets.dart';
+import '../../../story/presentation/screens/create_story_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -118,11 +121,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           _buildHomeTab(user, feedState),
           const UserSearchView(),
           const ReelsScreen(),
-          const _PlaceholderTab(
-            icon: Icons.shopping_bag_outlined,
-            title: 'Shop',
-            subtitle: 'Tính năng đang phát triển',
-          ),
+          const ConnectionHubScreen(), // Dating, Friendship, Meetups
           _buildProfileShortcut(user),
         ],
       ),
@@ -165,9 +164,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   : Icons.movie_filter_outlined),
               label: 'Reels',
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_bag_outlined),
-              label: 'Shop',
+            BottomNavigationBarItem(
+              icon: Icon(_currentIndex == 3 ? Icons.favorite : Icons.favorite_outline),
+              label: 'Connections',
             ),
             BottomNavigationBarItem(
               icon: _buildProfileNavIcon(user, isActive: false),
@@ -326,7 +325,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               children: [
                 const SizedBox(height: 8),
                 CreatePostCard(onCreatePost: _openCreatePostSheet),
-                _buildStoriesSection(user),
+                StoriesRow(
+                  onAddStory: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const CreateStoryScreen(),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 12),
                 Divider(height: 1, color: AppColors.muted),
               ],

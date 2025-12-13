@@ -62,6 +62,13 @@ class ApiEndpoints {
   // Search endpoints
   static const String searchHashtags = '/api/search/hashtags';
   static const String searchUsers = '/api/search/users';
+  
+  // Event endpoints (v1 API)
+  static const String events = '/api/v1/events';
+  static String eventById(String eventId) => '/api/v1/events/$eventId';
+  
+  // Matching endpoints (v1 API)
+  static const String swipe = '/api/v1/matches/swipe';
 }
 
 

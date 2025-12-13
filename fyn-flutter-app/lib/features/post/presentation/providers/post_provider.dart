@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/models/page_response.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/network/dio_provider.dart';
 import '../../data/models/create_post_request.dart';
 import '../../data/models/post_model.dart';
 import '../../data/models/post_reaction.dart';

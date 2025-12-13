@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/network/api_client.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/network/dio_provider.dart';
 import '../../../auth/data/models/user_response.dart';
 import '../../data/repositories/search_repository.dart';
 

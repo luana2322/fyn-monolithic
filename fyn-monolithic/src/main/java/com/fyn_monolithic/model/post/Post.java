@@ -4,7 +4,6 @@ import com.fyn_monolithic.model.common.AbstractAuditableEntity;
 import com.fyn_monolithic.model.search.PostHashtag;
 import com.fyn_monolithic.model.user.User;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
