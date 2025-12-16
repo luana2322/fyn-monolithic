@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/models/meetup_model.dart';
 import '../providers/discover_provider.dart';
+import '../widgets/compact_match_card.dart';
+import '../../../../shared/widgets/responsive_container.dart';
+import '../../../../theme/app_colors.dart';
 
 /// Matches screen showing all current matches
 class MatchesScreen extends ConsumerStatefulWidget {
@@ -27,9 +30,9 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(matchesProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('My Matches'),
         bottom: PreferredSize(
@@ -37,7 +40,10 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
           child: _buildFilters(),
         ),
       ),
-      body: _buildBody(state),
+      body: ResponsiveContainer(
+        maxWidth: 700,
+        child: _buildBody(state),
+      ),
     );
   }
 
@@ -133,26 +139,55 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
 
     return RefreshIndicator(
       onRefresh: () => ref.read(matchesProvider.notifier).loadMatches(status: _selectedStatus),
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.7,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: state.matches.length,
         itemBuilder: (context, index) {
           final match = state.matches[index];
-          return _MatchCard(
+          return CompactMatchCard(
             match: match,
-            onTap: () {
-              // Navigate to user profile
-              context.push('/profile/${match.user.id}');
-            },
-            onBlock: () => _showBlockDialog(match.id),
+            status: 'ACCEPTED', // TODO: Get actual status from match
+            onTap: () => context.push('/profile/${match.user.id}'),
+            onComplete: () => _showActionDialog(
+              'Mark as Completed?',
+              'This will mark the meetup as successfully completed.',
+              () => ref.read(matchesProvider.notifier).completeMatch(match.id),
+            ),
+            onCancel: () => _showActionDialog(
+              'Cancel this match?',
+              'You can rematch in the future.',
+              () => ref.read(matchesProvider.notifier).cancelMatch(match.id),
+            ),
+            onNoShow: () => _showActionDialog(
+              'Report No-show?',
+              'This will apply a penalty to the other user\'s reputation.',
+              () => ref.read(matchesProvider.notifier).reportNoShow(match.id),
+            ),
           );
         },
+      ),
+    );
+  }
+
+  void _showActionDialog(String title, String content, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              onConfirm();
+              Navigator.pop(context);
+            },
+            child: const Text('Confirm'),
+          ),
+        ],
       ),
     );
   }

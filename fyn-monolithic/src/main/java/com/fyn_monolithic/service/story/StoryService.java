@@ -9,6 +9,7 @@ import com.fyn_monolithic.model.user.User;
 import com.fyn_monolithic.repository.story.StoryRepository;
 import com.fyn_monolithic.repository.story.StoryViewRepository;
 import com.fyn_monolithic.repository.user.UserRepository;
+import com.fyn_monolithic.service.storage.MinioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,15 +26,67 @@ public class StoryService {
     private final StoryRepository storyRepository;
     private final StoryViewRepository storyViewRepository;
     private final UserRepository userRepository;
+    private final MinioService minioService;
 
-    @Value("${minio.url:http://localhost:9000}")
-    private String minioUrl;
+    @Value("${minio.endpoint:http://localhost:9000}")
+    private String minioEndpoint;
 
-    @Value("${minio.bucket:fyn-uploads}")
-    private String bucket;
+    /**
+     * Generate presigned URL for object key, or fix existing URL if already a full
+     * URL
+     * Replaces internal Docker hostname with localhost for browser access
+     */
+    private String getPresignedUrl(String objectKeyOrUrl) {
+        if (objectKeyOrUrl == null || objectKeyOrUrl.isEmpty()) {
+            return null;
+        }
 
-    private String getMediaBaseUrl() {
-        return minioUrl + "/" + bucket;
+        // If it's already a full URL, just fix the hostname and return
+        if (objectKeyOrUrl.startsWith("http://") || objectKeyOrUrl.startsWith("https://")) {
+            return objectKeyOrUrl
+                    .replace("fyn-minio:9000", "localhost:9000")
+                    .replace("http://minio:9000", "http://localhost:9000");
+        }
+
+        // It's an object key - generate presigned URL
+        try {
+            String presignedUrl = minioService.getPresignedUrl(objectKeyOrUrl);
+            // Replace internal Docker hostname with localhost for browser access
+            return presignedUrl.replace("fyn-minio:9000", "localhost:9000");
+        } catch (Exception e) {
+            // Fallback to direct URL if presigned generation fails
+            return minioEndpoint + "/fyn-data/" + objectKeyOrUrl;
+        }
+    }
+
+    /**
+     * Build StoryResponse with presigned URL for media
+     */
+    private StoryResponse buildStoryResponse(Story story, boolean viewed) {
+        String avatarUrl = null;
+        if (story.getUser().getProfile() != null && story.getUser().getProfile().getAvatarObjectKey() != null) {
+            avatarUrl = getPresignedUrl(story.getUser().getProfile().getAvatarObjectKey());
+        }
+
+        return StoryResponse.builder()
+                .id(story.getId())
+                .user(StoryUserResponse.builder()
+                        .id(story.getUser().getId())
+                        .username(story.getUser().getUsername())
+                        .fullName(story.getUser().getFullName())
+                        .avatarUrl(avatarUrl)
+                        .hasActiveStories(true)
+                        .storyCount(0)
+                        .build())
+                .mediaType(story.getMediaType())
+                .mediaUrl(getPresignedUrl(story.getMediaUrl()))
+                .textContent(story.getTextContent())
+                .backgroundColor(story.getBackgroundColor())
+                .viewCount(story.getViewCount())
+                .createdAt(story.getCreatedAt())
+                .expiresAt(story.getExpiresAt())
+                .viewedByCurrentUser(viewed)
+                .build();
     }
 
     /**
@@ -55,7 +108,7 @@ public class StoryService {
 
         story = storyRepository.save(story);
 
-        return StoryResponse.fromEntity(story, getMediaBaseUrl(), false);
+        return buildStoryResponse(story, false);
     }
 
     /**
@@ -92,14 +145,14 @@ public class StoryService {
 
             User storyUser = stories.get(0).getUser();
             List<StoryResponse> storyResponses = stories.stream()
-                    .map(s -> StoryResponse.fromEntity(s, getMediaBaseUrl(), viewedStoryIds.contains(s.getId())))
+                    .map(s -> buildStoryResponse(s, viewedStoryIds.contains(s.getId())))
                     .collect(Collectors.toList());
 
             boolean allViewed = storyResponses.stream().allMatch(StoryResponse::isViewedByCurrentUser);
 
             String avatarUrl = null;
             if (storyUser.getProfile() != null && storyUser.getProfile().getAvatarObjectKey() != null) {
-                avatarUrl = getMediaBaseUrl() + "/" + storyUser.getProfile().getAvatarObjectKey();
+                avatarUrl = getPresignedUrl(storyUser.getProfile().getAvatarObjectKey());
             }
 
             userResponses.add(StoryUserWithStoriesResponse.builder()
@@ -127,12 +180,12 @@ public class StoryService {
             User currentUser = userRepository.findById(userId).orElse(null);
             if (currentUser != null) {
                 List<StoryResponse> myStoryResponses = myStories.stream()
-                        .map(s -> StoryResponse.fromEntity(s, getMediaBaseUrl(), true))
+                        .map(s -> buildStoryResponse(s, true))
                         .collect(Collectors.toList());
 
                 String avatarUrl = null;
                 if (currentUser.getProfile() != null && currentUser.getProfile().getAvatarObjectKey() != null) {
-                    avatarUrl = getMediaBaseUrl() + "/" + currentUser.getProfile().getAvatarObjectKey();
+                    avatarUrl = getPresignedUrl(currentUser.getProfile().getAvatarObjectKey());
                 }
 
                 currentUserResponse = StoryUserWithStoriesResponse.builder()
@@ -162,7 +215,7 @@ public class StoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Story not found"));
 
         boolean viewed = storyViewRepository.existsByStoryIdAndViewerId(storyId, viewerId);
-        return StoryResponse.fromEntity(story, getMediaBaseUrl(), viewed);
+        return buildStoryResponse(story, viewed);
     }
 
     /**
@@ -223,7 +276,21 @@ public class StoryService {
 
         return storyViewRepository.findByStoryIdOrderByViewedAtDesc(storyId)
                 .stream()
-                .map(v -> StoryUserResponse.fromUser(v.getViewer(), getMediaBaseUrl()))
+                .map(v -> {
+                    User viewer = v.getViewer();
+                    String avatarUrl = null;
+                    if (viewer.getProfile() != null && viewer.getProfile().getAvatarObjectKey() != null) {
+                        avatarUrl = getPresignedUrl(viewer.getProfile().getAvatarObjectKey());
+                    }
+                    return StoryUserResponse.builder()
+                            .id(viewer.getId())
+                            .username(viewer.getUsername())
+                            .fullName(viewer.getFullName())
+                            .avatarUrl(avatarUrl)
+                            .hasActiveStories(true)
+                            .storyCount(0)
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 }

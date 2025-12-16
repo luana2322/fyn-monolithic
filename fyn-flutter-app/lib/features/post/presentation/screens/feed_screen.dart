@@ -14,6 +14,8 @@ import '../widgets/post_card.dart';
 import '../widgets/post_comments_sheet.dart';
 import '../../../search/presentation/widgets/user_search_view.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/dating_colors.dart';
+import '../../../../shared/widgets/responsive_container.dart';
 import 'reels_screen.dart' show ReelsScreen, _ReelsScreenState;
 import '../../../connections/presentation/screens/connection_hub_screen.dart';
 import '../../../story/presentation/widgets/story_widgets.dart';
@@ -112,26 +114,33 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final user = authState.user;
     final feedState = ref.watch(postFeedProvider);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: _buildAppBar(user),
+      backgroundColor: isDark ? DatingColors.darkBackground : DatingColors.lightBackground,
+      appBar: _buildAppBar(user, isDark),
       body: IndexedStack(
-        index: _currentIndex,
+        index: _currentIndex > 3 ? 0 : _currentIndex,
         children: [
           _buildHomeTab(user, feedState),
           const UserSearchView(),
           const ReelsScreen(),
           const ConnectionHubScreen(), // Dating, Friendship, Meetups
-          _buildProfileShortcut(user),
         ],
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
+        decoration: BoxDecoration(
+          color: isDark ? DatingColors.darkNavBackground : DatingColors.lightNavBackground,
+          border: Border(
+            top: BorderSide(
+              color: isDark ? DatingColors.darkNavBorder : DatingColors.lightNavBorder,
+              width: 0.5,
+            ),
+          ),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
-          backgroundColor: AppColors.primary,
+          backgroundColor: isDark ? DatingColors.darkNavBackground : DatingColors.lightNavBackground,
           elevation: 0,
           onTap: (index) {
             // Nếu đang rời khỏi tab Reels (index 2), pause tất cả video
@@ -139,6 +148,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               // Pause tất cả video khi rời khỏi tab Reels
               ReelsScreen.pauseAllVideos();
             }
+            
+            // Profile button (index 4) navigates directly to profile page
+            if (index == 4) {
+              context.go('/profile');
+              return;
+            }
+            
             setState(() {
               _currentIndex = index;
             });
@@ -146,8 +162,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           type: BottomNavigationBarType.fixed,
           showSelectedLabels: false,
           showUnselectedLabels: false,
-          selectedItemColor: AppColors.secondary,
-          unselectedItemColor: Colors.white70,
+          selectedItemColor: DatingColors.rose,
+          unselectedItemColor: isDark ? DatingColors.darkMutedText : DatingColors.lightMutedText,
           items: [
             BottomNavigationBarItem(
               icon: Icon(_currentIndex == 0 ? Icons.home : Icons.home_outlined),
@@ -179,19 +195,22 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(user) {
+  PreferredSizeWidget _buildAppBar(user, bool isDark) {
     return AppBar(
       elevation: 0,
-      titleSpacing: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: isDark ? DatingColors.darkNavBackground : DatingColors.lightNavBackground,
+      surfaceTintColor: Colors.transparent,
+      titleSpacing: 16,
       title: Row(
         children: [
           Text(
             AppConfig.appName,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.2,
-              color: Colors.white,
+              color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
             ),
           ),
         ],
@@ -203,6 +222,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             final unread = notificationState.unreadCount;
             return _buildNotificationButton(
               count: unread,
+              isDark: isDark,
               onPressed: () {
                 context.go('/notifications');
               },
@@ -211,12 +231,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         ),
         _buildAppBarButton(
           icon: Icons.chat_bubble_outline,
+          isDark: isDark,
           onPressed: () {
             context.go('/chat');
           },
         ),
         _buildAppBarButton(
           icon: Icons.logout,
+          isDark: isDark,
           onPressed: () async {
             await ref.read(authNotifierProvider.notifier).logout();
             if (mounted) {
@@ -224,27 +246,26 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             }
           },
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 12),
       ],
     );
   }
 
-  Widget _buildAppBarButton({required IconData icon, VoidCallback? onPressed}) {
+  Widget _buildAppBarButton({required IconData icon, required bool isDark, VoidCallback? onPressed}) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: isDark 
+            ? DatingColors.darkSurfaceElevated 
+            : DatingColors.lightSurfaceElevated,
+        borderRadius: BorderRadius.circular(10),
       ),
       child: IconButton(
-        icon: Icon(icon, color: Colors.white),
+        icon: Icon(
+          icon, 
+          color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
+          size: 22,
+        ),
         onPressed: onPressed ?? () {},
       ),
     );
@@ -252,50 +273,50 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   Widget _buildNotificationButton({
     required int count,
+    required bool isDark,
     required VoidCallback onPressed,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: isDark 
+            ? DatingColors.darkSurfaceElevated 
+            : DatingColors.lightSurfaceElevated,
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+            icon: Icon(
+              Icons.notifications_outlined, 
+              color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
+              size: 22,
+            ),
             onPressed: onPressed,
           ),
           if (count > 0)
             Positioned(
-              right: 4,
-              top: 4,
+              right: 6,
+              top: 6,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent,
-                  borderRadius: BorderRadius.circular(10),
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: DatingColors.rose,
+                  shape: BoxShape.circle,
                 ),
                 constraints: const BoxConstraints(
-                  minWidth: 18,
+                  minWidth: 16,
                   minHeight: 16,
                 ),
                 child: Text(
-                  count > 9 ? '9+' : '$count',
-                  textAlign: TextAlign.center,
+                  count > 99 ? '99+' : count.toString(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -305,122 +326,106 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildHomeTab(user, FeedState feedState) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    // Feed chiếm khoảng 1/3 màn hình ở giữa như Facebook/Instagram
-    // Trên mobile: chiếm toàn bộ, trên desktop/tablet: chiếm 1/3 với margin hai bên
-    final isMobile = screenWidth < 768;
-    final feedMaxWidth = isMobile ? screenWidth : screenWidth * 0.33;
-    final feedWidth = feedMaxWidth.clamp(400.0, 600.0);
-
-    final content = RefreshIndicator(
-      onRefresh: () async {
-        await ref.read(postFeedProvider.notifier).refresh();
-      },
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                CreatePostCard(onCreatePost: _openCreatePostSheet),
-                StoriesRow(
-                  onAddStory: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreateStoryScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                Divider(height: 1, color: AppColors.muted),
-              ],
-            ),
-          ),
-          if (feedState.isLoading && feedState.posts.isEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 48),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            )
-          else if (feedState.error != null && feedState.posts.isEmpty)
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ResponsiveContainer(
+      maxWidth: 600,
+      backgroundColor: isDark ? DatingColors.darkBackground : DatingColors.lightBackground,
+      child: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(postFeedProvider.notifier).refresh();
+        },
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
-                child: Column(
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.redAccent, size: 40),
-                    const SizedBox(height: 12),
-                    Text(
-                      feedState.error ?? 'Có lỗi xảy ra',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.secondaryText),
-                    ),
-                  ],
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  CreatePostCard(onCreatePost: _openCreatePostSheet),
+                  StoriesRow(
+                    onAddStory: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CreateStoryScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  Divider(height: 1, color: AppColors.muted),
+                ],
               ),
-            )
-          else if (feedState.posts.isEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 48),
-                child: Center(
-                  child: Text(
-                    'Chưa có bài viết nào. Hãy là người đầu tiên chia sẻ!',
-                    style: TextStyle(color: AppColors.secondaryText),
+            ),
+            if (feedState.isLoading && feedState.posts.isEmpty)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 48),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              )
+            else if (feedState.error != null && feedState.posts.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 40),
+                      const SizedBox(height: 12),
+                      Text(
+                        feedState.error ?? 'Có lỗi xảy ra',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppColors.secondaryText),
+                      ),
+                    ],
                   ),
                 ),
+              )
+            else if (feedState.posts.isEmpty)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 48),
+                  child: Center(
+                    child: Text(
+                      'Chưa có bài viết nào. Hãy là người đầu tiên chia sẻ!',
+                      style: TextStyle(color: AppColors.secondaryText),
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final post = feedState.posts[index];
+                    final isOwn = user?.id == post.author.id;
+                    return PostCard(
+                      post: post,
+                      isOwnPost: isOwn,
+                      currentUserAvatarUrl: user?.profile?.avatarUrl != null
+                          ? ImageUtils.getAvatarUrl(user!.profile.avatarUrl)
+                          : null,
+                      currentUsername: user?.username,
+                      onDelete: () => _confirmDeletePost(post),
+                      onTapProfile: () => context.go('/profile/${post.author.id}'),
+                      onToggleReaction: () => ref
+                          .read(postFeedProvider.notifier)
+                          .toggleReaction(post.id, post.likedByCurrentUser),
+                      onOpenComments: () => _openCommentsSheet(post),
+                    );
+                  },
+                  childCount: feedState.posts.length,
+                ),
               ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final post = feedState.posts[index];
-                  final isOwn = user?.id == post.author.id;
-                  return PostCard(
-                    post: post,
-                    isOwnPost: isOwn,
-                    currentUserAvatarUrl: user?.profile?.avatarUrl != null
-                        ? ImageUtils.getAvatarUrl(user!.profile.avatarUrl)
-                        : null,
-                    currentUsername: user?.username,
-                    onDelete: () => _confirmDeletePost(post),
-                    onTapProfile: () => context.go('/profile/${post.author.id}'),
-                    onToggleReaction: () => ref
-                        .read(postFeedProvider.notifier)
-                        .toggleReaction(post.id, post.likedByCurrentUser),
-                    onOpenComments: () => _openCommentsSheet(post),
-                  );
-                },
-                childCount: feedState.posts.length,
+            if (feedState.isLoadingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                ),
               ),
-            ),
-          if (feedState.isLoadingMore)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-              ),
-            ),
-          const SliverToBoxAdapter(child: SizedBox(height: 80)),
-        ],
-      ),
-    );
-
-    // Feed nằm giữa màn hình với margin hai bên
-    return Container(
-      color: AppColors.background,
-      child: Center(
-        child: Container(
-          width: isMobile ? double.infinity : feedWidth,
-          constraints: BoxConstraints(
-            maxWidth: feedWidth,
-          ),
-          child: content,
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          ],
         ),
       ),
     );

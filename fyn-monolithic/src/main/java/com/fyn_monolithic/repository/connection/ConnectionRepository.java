@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,6 +28,14 @@ public interface ConnectionRepository extends JpaRepository<Connection, UUID> {
 
     // Find connections where user is requester OR receiver
     Page<Connection> findByRequesterIdOrReceiverId(UUID requesterId, UUID receiverId, Pageable pageable);
+
+    // Find connections with eager fetch for users (to avoid
+    // LazyInitializationException)
+    @Query("SELECT c FROM Connection c " +
+            "LEFT JOIN FETCH c.requester r LEFT JOIN FETCH r.profile " +
+            "LEFT JOIN FETCH c.receiver v LEFT JOIN FETCH v.profile " +
+            "WHERE c.requester.id = :userId OR c.receiver.id = :userId")
+    List<Connection> findByUserIdWithUsers(UUID userId);
 
     // Find specific connection between two users
     Optional<Connection> findByRequesterIdAndReceiverId(UUID requesterId, UUID receiverId);

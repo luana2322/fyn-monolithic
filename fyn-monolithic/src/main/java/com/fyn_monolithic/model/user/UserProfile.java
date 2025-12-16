@@ -30,4 +30,7 @@ public class UserProfile extends AbstractAuditableEntity {
 
     @Column(name = "avatar_object_key")
     private String avatarObjectKey;
+
+    @Column(name = "reputation_score")
+    private Double reputationScore = 100.0; // Default 100, decreases on no-show
 }

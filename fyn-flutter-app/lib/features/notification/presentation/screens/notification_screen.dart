@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../theme/app_colors.dart';
+import '../../../../shared/widgets/responsive_container.dart';
 import '../../data/models/notification_model.dart';
 import '../providers/notification_provider.dart';
 
@@ -49,60 +50,63 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         title: const Text('Thông báo'),
       ),
       backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        onRefresh: () =>
-            ref.read(notificationProvider.notifier).refresh(),
-        child: Builder(
-          builder: (context) {
-            if (state.isLoading && state.notifications.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      body: ResponsiveContainer(
+        maxWidth: 600,
+        child: RefreshIndicator(
+          onRefresh: () =>
+              ref.read(notificationProvider.notifier).refresh(),
+          child: Builder(
+            builder: (context) {
+              if (state.isLoading && state.notifications.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            if (state.error != null && state.notifications.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    state.error!,
-                    style: const TextStyle(color: AppColors.secondaryText),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              );
-            }
-
-            if (state.notifications.isEmpty) {
-              return const Center(
-                child: Text(
-                  'Chưa có thông báo nào',
-                  style: TextStyle(color: AppColors.secondaryText),
-                ),
-              );
-            }
-
-            return ListView.separated(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: state.notifications.length +
-                  (state.isLoadingMore ? 1 : 0),
-              separatorBuilder: (_, __) => const Divider(
-                height: 1,
-                color: AppColors.border,
-              ),
-              itemBuilder: (context, index) {
-                if (index >= state.notifications.length) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
+              if (state.error != null && state.notifications.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      state.error!,
+                      style: const TextStyle(color: AppColors.secondaryText),
+                      textAlign: TextAlign.center,
                     ),
-                  );
-                }
-                final notification = state.notifications[index];
-                return _NotificationTile(notification: notification);
-              },
-            );
-          },
+                  ),
+                );
+              }
+
+              if (state.notifications.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'Chưa có thông báo nào',
+                    style: TextStyle(color: AppColors.secondaryText),
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: state.notifications.length +
+                    (state.isLoadingMore ? 1 : 0),
+                separatorBuilder: (_, __) => const Divider(
+                  height: 1,
+                  color: AppColors.border,
+                ),
+                itemBuilder: (context, index) {
+                  if (index >= state.notifications.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  }
+                  final notification = state.notifications[index];
+                  return _NotificationTile(notification: notification);
+                },
+              );
+            },
+          ),
         ),
       ),
     );

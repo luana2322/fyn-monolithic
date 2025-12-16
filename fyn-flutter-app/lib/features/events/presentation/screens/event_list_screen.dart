@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/event_provider.dart';
 import '../../data/models/event_model.dart';
+import '../../../../shared/widgets/responsive_container.dart';
+import '../../../../theme/app_colors.dart';
 
 class EventListScreen extends ConsumerWidget {
   const EventListScreen({super.key});
@@ -13,6 +15,7 @@ class EventListScreen extends ConsumerWidget {
     final eventsAsyncValue = ref.watch(eventsListProvider(null));
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Events'),
         actions: [
@@ -28,22 +31,25 @@ class EventListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: eventsAsyncValue.when(
-        data: (events) {
-          if (events.isEmpty) {
-            return const Center(child: Text('No events found nearby'));
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-              return EventCard(event: event);
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+      body: ResponsiveContainer(
+        maxWidth: 700,
+        child: eventsAsyncValue.when(
+          data: (events) {
+            if (events.isEmpty) {
+              return const Center(child: Text('No events found nearby'));
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final event = events[index];
+                return EventCard(event: event);
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(child: Text('Error: $error')),
+        ),
       ),
     );
   }

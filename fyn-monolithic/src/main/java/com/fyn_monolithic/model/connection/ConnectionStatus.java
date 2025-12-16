@@ -5,5 +5,8 @@ public enum ConnectionStatus {
     ACCEPTED,
     REJECTED,
     BLOCKED,
-    EXPIRED
+    EXPIRED,
+    CANCELLED, // User cancelled the match
+    COMPLETED, // Match completed successfully
+    NO_SHOW // Other person didn't show up
 }

@@ -6,9 +6,12 @@ import 'package:image_picker/image_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../shared/widgets/responsive_container.dart';
 import 'edit_profile_screen.dart';
 import 'followers_following_screen.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/dating_colors.dart';
+import '../../../../shared/themes/app_typography.dart';
 import '../../../post/presentation/providers/post_provider.dart';
 import '../../../post/data/models/post_model.dart';
 import '../../../post/presentation/widgets/post_card.dart';
@@ -84,19 +87,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final shouldShowBack =
         (widget.userId != null || widget.username != null) || canPop;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? DatingColors.darkBackground : DatingColors.lightBackground,
       appBar: AppBar(
         elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: isDark ? DatingColors.darkNavBackground : DatingColors.lightNavBackground,
         title: Text(
           profileState.user?.username ?? 'Hồ sơ',
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
+            color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
           ),
         ),
         leading: shouldShowBack
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new),
+                icon: Icon(
+                  Icons.arrow_back_ios_new,
+                  color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
+                ),
                 onPressed: () {
                   if (Navigator.of(context).canPop()) {
                     Navigator.of(context).maybePop();
@@ -109,7 +120,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         actions: isOwnProfile
             ? [
                 IconButton(
-                  icon: const Icon(Icons.edit),
+                  icon: Icon(
+                    Icons.settings_outlined,
+                    color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -122,34 +136,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ]
             : null,
       ),
-      body: Container(
-        color: AppColors.background,
-        child: Center(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 3 / 7,
-            constraints: BoxConstraints(
-              maxWidth: 600,
-              minWidth: 400,
-            ),
-            child: RefreshIndicator(
-              onRefresh: () async {
-                await profileNotifier.refresh();
-                final currentUserId = profileState.user?.id ?? userId;
-                if (currentUserId != null) {
-                  await ref
-                      .read(userPostsProvider(currentUserId).notifier)
-                      .refresh();
-                }
-              },
-              child: _buildBody(
-                ref,
-                profileState,
-                isOwnProfile,
-                authState,
-                params,
-                profileNotifier,
-              ),
-            ),
+      body: ResponsiveContainer(
+        maxWidth: 700,
+        backgroundColor: isDark ? DatingColors.darkBackground : DatingColors.lightBackground,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await profileNotifier.refresh();
+            final currentUserId = profileState.user?.id ?? userId;
+            if (currentUserId != null) {
+              await ref
+                  .read(userPostsProvider(currentUserId).notifier)
+                  .refresh();
+            }
+          },
+          child: _buildBody(
+            ref,
+            profileState,
+            isOwnProfile,
+            authState,
+            params,
+            profileNotifier,
           ),
         ),
       ),
@@ -251,167 +257,133 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     AuthState authState,
   ) {
     final avatarUrl = ImageUtils.getAvatarUrl(user.profile.avatarUrl);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return Column(
-      children: [
-        // Cover Photo Section (có thể thêm sau)
-        Container(
-          height: 180,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.primary,
-                AppColors.primaryLight,
-                AppColors.secondary,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: isDark
+              ? [
+                  const Color(0xFF1E1B4B), // Indigo dark
+                  const Color(0xFF312E81), // Indigo
+                  DatingColors.darkBackground,
+                ]
+              : [
+                  const Color(0xFF818CF8), // Indigo light
+                  const Color(0xFF6366F1), // Indigo
+                  DatingColors.lightBackground,
+                ],
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          
+          // Avatar - Centered
+          GestureDetector(
+            onTap: isOwnProfile ? () => _changeAvatar() : null,
+            child: Stack(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark 
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : Colors.white.withValues(alpha: 0.5),
+                      width: 3,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 55,
+                    backgroundColor: isDark 
+                        ? DatingColors.darkSurfaceElevated 
+                        : DatingColors.lightSurfaceElevated,
+                    backgroundImage: avatarUrl != null
+                        ? CachedNetworkImageProvider(avatarUrl)
+                        : null,
+                    child: avatarUrl == null
+                        ? Text(
+                            user.username[0].toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 42,
+                              color: isDark 
+                                  ? DatingColors.darkPrimaryText 
+                                  : DatingColors.lightPrimaryText,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+                if (isOwnProfile)
+                  Positioned(
+                    bottom: 4,
+                    right: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark 
+                            ? DatingColors.darkSurface 
+                            : Colors.white,
+                        border: Border.all(
+                          color: isDark 
+                              ? DatingColors.darkBorder 
+                              : DatingColors.lightBorder,
+                          width: 2,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.edit,
+                        size: 16,
+                        color: isDark 
+                            ? DatingColors.darkPrimaryText 
+                            : DatingColors.lightPrimaryText,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-          child: Stack(
-            children: [
-              // Có thể thêm cover photo sau
-              Positioned(
-                bottom: -60,
-                left: 16,
-                child: GestureDetector(
-                  onTap: isOwnProfile ? () => _changeAvatar() : null,
-                  child: Stack(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                        ),
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundColor: AppColors.surface,
-                          backgroundImage: avatarUrl != null
-                              ? CachedNetworkImageProvider(avatarUrl)
-                              : null,
-                          child: avatarUrl == null
-                              ? Text(
-                                  user.username[0].toUpperCase(),
-                                  style: const TextStyle(
-                                    fontSize: 48,
-                                    color: AppColors.primaryText,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : null,
-                        ),
-                      ),
-                      if (isOwnProfile)
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.secondary,
-                              border: Border.all(color: Colors.white, width: 3),
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 20,
-                              color: AppColors.primaryText,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          
+          const SizedBox(height: 16),
+          
+          // Username
+          Text(
+            user.fullName ?? user.username,
+            style: AppTypography.username(isDark),
           ),
-        ),
-        const SizedBox(height: 70),
-        
-        // User Info Section
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              // Full Name & Username
-              Text(
-                user.fullName ?? user.username,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryText,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '@${user.username}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: AppColors.secondaryText,
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Bio
-              if (user.profile.bio != null && user.profile.bio!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    user.profile.bio!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.primaryText,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              
-              // Location & Website
-              Wrap(
-                spacing: 16,
-                runSpacing: 8,
-                alignment: WrapAlignment.center,
-                children: [
-                  if (user.profile.location != null)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.location_on,
-                            size: 16, color: AppColors.secondaryText),
-                        const SizedBox(width: 4),
-                        Text(
-                          user.profile.location!,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.secondaryText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  if (user.profile.website != null)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.link, size: 16, color: AppColors.secondary),
-                        const SizedBox(width: 4),
-                        Text(
-                          user.profile.website!,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.secondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ],
+          
+          const SizedBox(height: 6),
+          
+          // ID
+          Text(
+            'ID:${user.id.substring(0, 8).toUpperCase()}',
+            style: AppTypography.metaText(isDark),
           ),
-        ),
-      ],
+          
+          const SizedBox(height: 12),
+          
+          // Bio
+          if (user.profile.bio != null && user.profile.bio!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                user.profile.bio!,
+                style: AppTypography.postContent(isDark),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
   

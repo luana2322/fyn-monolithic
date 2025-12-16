@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/call_provider.dart';
+import '../../../../theme/app_colors.dart';
 
 /// Incoming call screen - shown when receiving a call
 class IncomingCallScreen extends ConsumerWidget {
@@ -23,7 +24,7 @@ class IncomingCallScreen extends ConsumerWidget {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: Colors.black87,
+        backgroundColor: AppColors.primaryDark,
         body: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -41,18 +42,18 @@ class IncomingCallScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.green.withOpacity(0.5),
+                          color: AppColors.success.withOpacity(0.5),
                           width: 3,
                         ),
                       ),
                       child: CircleAvatar(
                         radius: 70,
-                        backgroundColor: Colors.grey[800],
+                        backgroundColor: AppColors.muted,
                         backgroundImage: callerAvatar != null
                             ? NetworkImage(callerAvatar!)
                             : null,
                         child: callerAvatar == null
-                            ? Icon(Icons.person, size: 70, color: Colors.grey[600])
+                            ? Icon(Icons.person, size: 70, color: AppColors.secondaryText)
                             : null,
                       ),
                     ),

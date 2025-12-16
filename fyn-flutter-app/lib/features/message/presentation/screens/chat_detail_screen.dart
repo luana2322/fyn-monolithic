@@ -7,6 +7,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../video_call/providers/call_provider.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/utils/date_utils.dart' as app_date_utils;
+import '../../../../core/utils/responsive_utils.dart';
+import '../../../../shared/widgets/responsive_container.dart';
 import '../../../../theme/app_colors.dart';
 import '../providers/message_provider.dart';
 import '../../data/models/conversation_model.dart';
@@ -247,26 +249,18 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: Container(
-        color: AppColors.background,
-        child: Center(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 3 / 7,
-            constraints: BoxConstraints(
-              maxWidth: 600,
-              minWidth: 400,
+      body: ResponsiveContainer(
+        maxWidth: 700,
+        backgroundColor: AppColors.background,
+        child: Column(
+          children: [
+            // Messages list
+            Expanded(
+              child: _buildMessagesList(messageState, currentUserId),
             ),
-            child: Column(
-              children: [
-                // Messages list
-                Expanded(
-                  child: _buildMessagesList(messageState, currentUserId),
-                ),
-                // Input area
-                _buildInputArea(messageState),
-              ],
-            ),
-          ),
+            // Input area
+            _buildInputArea(messageState),
+          ],
         ),
       ),
     );

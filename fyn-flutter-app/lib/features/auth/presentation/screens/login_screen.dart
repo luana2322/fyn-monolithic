@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
+import '../../../../shared/widgets/responsive_container.dart';
 import '../../../../theme/app_colors.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -60,12 +62,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final isMobile = ResponsiveUtils.isMobile(context);
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Center(
+        child: ResponsiveContainer(
+          maxWidth: 480,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 24 : 40,
+              vertical: 32,
+            ),
             child: Form(
               key: _formKey,
               child: Column(

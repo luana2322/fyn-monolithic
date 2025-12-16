@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
+import '../../../../shared/widgets/responsive_container.dart';
+import '../../../../theme/app_colors.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -67,7 +70,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           content: Text(
             ref.read(authNotifierProvider).error ?? 'Đăng ký thất bại',
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -102,37 +105,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF667EEA).withOpacity(0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFF667EEA),
+                color: AppColors.primary,
                 size: 20,
               ),
             ),
             suffixIcon: suffixIcon,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Colors.grey[300]!,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Colors.grey[300]!,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF667EEA),
-                width: 2,
-              ),
-            ),
-            filled: true,
-            fillColor: Colors.grey[50],
           ),
           keyboardType: keyboardType,
           textInputAction: textInputAction,
@@ -147,6 +129,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final isMobile = ResponsiveUtils.isMobile(context);
 
     return Scaffold(
       body: Container(
@@ -155,16 +138,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF667EEA),
-              const Color(0xFF764BA2),
-              const Color(0xFF6B73FF),
+              AppColors.primary,
+              AppColors.primaryDark,
+              AppColors.primaryLight,
             ],
           ),
         ),
         child: SafeArea(
-          child: Center(
+          child: ResponsiveContainer(
+            maxWidth: 520,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 24 : 40,
+                vertical: 32,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(

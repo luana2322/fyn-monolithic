@@ -215,6 +215,39 @@ class MatchesNotifier extends StateNotifier<MatchesState> {
       state = state.copyWith(error: e.toString());
     }
   }
+
+  /// Cancel a match
+  Future<void> cancelMatch(String matchId) async {
+    try {
+      await _repository.cancelMatch(matchId);
+      // Reload matches after status change
+      loadMatches(status: state.filterStatus);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
+
+  /// Complete a match
+  Future<void> completeMatch(String matchId) async {
+    try {
+      await _repository.completeMatch(matchId);
+      // Reload matches after status change
+      loadMatches(status: state.filterStatus);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
+
+  /// Report no-show (applies penalty to other user)
+  Future<void> reportNoShow(String matchId) async {
+    try {
+      await _repository.reportNoShow(matchId);
+      // Reload matches after status change
+      loadMatches(status: state.filterStatus);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
 }
 
 // Provider for matches list

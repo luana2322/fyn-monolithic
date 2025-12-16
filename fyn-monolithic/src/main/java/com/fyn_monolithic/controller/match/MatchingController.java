@@ -98,4 +98,40 @@ public class MatchingController {
                 matchingService.blockMatch(userDetails.getUser().getId(), matchId);
                 return ResponseEntity.ok(Map.of("success", true, "message", "Match blocked"));
         }
+
+        /**
+         * Cancel a match
+         */
+        @PatchMapping("/{matchId}/cancel")
+        public ResponseEntity<Map<String, Object>> cancelMatch(
+                        @PathVariable UUID matchId,
+                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+                matchingService.cancelMatch(userDetails.getUser().getId(), matchId);
+                return ResponseEntity.ok(Map.of("success", true, "message", "Match cancelled"));
+        }
+
+        /**
+         * Mark match as completed
+         */
+        @PatchMapping("/{matchId}/complete")
+        public ResponseEntity<Map<String, Object>> completeMatch(
+                        @PathVariable UUID matchId,
+                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+                matchingService.completeMatch(userDetails.getUser().getId(), matchId);
+                return ResponseEntity.ok(Map.of("success", true, "message", "Match completed"));
+        }
+
+        /**
+         * Report no-show (applies penalty to other user)
+         */
+        @PatchMapping("/{matchId}/no-show")
+        public ResponseEntity<Map<String, Object>> reportNoShow(
+                        @PathVariable UUID matchId,
+                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+                matchingService.reportNoShow(userDetails.getUser().getId(), matchId);
+                return ResponseEntity.ok(Map.of("success", true, "message", "No-show reported, penalty applied"));
+        }
 }

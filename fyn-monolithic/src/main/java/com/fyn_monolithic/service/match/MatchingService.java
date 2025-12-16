@@ -54,14 +54,23 @@ public class MatchingService {
 
     /**
      * Get user's matches (mutual likes)
+     * 
+     * @param status - filter: "matched" (ACCEPTED), "completed", "cancelled",
+     *               "noshow", or null for all
      */
     public Page<DiscoverProfileResponse> getMatches(UUID userId, String status, Pageable pageable) {
-        // Get connections where user is requester or receiver and status is ACCEPTED
-        Page<Connection> connections = connectionRepository.findByRequesterIdOrReceiverId(
-                userId, userId, pageable);
+        // Get connections with eager fetch to avoid LazyInitializationException
+        List<Connection> allConnections = connectionRepository.findByUserIdWithUsers(userId);
 
-        List<DiscoverProfileResponse> matches = connections.getContent().stream()
-                .filter(c -> c.getStatus() == ConnectionStatus.ACCEPTED)
+        System.out.println("DEBUG getMatches - userId: " + userId);
+        System.out.println("DEBUG getMatches - status filter: " + status);
+        System.out.println("DEBUG getMatches - allConnections count: " + allConnections.size());
+
+        // Determine which statuses to show based on filter
+        Set<ConnectionStatus> allowedStatuses = getStatusesForFilter(status);
+
+        List<DiscoverProfileResponse> matches = allConnections.stream()
+                .filter(c -> allowedStatuses.contains(c.getStatus()))
                 .filter(c -> "SWIPE".equals(c.getMatchSource()))
                 .map(connection -> {
                     // Get the other user in the connection
@@ -72,7 +81,36 @@ public class MatchingService {
                 })
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(matches, pageable, matches.size());
+        System.out.println("DEBUG getMatches - filtered matches count: " + matches.size());
+
+        // Manual pagination
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), matches.size());
+        List<DiscoverProfileResponse> pageContent = start < matches.size()
+                ? matches.subList(start, end)
+                : List.of();
+
+        return new PageImpl<>(pageContent, pageable, matches.size());
+    }
+
+    /**
+     * Get connection statuses based on filter parameter
+     */
+    private Set<ConnectionStatus> getStatusesForFilter(String status) {
+        if (status == null || status.isEmpty() || "matched".equalsIgnoreCase(status)) {
+            // Default: show active matches (ACCEPTED) and also completed/cancelled/noshow
+            // for history
+            return Set.of(ConnectionStatus.ACCEPTED, ConnectionStatus.COMPLETED, ConnectionStatus.CANCELLED,
+                    ConnectionStatus.NO_SHOW);
+        }
+        return switch (status.toLowerCase()) {
+            case "active" -> Set.of(ConnectionStatus.ACCEPTED);
+            case "completed" -> Set.of(ConnectionStatus.COMPLETED);
+            case "cancelled" -> Set.of(ConnectionStatus.CANCELLED);
+            case "noshow" -> Set.of(ConnectionStatus.NO_SHOW);
+            default -> Set.of(ConnectionStatus.ACCEPTED, ConnectionStatus.COMPLETED, ConnectionStatus.CANCELLED,
+                    ConnectionStatus.NO_SHOW);
+        };
     }
 
     /**
@@ -126,6 +164,58 @@ public class MatchingService {
                 .ifPresent(connectionRepository::delete);
         connectionRepository.findByRequesterIdAndReceiverId(matchId, userId)
                 .ifPresent(connectionRepository::delete);
+    }
+
+    /**
+     * Cancel a match
+     */
+    @Transactional
+    public void cancelMatch(UUID userId, UUID matchId) {
+        Connection connection = findConnectionForUser(userId, matchId);
+        connection.setStatus(ConnectionStatus.CANCELLED);
+        connectionRepository.save(connection);
+    }
+
+    /**
+     * Mark match as completed (either party can do this)
+     */
+    @Transactional
+    public void completeMatch(UUID userId, UUID matchId) {
+        Connection connection = findConnectionForUser(userId, matchId);
+        connection.setStatus(ConnectionStatus.COMPLETED);
+        connectionRepository.save(connection);
+    }
+
+    /**
+     * Report no-show and apply penalty to the other user
+     */
+    @Transactional
+    public void reportNoShow(UUID userId, UUID matchId) {
+        Connection connection = findConnectionForUser(userId, matchId);
+        connection.setStatus(ConnectionStatus.NO_SHOW);
+        connectionRepository.save(connection);
+
+        // Apply penalty to the other user (reduce reputation by 10 points)
+        User otherUser = connection.getRequester().getId().equals(userId)
+                ? connection.getReceiver()
+                : connection.getRequester();
+
+        if (otherUser.getProfile() != null) {
+            Double currentRep = otherUser.getProfile().getReputationScore();
+            if (currentRep == null)
+                currentRep = 100.0;
+            otherUser.getProfile().setReputationScore(Math.max(0, currentRep - 10.0));
+            userRepository.save(otherUser);
+        }
+    }
+
+    /**
+     * Find connection where user is either requester or receiver
+     */
+    private Connection findConnectionForUser(UUID userId, UUID matchId) {
+        return connectionRepository.findByRequesterIdAndReceiverId(userId, matchId)
+                .or(() -> connectionRepository.findByRequesterIdAndReceiverId(matchId, userId))
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
     }
 
     private void _createMatch(User u1, User u2) {

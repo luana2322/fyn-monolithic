@@ -84,6 +84,33 @@ class MatchRepository {
       throw Exception('Failed to block match: $e');
     }
   }
+
+  /// Cancel a match
+  Future<void> cancelMatch(String matchId) async {
+    try {
+      await _apiClient.patch('/api/v1/matches/$matchId/cancel');
+    } catch (e) {
+      throw Exception('Failed to cancel match: $e');
+    }
+  }
+
+  /// Mark match as completed
+  Future<void> completeMatch(String matchId) async {
+    try {
+      await _apiClient.patch('/api/v1/matches/$matchId/complete');
+    } catch (e) {
+      throw Exception('Failed to complete match: $e');
+    }
+  }
+
+  /// Report no-show (applies penalty)
+  Future<void> reportNoShow(String matchId) async {
+    try {
+      await _apiClient.patch('/api/v1/matches/$matchId/no-show');
+    } catch (e) {
+      throw Exception('Failed to report no-show: $e');
+    }
+  }
 }
 
 /// Result of a swipe action
