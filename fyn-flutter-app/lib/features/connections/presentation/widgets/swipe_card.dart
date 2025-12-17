@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/match_model.dart';
 import '../../data/models/meetup_model.dart';
+import '../../../../theme/dating_colors.dart';
 
 /// Swipe card widget for discover screen
 /// Displays user profile with photo, name, bio, and interest badges
@@ -393,6 +394,7 @@ class EmptyStateWidget extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onAction;
   final String? actionLabel;
+  final bool isDark;
 
   const EmptyStateWidget({
     super.key,
@@ -401,6 +403,7 @@ class EmptyStateWidget extends StatelessWidget {
     this.icon = Icons.search_off,
     this.onAction,
     this.actionLabel,
+    this.isDark = false,
   });
 
   @override
@@ -411,19 +414,20 @@ class EmptyStateWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 80, color: Colors.grey.shade400),
+            Icon(icon, size: 80, color: isDark ? DatingColors.darkSecondaryText : Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: isDark ? DatingColors.darkPrimaryText : null,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(color: isDark ? DatingColors.darkSecondaryText : Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
             if (onAction != null && actionLabel != null) ...[

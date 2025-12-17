@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/dating_colors.dart';
 import '../../../../shared/widgets/responsive_container.dart';
 import '../../data/models/notification_model.dart';
 import '../providers/notification_provider.dart';
@@ -44,14 +45,20 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(notificationProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? DatingColors.darkBackground : AppColors.background,
       appBar: AppBar(
-        title: const Text('Thông báo'),
+        backgroundColor: isDark ? DatingColors.darkNavBackground : null,
+        title: Text(
+          'Thông báo',
+          style: TextStyle(color: isDark ? DatingColors.darkPrimaryText : null),
+        ),
+        iconTheme: IconThemeData(color: isDark ? DatingColors.darkPrimaryText : null),
       ),
-      backgroundColor: AppColors.background,
       body: ResponsiveContainer(
-        maxWidth: 600,
+        backgroundColor: isDark ? DatingColors.darkBackground : AppColors.background,
         child: RefreshIndicator(
           onRefresh: () =>
               ref.read(notificationProvider.notifier).refresh(),
@@ -102,7 +109,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                     );
                   }
                   final notification = state.notifications[index];
-                  return _NotificationTile(notification: notification);
+                  return _NotificationTile(notification: notification, isDark: isDark);
                 },
               );
             },
@@ -115,8 +122,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
 
 class _NotificationTile extends ConsumerWidget {
   final NotificationModel notification;
+  final bool isDark;
 
-  const _NotificationTile({required this.notification});
+  const _NotificationTile({required this.notification, required this.isDark});
 
   IconData _iconForType(NotificationType type) {
     switch (type) {
@@ -155,7 +163,9 @@ class _NotificationTile extends ConsumerWidget {
     final isUnread = notification.status.isUnread;
 
     return Material(
-      color: isUnread ? AppColors.surface : AppColors.background,
+      color: isUnread 
+          ? (isDark ? DatingColors.darkSurfaceElevated : AppColors.surface)
+          : (isDark ? DatingColors.darkBackground : AppColors.background),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: _iconColorForType(notification.type).withOpacity(0.15),
@@ -169,15 +179,16 @@ class _NotificationTile extends ConsumerWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
+            color: isDark ? DatingColors.darkPrimaryText : AppColors.primaryText,
           ),
         ),
         subtitle: notification.createdAt != null
             ? Text(
                 // Simple relative time
                 _formatTimeAgo(notification.createdAt!),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.secondaryText,
+                  color: isDark ? DatingColors.darkSecondaryText : AppColors.secondaryText,
                 ),
               )
             : null,

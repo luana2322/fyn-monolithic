@@ -29,6 +29,9 @@ public class PostMedia extends AbstractAuditableEntity {
     @Column(name = "media_type", nullable = false)
     private MediaType mediaType;
 
+    @Column(name = "order_index")
+    private Integer orderIndex = 0;
+
     @Column(name = "description")
     private String description;
 }

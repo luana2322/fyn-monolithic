@@ -16,6 +16,7 @@ import '../../../post/presentation/providers/post_provider.dart';
 import '../../../post/data/models/post_model.dart';
 import '../../../post/presentation/widgets/post_card.dart';
 import '../../../post/presentation/widgets/post_comments_sheet.dart';
+import '../../../../shared/providers/theme_provider.dart';
 
 class _PostsLoadTracker {
   final Set<String> loadedUserIds = <String>{};
@@ -224,7 +225,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: isOwnProfile
-                ? _buildEditProfileButton()
+                ? Column(
+                    children: [
+                      _buildEditProfileButton(),
+                      const SizedBox(height: 16),
+                      _buildThemeToggle(),
+                    ],
+                  )
                 : _buildFollowButton(profileState, profileNotifier),
           ),
           
@@ -567,6 +574,71 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           padding: const EdgeInsets.symmetric(vertical: 12),
           side: BorderSide(color: AppColors.primary, width: 1.5),
         ),
+      ),
+    );
+  }
+
+  Widget _buildThemeToggle() {
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
+    final themeNotifier = ref.read(themeModeProvider.notifier);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark 
+            ? DatingColors.darkSurfaceElevated 
+            : DatingColors.lightSurfaceElevated,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark 
+              ? DatingColors.darkBorder 
+              : DatingColors.lightBorder,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isDark ? Icons.dark_mode : Icons.light_mode,
+            color: isDark ? Colors.amber : Colors.orange,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Chế độ tối',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: isDark 
+                        ? DatingColors.darkPrimaryText 
+                        : DatingColors.lightPrimaryText,
+                  ),
+                ),
+                Text(
+                  isDark ? 'Đang bật' : 'Đang tắt',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark 
+                        ? DatingColors.darkSecondaryText 
+                        : DatingColors.lightSecondaryText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: isDark,
+            onChanged: (value) {
+              themeNotifier.setThemeMode(
+                value ? ThemeMode.dark : ThemeMode.light,
+              );
+            },
+            activeColor: DatingColors.rose,
+          ),
+        ],
       ),
     );
   }

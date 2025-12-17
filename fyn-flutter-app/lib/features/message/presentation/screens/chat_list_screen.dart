@@ -8,6 +8,7 @@ import '../../../user/presentation/providers/user_provider.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/utils/date_utils.dart' as app_date_utils;
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/dating_colors.dart';
 import '../providers/message_provider.dart';
 import '../../data/models/conversation_model.dart';
 import '../../data/models/conversation_type.dart';
@@ -35,18 +36,24 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     final authState = ref.watch(authNotifierProvider);
     final conversationState = ref.watch(conversationListProvider);
     final currentUserId = authState.user?.id;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? DatingColors.darkBackground : AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        title: const Text(
+        backgroundColor: isDark ? DatingColors.darkNavBackground : null,
+        title: Text(
           'Tin nhắn',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: isDark ? DatingColors.darkPrimaryText : null,
+          ),
         ),
+        iconTheme: IconThemeData(color: isDark ? DatingColors.darkPrimaryText : null),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_comment),
+            icon: Icon(Icons.add_comment, color: isDark ? DatingColors.darkPrimaryText : null),
             onPressed: () {
               Navigator.push(
                 context,
@@ -59,7 +66,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         ],
       ),
       body: Container(
-        color: AppColors.background,
+        color: isDark ? DatingColors.darkBackground : AppColors.background,
         child: Center(
           child: Container(
             width: MediaQuery.of(context).size.width * 3 / 7,
@@ -73,7 +80,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                     .read(conversationListProvider.notifier)
                     .loadConversations();
               },
-              child: _buildBody(conversationState, currentUserId),
+              child: _buildBody(conversationState, currentUserId, isDark),
             ),
           ),
         ),
@@ -81,7 +88,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     );
   }
 
-  Widget _buildBody(ConversationListState state, String? currentUserId) {
+  Widget _buildBody(ConversationListState state, String? currentUserId, bool isDark) {
     if (state.isLoading && state.conversations.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -95,7 +102,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             const SizedBox(height: 16),
             Text(
               state.error!,
-              style: const TextStyle(color: AppColors.secondaryText),
+              style: TextStyle(color: isDark ? DatingColors.darkSecondaryText : AppColors.secondaryText),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -120,18 +127,18 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             Icon(
               Icons.chat_bubble_outline,
               size: 64,
-              color: AppColors.secondaryText.withOpacity(0.5),
+              color: (isDark ? DatingColors.darkSecondaryText : AppColors.secondaryText).withOpacity(0.5),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Chưa có cuộc trò chuyện nào',
-              style: TextStyle(color: AppColors.secondaryText),
+              style: TextStyle(color: isDark ? DatingColors.darkSecondaryText : AppColors.secondaryText),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Nhấn nút + để bắt đầu chat',
               style: TextStyle(
-                color: AppColors.secondaryText,
+                color: isDark ? DatingColors.darkSecondaryText : AppColors.secondaryText,
                 fontSize: 12,
               ),
             ),
@@ -148,6 +155,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         return _ConversationListItem(
           conversation: conversation,
           currentUserId: currentUserId ?? '',
+          isDark: isDark,
           onTap: () {
             Navigator.push(
               context,
@@ -165,11 +173,13 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 class _ConversationListItem extends ConsumerStatefulWidget {
   final ConversationModel conversation;
   final String currentUserId;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _ConversationListItem({
     required this.conversation,
     required this.currentUserId,
+    required this.isDark,
     required this.onTap,
   });
 
@@ -258,16 +268,16 @@ class _ConversationListItemState extends ConsumerState<_ConversationListItem> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: widget.isDark ? DatingColors.darkSurface : Colors.white,
           border: Border(
-            bottom: BorderSide(color: AppColors.border, width: 0.5),
+            bottom: BorderSide(color: widget.isDark ? DatingColors.darkBorder : AppColors.border, width: 0.5),
           ),
         ),
         child: Row(
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundColor: AppColors.muted,
+              backgroundColor: widget.isDark ? DatingColors.darkSurfaceElevated : AppColors.muted,
               backgroundImage: avatarUrl != null
                   ? CachedNetworkImageProvider(
                       ImageUtils.getAvatarUrl(avatarUrl) ?? avatarUrl,
@@ -276,10 +286,10 @@ class _ConversationListItemState extends ConsumerState<_ConversationListItem> {
               child: avatarUrl == null
                   ? Text(
                       (displayName ?? 'U')[0].toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryText,
+                        color: widget.isDark ? DatingColors.darkPrimaryText : AppColors.primaryText,
                       ),
                     )
                   : null,
@@ -294,10 +304,10 @@ class _ConversationListItemState extends ConsumerState<_ConversationListItem> {
                       Expanded(
                         child: Text(
                           displayName ?? 'Người dùng',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.primaryText,
+                            color: widget.isDark ? DatingColors.darkPrimaryText : AppColors.primaryText,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -306,9 +316,9 @@ class _ConversationListItemState extends ConsumerState<_ConversationListItem> {
                       if (lastMessageTime.isNotEmpty)
                         Text(
                           lastMessageTime,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.secondaryText,
+                            color: widget.isDark ? DatingColors.darkSecondaryText : AppColors.secondaryText,
                           ),
                         ),
                     ],
@@ -319,8 +329,8 @@ class _ConversationListItemState extends ConsumerState<_ConversationListItem> {
                     style: TextStyle(
                       fontSize: 14,
                       color: conversation.lastMessage != null
-                          ? AppColors.secondaryText
-                          : AppColors.muted,
+                          ? (widget.isDark ? DatingColors.darkSecondaryText : AppColors.secondaryText)
+                          : (widget.isDark ? DatingColors.darkMutedText : AppColors.muted),
                       fontStyle: conversation.lastMessage == null
                           ? FontStyle.italic
                           : FontStyle.normal,

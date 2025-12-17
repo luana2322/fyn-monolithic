@@ -218,6 +218,40 @@ public class MatchingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
     }
 
+    /**
+     * Undo the last swipe action
+     * Removes the swipe and any connection if it created a match
+     * 
+     * @return true if swipe was undone, false if no recent swipe exists
+     */
+    @Transactional
+    public boolean undoLastSwipe(UUID userId) {
+        Optional<SwipeAction> lastSwipe = swipeActionRepository
+                .findFirstByActorIdOrderByCreatedAtDesc(userId);
+
+        if (lastSwipe.isEmpty()) {
+            return false;
+        }
+
+        SwipeAction action = lastSwipe.get();
+        UUID targetId = action.getTarget().getId();
+
+        // If this was a match (mutual like), also delete the connection
+        if (action.getActionType() == SwipeType.LIKE ||
+                action.getActionType() == SwipeType.SUPERLIKE) {
+
+            // Check both directions for connection
+            connectionRepository.findByRequesterIdAndReceiverId(userId, targetId)
+                    .ifPresent(connectionRepository::delete);
+            connectionRepository.findByRequesterIdAndReceiverId(targetId, userId)
+                    .ifPresent(connectionRepository::delete);
+        }
+
+        // Delete the swipe action
+        swipeActionRepository.delete(action);
+        return true;
+    }
+
     private void _createMatch(User u1, User u2) {
         // Check if connection already exists
         if (connectionRepository.existsByRequesterIdAndReceiverId(u1.getId(), u2.getId()) ||

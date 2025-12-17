@@ -109,6 +109,23 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
     }
   }
 
+  /// Undo the last swipe action
+  Future<bool> undoLastSwipe() async {
+    try {
+      final success = await _repository.undoSwipe();
+      
+      if (success) {
+        // Reload profiles to show the undone profile again
+        await loadProfiles();
+      }
+      
+      return success;
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to undo swipe: ${e.toString()}');
+      return false;
+    }
+  }
+
   /// Move to next profile
   void _moveToNext() {
     if (state.currentIndex < state.profiles.length - 1) {

@@ -6,12 +6,14 @@ class PostMedia {
   final String? objectKey;
   final String? mediaUrl;
   final PostMediaType mediaType;
+  final int orderIndex;
   final String? description;
 
   const PostMedia({
     this.objectKey,
     this.mediaUrl,
     required this.mediaType,
+    this.orderIndex = 0,
     this.description,
   });
 
@@ -20,6 +22,7 @@ class PostMedia {
       objectKey: json['objectKey'] as String?,
       mediaUrl: json['mediaUrl'] as String?,
       mediaType: _typeFromString(json['mediaType'] as String?),
+      orderIndex: (json['orderIndex'] as num?)?.toInt() ?? 0,
       description: json['description'] as String?,
     );
   }

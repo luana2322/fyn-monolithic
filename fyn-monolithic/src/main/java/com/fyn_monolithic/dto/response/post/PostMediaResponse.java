@@ -10,6 +10,6 @@ public class PostMediaResponse {
     String objectKey;
     String mediaUrl;
     MediaType mediaType;
+    Integer orderIndex;
     String description;
 }
-

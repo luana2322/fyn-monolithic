@@ -81,37 +81,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-                  Container(
-                    width: 84,
-                    height: 84,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.18),
-                          blurRadius: 22,
-                          offset: const Offset(0, 14),
+                  // App Logo
+                  Center(
+                    child: Image.asset(
+                      'assets/images/fyn-logo.png',
+                      height: 120,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 84,
+                        height: 84,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.mark_email_read_outlined,
-                      size: 38,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'fyn social',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 42,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                      letterSpacing: -1,
+                        child: const Icon(
+                          Icons.favorite,
+                          size: 38,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 16),
                   const SizedBox(height: 8),
                   Text(
                     'Kết nối và chia sẻ với cộng đồng',

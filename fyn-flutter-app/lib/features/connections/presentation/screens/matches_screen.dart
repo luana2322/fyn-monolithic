@@ -6,6 +6,7 @@ import '../providers/discover_provider.dart';
 import '../widgets/compact_match_card.dart';
 import '../../../../shared/widgets/responsive_container.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/dating_colors.dart';
 
 /// Matches screen showing all current matches
 class MatchesScreen extends ConsumerStatefulWidget {
@@ -30,51 +31,61 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(matchesProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? DatingColors.darkBackground : AppColors.background,
       appBar: AppBar(
-        title: const Text('My Matches'),
+        backgroundColor: isDark ? DatingColors.darkNavBackground : null,
+        title: Text(
+          'My Matches',
+          style: TextStyle(color: isDark ? DatingColors.darkPrimaryText : null),
+        ),
+        iconTheme: IconThemeData(color: isDark ? DatingColors.darkPrimaryText : null),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
-          child: _buildFilters(),
+          child: _buildFilters(isDark),
         ),
       ),
       body: ResponsiveContainer(
         maxWidth: 700,
-        child: _buildBody(state),
+        backgroundColor: isDark ? DatingColors.darkBackground : AppColors.background,
+        child: _buildBody(state, isDark),
       ),
     );
   }
 
-  Widget _buildFilters() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          // Status filter chips
-          _FilterChip(
-            label: 'Matched',
-            isSelected: _selectedStatus == 'matched',
-            onTap: () => _setStatus('matched'),
-            color: Colors.green,
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            label: 'Liked You',
-            isSelected: _selectedStatus == 'liked',
-            onTap: () => _setStatus('liked'),
-            color: Colors.orange,
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            label: 'Pending',
-            isSelected: _selectedStatus == 'pending',
-            onTap: () => _setStatus('pending'),
-            color: Colors.blue,
-          ),
-        ],
+  Widget _buildFilters(bool isDark) {
+    return Container(
+      color: isDark ? DatingColors.darkNavBackground : null,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            // Status filter chips
+            _FilterChip(
+              label: 'Matched',
+              isSelected: _selectedStatus == 'matched',
+              onTap: () => _setStatus('matched'),
+              color: Colors.green,
+            ),
+            const SizedBox(width: 8),
+            _FilterChip(
+              label: 'Liked You',
+              isSelected: _selectedStatus == 'liked',
+              onTap: () => _setStatus('liked'),
+              color: Colors.orange,
+            ),
+            const SizedBox(width: 8),
+            _FilterChip(
+              label: 'Pending',
+              isSelected: _selectedStatus == 'pending',
+              onTap: () => _setStatus('pending'),
+              color: Colors.blue,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -87,7 +98,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
     );
   }
 
-  Widget _buildBody(MatchesState state) {
+  Widget _buildBody(MatchesState state, bool isDark) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -99,7 +110,10 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Text(state.error!),
+            Text(
+              state.error!,
+              style: TextStyle(color: isDark ? DatingColors.darkPrimaryText : AppColors.primaryText),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => ref.read(matchesProvider.notifier).loadMatches(status: _selectedStatus),
@@ -115,16 +129,20 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.favorite_border, size: 64, color: Colors.grey.shade400),
+            Icon(Icons.favorite_border, size: 64, color: isDark ? DatingColors.darkSecondaryText : Colors.grey.shade400),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No matches yet',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? DatingColors.darkPrimaryText : AppColors.primaryText,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Keep swiping to find your match!',
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(color: isDark ? DatingColors.darkSecondaryText : Colors.grey.shade600),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(

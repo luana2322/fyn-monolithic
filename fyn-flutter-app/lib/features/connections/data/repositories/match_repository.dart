@@ -50,6 +50,17 @@ class MatchRepository {
     }
   }
 
+  /// Undo the last swipe action
+  Future<bool> undoSwipe() async {
+    try {
+      final response = await _apiClient.delete('/api/v1/matches/swipe/undo');
+      final data = response.data;
+      return data['success'] == true;
+    } catch (e) {
+      throw Exception('Failed to undo swipe: $e');
+    }
+  }
+
   /// Get current user's matches
   Future<List<MatchModel>> getMatches({
     String? connectionType,

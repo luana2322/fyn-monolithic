@@ -54,14 +54,16 @@ public class PostService {
         Post saved = postRepository.save(post);
 
         if (mediaFiles != null) {
-            mediaFiles.forEach(file -> {
+            int orderIndex = 0;
+            for (MultipartFile file : mediaFiles) {
                 String objectKey = minioService.upload(file);
                 PostMedia media = new PostMedia();
                 media.setPost(saved);
                 media.setObjectKey(objectKey);
                 media.setMediaType(minioService.detectMediaType(file));
+                media.setOrderIndex(orderIndex++);
                 postMediaRepository.save(media);
-            });
+            }
         }
 
         upsertHashtags(saved, request.getHashtags());

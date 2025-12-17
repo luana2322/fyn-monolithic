@@ -204,13 +204,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       titleSpacing: 16,
       title: Row(
         children: [
-          Text(
-            AppConfig.appName,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
-              color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
+          Image.asset(
+            'assets/images/fyn-logo.png',
+            height: 32,
+            errorBuilder: (context, error, stackTrace) => Text(
+              AppConfig.appName,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+                color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
+              ),
             ),
           ),
         ],

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/models/meetup_model.dart';
 import '../providers/discover_provider.dart';
 import '../widgets/swipe_card.dart';
+import '../../../../theme/dating_colors.dart';
 
 /// Discover screen with swipe cards for matching
 /// Tinder-like UI with draggable cards
@@ -45,27 +46,74 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(discoverProvider);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: _buildAppBar(state),
+      backgroundColor: isDark ? DatingColors.darkBackground : Colors.grey.shade100,
+      appBar: _buildAppBar(state, isDark),
       body: Column(
         children: [
           // Connection type filter tabs
-          _buildConnectionTypeTabs(state),
+          _buildConnectionTypeTabs(state, isDark),
           // Main card stack
           Expanded(
-            child: _buildCardStack(state),
+            child: _buildCardStack(state, isDark),
           ),
           // Action buttons
           if (state.currentProfile != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 32),
-              child: SwipeActionButtons(
-                isLoading: state.isLoading,
-                onDislike: () => _handleSwipe('DISLIKE'),
-                onLike: () => _handleSwipe('LIKE'),
-                onSuperlike: () => _handleSwipe('SUPERLIKE'),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Undo button
+                  GestureDetector(
+                    onTap: () async {
+                      final success = await ref.read(discoverProvider.notifier).undoLastSwipe();
+                      if (success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Swipe undone! Profile will reload'),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      } else if (!success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('No recent swipe to undo'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isDark ? DatingColors.darkSurface : Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.amber.withOpacity(0.5), width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.amber.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.undo, color: Colors.amber, size: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  // Regular swipe buttons
+                  SwipeActionButtons(
+                    isLoading: state.isLoading,
+                    onDislike: () => _handleSwipe('DISLIKE'),
+                    onLike: () => _handleSwipe('LIKE'),
+                    onSuperlike: () => _handleSwipe('SUPERLIKE'),
+                  ),
+                ],
               ),
             ),
         ],
@@ -73,25 +121,28 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
     );
   }
 
-  PreferredSizeWidget _buildAppBar(DiscoverState state) {
+  PreferredSizeWidget _buildAppBar(DiscoverState state, bool isDark) {
     return AppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: isDark ? DatingColors.darkNavBackground : Colors.transparent,
       elevation: 0,
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.explore, color: Theme.of(context).primaryColor),
+          Icon(Icons.explore, color: isDark ? DatingColors.rose : Theme.of(context).primaryColor),
           const SizedBox(width: 8),
-          const Text(
+          Text(
             'Discover',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDark ? DatingColors.darkPrimaryText : Colors.black87,
+            ),
           ),
         ],
       ),
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.tune, color: Colors.black54),
+          icon: Icon(Icons.tune, color: isDark ? DatingColors.darkSecondaryText : Colors.black54),
           onPressed: () {
             // TODO: Open filters
           },
@@ -100,37 +151,43 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
     );
   }
 
-  Widget _buildConnectionTypeTabs(DiscoverState state) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: ConnectionType.values.map((type) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ConnectionTypeChip(
-              type: type,
-              isSelected: state.connectionType == type,
-              onTap: () {
-                ref.read(discoverProvider.notifier).setConnectionType(type);
-              },
-            ),
-          );
-        }).toList(),
+  Widget _buildConnectionTypeTabs(DiscoverState state, bool isDark) {
+    return Container(
+      color: isDark ? DatingColors.darkNavBackground : null,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: ConnectionType.values.map((type) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ConnectionTypeChip(
+                type: type,
+                isSelected: state.connectionType == type,
+                onTap: () {
+                  ref.read(discoverProvider.notifier).setConnectionType(type);
+                },
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
-  Widget _buildCardStack(DiscoverState state) {
+  Widget _buildCardStack(DiscoverState state, bool isDark) {
     // Loading state
     if (state.isLoading && state.profiles.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Finding matches...'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Finding matches...',
+              style: TextStyle(color: isDark ? DatingColors.darkSecondaryText : null),
+            ),
           ],
         ),
       );
@@ -144,6 +201,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
         subtitle: state.error!,
         actionLabel: 'Retry',
         onAction: () => ref.read(discoverProvider.notifier).loadProfiles(),
+        isDark: isDark,
       );
     }
 
@@ -155,6 +213,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
         subtitle: 'Try adjusting your filters or check back later',
         actionLabel: 'Refresh',
         onAction: () => ref.read(discoverProvider.notifier).loadProfiles(),
+        isDark: isDark,
       );
     }
 
@@ -166,6 +225,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
         subtitle: 'Come back later for new matches',
         actionLabel: 'Refresh',
         onAction: () => ref.read(discoverProvider.notifier).loadProfiles(),
+        isDark: isDark,
       );
     }
 

@@ -21,4 +21,7 @@ public interface SwipeActionRepository extends JpaRepository<SwipeAction, UUID> 
 
     // Check if target has already liked actor
     boolean existsByActorIdAndTargetIdAndActionType(UUID actorId, UUID targetId, SwipeType actionType);
+
+    // Find most recent swipe action by actor (for undo)
+    Optional<SwipeAction> findFirstByActorIdOrderByCreatedAtDesc(UUID actorId);
 }

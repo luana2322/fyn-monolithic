@@ -29,23 +29,23 @@ class DatingColors {
   // DARK MODE COLORS
   // ============================================
   
-  // Dark mode backgrounds
-  static const Color darkBackground = Color(0xFF0F172A);
-  static const Color darkSurface = Color(0xFF111827);
-  static const Color darkSurfaceElevated = Color(0xFF1E293B);
+  // Dark mode backgrounds - improved contrast
+  static const Color darkBackground = Color(0xFF18191A);  // Facebook-style dark bg
+  static const Color darkSurface = Color(0xFF242526);      // Elevated card bg
+  static const Color darkSurfaceElevated = Color(0xFF3A3B3C); // Input/button bg
   
-  // Dark mode navigation (slightly darker than background for depth)
-  static const Color darkNavBackground = Color(0xFF020617);
-  static const Color darkNavBorder = Color(0xFF1F2937);
+  // Dark mode navigation
+  static const Color darkNavBackground = Color(0xFF242526);
+  static const Color darkNavBorder = Color(0xFF3A3B3C);
   
   // Dark mode text
-  static const Color darkPrimaryText = Color(0xFFE5E7EB);
-  static const Color darkSecondaryText = Color(0xFF9CA3AF);
-  static const Color darkMutedText = Color(0xFF6B7280);
+  static const Color darkPrimaryText = Color(0xFFE4E6EB);
+  static const Color darkSecondaryText = Color(0xFFB0B3B8);
+  static const Color darkMutedText = Color(0xFF8A8D91);
   
   // Dark mode borders
-  static const Color darkBorder = Color(0xFF1F2937);
-  static const Color darkDivider = Color(0xFF374151);
+  static const Color darkBorder = Color(0xFF3E4042);
+  static const Color darkDivider = Color(0xFF3E4042);
   
   // ============================================
   // ACCENT COLORS (Same for both modes)

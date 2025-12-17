@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/utils/image_utils.dart';
+import '../../../../theme/dating_colors.dart';
 
 class CreatePostCard extends ConsumerWidget {
   final VoidCallback? onCreatePost;
@@ -12,9 +13,10 @@ class CreatePostCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      color: Colors.white,
+      color: isDark ? DatingColors.darkSurface : Colors.white,
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -23,14 +25,14 @@ class CreatePostCard extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: Colors.blue.shade100,
+                backgroundColor: isDark ? DatingColors.darkSurfaceElevated : Colors.blue.shade100,
                 backgroundImage: user?.profile.avatarUrl != null
                     ? NetworkImage(
                         ImageUtils.getAvatarUrl(user!.profile.avatarUrl) ?? '',
                       )
                     : null,
                 child: user?.profile.avatarUrl == null
-                    ? _buildAvatarInitials(user?.username ?? 'U')
+                    ? _buildAvatarInitials(user?.username ?? 'U', isDark)
                     : null,
               ),
               const SizedBox(width: 12),
@@ -48,14 +50,14 @@ class CreatePostCard extends ConsumerWidget {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: isDark ? DatingColors.darkSurfaceElevated : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: isDark ? DatingColors.darkBorder : Colors.grey.shade300),
                     ),
                     child: Text(
                       'Bạn đang nghĩ gì?',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: isDark ? DatingColors.darkSecondaryText : Colors.grey.shade600,
                         fontSize: 14,
                       ),
                     ),
@@ -65,15 +67,18 @@ class CreatePostCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(height: 1),
+          Divider(height: 1, color: isDark ? DatingColors.darkBorder : null),
+          const SizedBox(height: 8),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildActionButton(
+                context: context,
                 icon: Icons.videocam,
                 label: 'Video',
                 color: Colors.red,
+                isDark: isDark,
                 onTap: onCreatePost ??
                     () {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -82,9 +87,11 @@ class CreatePostCard extends ConsumerWidget {
                     },
               ),
               _buildActionButton(
+                context: context,
                 icon: Icons.photo_library,
                 label: 'Ảnh',
                 color: Colors.green,
+                isDark: isDark,
                 onTap: onCreatePost ??
                     () {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,9 +100,11 @@ class CreatePostCard extends ConsumerWidget {
                     },
               ),
               _buildActionButton(
+                context: context,
                 icon: Icons.emoji_emotions,
                 label: 'Cảm xúc',
                 color: Colors.orange,
+                isDark: isDark,
                 onTap: onCreatePost ??
                     () {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,9 +120,11 @@ class CreatePostCard extends ConsumerWidget {
   }
 
   Widget _buildActionButton({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required Color color,
+    required bool isDark,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -128,7 +139,7 @@ class CreatePostCard extends ConsumerWidget {
             Text(
               label,
               style: TextStyle(
-                color: Colors.grey.shade700,
+                color: isDark ? DatingColors.darkSecondaryText : Colors.grey.shade700,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -139,14 +150,14 @@ class CreatePostCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildAvatarInitials(String username) {
+  Widget _buildAvatarInitials(String username, bool isDark) {
     final initials = username.isNotEmpty
         ? username.substring(0, 1).toUpperCase()
         : 'U';
     return Text(
       initials,
       style: TextStyle(
-        color: Colors.blue.shade700,
+        color: isDark ? DatingColors.darkPrimaryText : Colors.blue.shade700,
         fontWeight: FontWeight.bold,
         fontSize: 14,
       ),

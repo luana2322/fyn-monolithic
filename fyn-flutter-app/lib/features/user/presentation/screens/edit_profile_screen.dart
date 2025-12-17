@@ -9,6 +9,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../theme/dating_colors.dart';
 import '../../data/models/update_profile_request.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -171,12 +172,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final authState = ref.watch(authNotifierProvider);
     final editState = ref.watch(editProfileProvider);
     final user = authState.user;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? DatingColors.darkBackground : AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        title: const Text('Chỉnh sửa profile'),
+        backgroundColor: isDark ? DatingColors.darkNavBackground : null,
+        title: Text(
+          'Chỉnh sửa profile',
+          style: TextStyle(color: isDark ? DatingColors.darkPrimaryText : null),
+        ),
+        iconTheme: IconThemeData(color: isDark ? DatingColors.darkPrimaryText : null),
         actions: [
           TextButton(
             onPressed: editState.isLoading ? null : _saveProfile,
@@ -186,14 +193,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Lưu'),
+                : Text('Lưu', style: TextStyle(color: isDark ? DatingColors.darkPrimaryText : null)),
           ),
         ],
       ),
       body: user == null
           ? const Center(child: CircularProgressIndicator())
           : Container(
-              color: AppColors.background,
+              color: isDark ? DatingColors.darkBackground : AppColors.background,
               child: Center(
                 child: Container(
                   width: MediaQuery.of(context).size.width * 3 / 7,
@@ -211,9 +218,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: isDark ? DatingColors.darkSurface : AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
+                        boxShadow: isDark ? null : [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.05),
                             blurRadius: 10,
@@ -227,7 +234,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             'Ảnh đại diện',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.primaryText,
+                                  color: isDark ? DatingColors.darkPrimaryText : AppColors.primaryText,
                                 ),
                           ),
                           const SizedBox(height: 16),
@@ -236,7 +243,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               children: [
                                 CircleAvatar(
                                   radius: 60,
-                                  backgroundColor: AppColors.surfaceElevated,
+                                  backgroundColor: isDark ? DatingColors.darkSurfaceElevated : AppColors.surfaceElevated,
                                   backgroundImage: _getImageProvider() ??
                                       (ImageUtils.getAvatarUrl(
                                                   user.profile.avatarUrl) !=
@@ -301,9 +308,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: isDark ? DatingColors.darkSurface : AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
+                        boxShadow: isDark ? null : [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.05),
                             blurRadius: 10,
@@ -318,7 +325,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             'Thông tin cá nhân',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.primaryText,
+                                  color: isDark ? DatingColors.darkPrimaryText : AppColors.primaryText,
                                 ),
                           ),
                           const SizedBox(height: 20),
@@ -384,9 +391,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: isDark ? DatingColors.darkSurface : AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
+                        boxShadow: isDark ? null : [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.05),
                             blurRadius: 10,

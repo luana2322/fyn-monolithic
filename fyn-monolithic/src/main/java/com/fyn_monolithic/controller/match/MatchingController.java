@@ -66,6 +66,21 @@ public class MatchingController {
         }
 
         /**
+         * Undo the last swipe action
+         */
+        @DeleteMapping("/swipe/undo")
+        public ResponseEntity<Map<String, Object>> undoLastSwipe(
+                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+                boolean success = matchingService.undoLastSwipe(
+                                userDetails.getUser().getId());
+
+                return ResponseEntity.ok(Map.of(
+                                "success", success,
+                                "message", success ? "Swipe undone" : "No recent swipe to undo"));
+        }
+
+        /**
          * Get current user's matches
          */
         @GetMapping

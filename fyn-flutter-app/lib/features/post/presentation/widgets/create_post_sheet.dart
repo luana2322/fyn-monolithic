@@ -10,6 +10,9 @@ import '../../data/models/create_post_request.dart';
 import '../../data/models/post_visibility.dart';
 import '../providers/post_provider.dart';
 
+/// Configurable maximum number of media items per post
+const int kMaxMediaItems = 10;
+
 class CreatePostSheet extends ConsumerStatefulWidget {
   const CreatePostSheet({super.key});
 
@@ -24,12 +27,21 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
   final List<_SelectedMedia> _media = [];
 
   Future<void> _pickImages() async {
+    if (_media.length >= kMaxMediaItems) {
+      _showMaxMediaWarning();
+      return;
+    }
+    
     try {
       final files = await _picker.pickMultiImage();
       if (files == null || files.isEmpty) return;
 
+      // Limit to remaining slots
+      final remaining = kMaxMediaItems - _media.length;
+      final filesToAdd = files.take(remaining).toList();
+
       final previews = await Future.wait(
-        files.map((file) async {
+        filesToAdd.map((file) async {
           final bytes = await file.readAsBytes();
           return _SelectedMedia(
             file: file,
@@ -53,6 +65,11 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
   }
 
   Future<void> _pickVideo() async {
+    if (_media.length >= kMaxMediaItems) {
+      _showMaxMediaWarning();
+      return;
+    }
+    
     try {
       final file = await _picker.pickVideo(
         source: ImageSource.gallery,
@@ -77,11 +94,37 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
     }
   }
 
+  void _showMaxMediaWarning() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Tối đa $kMaxMediaItems media cho mỗi bài viết')),
+    );
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    if (_isSubmitting) return;
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final item = _media.removeAt(oldIndex);
+      _media.insert(newIndex, item);
+    });
+  }
+
+  void _removeMedia(int index) {
+    if (_isSubmitting) return;
+    setState(() {
+      _media.removeAt(index);
+    });
+  }
+
   Future<void> _submit() async {
     final content = _controller.text.trim();
+    
+    // Error only if BOTH caption and media are empty
     if (content.isEmpty && _media.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập nội dung hoặc chọn media')),
+        const SnackBar(content: Text('Vui lòng nhập nội dung hoặc chọn ảnh/video')),
       );
       return;
     }
@@ -92,7 +135,7 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
 
     try {
       final request = CreatePostRequest(
-        content: content,
+        content: content.isEmpty ? null : content,  // Optional caption
         visibility: PostVisibility.public,
       );
       await ref.read(postFeedProvider.notifier).createPost(
@@ -122,6 +165,8 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final theme = Theme.of(context);
+    
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: SafeArea(
@@ -132,6 +177,7 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -151,86 +197,53 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
                   ],
                 ),
                 const SizedBox(height: 12),
+                
+                // Caption input (optional)
                 TextField(
                   controller: _controller,
-                  maxLines: 6,
-                  decoration: const InputDecoration(
-                    hintText: 'Chia sẻ cảm nghĩ của bạn...',
-                    border: OutlineInputBorder(),
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: 'Chia sẻ cảm nghĩ của bạn... (không bắt buộc)',
+                    helperText: 'Caption là tuỳ chọn',
+                    helperStyle: TextStyle(color: Colors.grey.shade500),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    ..._media.asMap().entries.map(
-                      (entry) => Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: _buildPreview(entry.value),
+                
+                // Media counter
+                if (_media.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.photo_library, size: 16, color: theme.primaryColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${_media.length}/$kMaxMediaItems media',
+                          style: TextStyle(
+                            color: theme.primaryColor,
+                            fontWeight: FontWeight.w500,
                           ),
-                          Positioned(
-                            top: 4,
-                            right: 4,
-                            child: GestureDetector(
-                              onTap: () {
-                                if (_isSubmitting) return;
-                                setState(() {
-                                  _media.removeAt(entry.key);
-                                });
-                              },
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.black54,
-                                  shape: BoxShape.circle,
-                                ),
-                                padding: const EdgeInsets.all(4),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          'Kéo để sắp xếp',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    if (_media.length < 4) ...[
-                      // Button chọn ảnh
-                      GestureDetector(
-                        onTap: _isSubmitting ? null : _pickImages,
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: const Icon(Icons.add_a_photo_outlined),
-                        ),
-                      ),
-                      // Button chọn video
-                      GestureDetector(
-                        onTap: _isSubmitting ? null : _pickVideo,
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: const Icon(Icons.videocam_outlined),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
+                
+                // Media grid with drag-and-drop reordering
+                _buildMediaGrid(),
+                
                 const SizedBox(height: 24),
+                
+                // Submit button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -252,6 +265,144 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
     );
   }
 
+  Widget _buildMediaGrid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Draggable media items
+        if (_media.isNotEmpty)
+          SizedBox(
+            height: 110,
+            child: ReorderableListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _media.length,
+              onReorder: _onReorder,
+              proxyDecorator: (child, index, animation) {
+                return AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, child) {
+                    return Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(12),
+                      child: child,
+                    );
+                  },
+                  child: child,
+                );
+              },
+              itemBuilder: (context, index) {
+                final media = _media[index];
+                return Container(
+                  key: ValueKey('media_$index'),
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Stack(
+                    children: [
+                      // Media preview
+                      Container(
+                        width: 90,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(11),
+                          child: _buildPreview(media),
+                        ),
+                      ),
+                      // Order badge
+                      Positioned(
+                        bottom: 4,
+                        left: 4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${index + 1}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Delete button
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () => _removeMedia(index),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(4),
+                            child: const Icon(
+                              Icons.close,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Drag handle indicator
+                      Positioned(
+                        top: 4,
+                        left: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.black38,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Icon(
+                            Icons.drag_indicator,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        
+        const SizedBox(height: 12),
+        
+        // Add media buttons
+        if (_media.length < kMaxMediaItems)
+          Row(
+            children: [
+              // Add images button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isSubmitting ? null : _pickImages,
+                  icon: const Icon(Icons.add_a_photo_outlined),
+                  label: const Text('Thêm ảnh'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Add video button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isSubmitting ? null : _pickVideo,
+                  icon: const Icon(Icons.videocam_outlined),
+                  label: const Text('Thêm video'),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
   Widget _buildPreview(_SelectedMedia media) {
     if (media.isVideo) {
       return _VideoPreviewWidget(file: media.file);
@@ -262,7 +413,7 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
       return Image.memory(
         media.bytes!,
         width: 90,
-        height: 90,
+        height: 100,
         fit: BoxFit.cover,
       );
     }
@@ -273,13 +424,13 @@ class _CreatePostSheetState extends ConsumerState<CreatePostSheet> {
           return Image.memory(
             snapshot.data!,
             width: 90,
-            height: 90,
+            height: 100,
             fit: BoxFit.cover,
           );
         }
         return Container(
           width: 90,
-          height: 90,
+          height: 100,
           color: Colors.grey.shade200,
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         );
@@ -348,7 +499,7 @@ class _VideoPreviewWidgetState extends State<_VideoPreviewWidget> {
   Widget build(BuildContext context) {
     return Container(
       width: 90,
-      height: 90,
+      height: 100,
       decoration: BoxDecoration(
         color: Colors.black87,
         borderRadius: BorderRadius.circular(12),
@@ -447,5 +598,3 @@ class _VideoPreviewWidgetState extends State<_VideoPreviewWidget> {
     );
   }
 }
-
-

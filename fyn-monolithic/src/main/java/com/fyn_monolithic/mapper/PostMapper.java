@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-@Mapper(componentModel = "spring", uses = {UserMapper.class})
+@Mapper(componentModel = "spring", uses = { UserMapper.class })
 public interface PostMapper {
 
     @Mapping(target = "media", expression = "java(toMediaResponses(post.getMedia()))")
@@ -25,7 +25,12 @@ public interface PostMapper {
         if (media == null) {
             return List.of();
         }
-        return toStream(media).map(this::toMediaResponse).collect(Collectors.toList());
+        return toStream(media)
+                .sorted((a, b) -> Integer.compare(
+                        a.getOrderIndex() != null ? a.getOrderIndex() : 0,
+                        b.getOrderIndex() != null ? b.getOrderIndex() : 0))
+                .map(this::toMediaResponse)
+                .collect(Collectors.toList());
     }
 
     default List<CommentResponse> toCommentResponses(Iterable<PostComment> comments) {
