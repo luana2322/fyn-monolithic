@@ -1,0 +1,19 @@
+# AI Recommendation System Configuration
+
+huggingface:
+  api:
+    token: ${HUGGINGFACE_API_TOKEN:}  # Optional for free tier - set via environment variable
+  model: sentence-transformers/all-MiniLM-L6-v2  # 384-dim embeddings
+
+ai:
+  recommendation:
+    enabled: true
+    min-interaction-count: 3  # Minimum interactions before showing recommendations
+    max-candidate-posts: 500  # Maximum posts to consider for ranking
+    cache-ttl-minutes: 30  # User preference vector cache TTL
+
+spring:
+  cache:
+    type: simple  # Use simple cache manager (can upgrade to Redis later)
+    cache-names:
+      - userPreferenceVectors

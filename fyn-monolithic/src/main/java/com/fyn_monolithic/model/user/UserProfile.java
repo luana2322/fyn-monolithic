@@ -3,6 +3,8 @@ package com.fyn_monolithic.model.user;
 import com.fyn_monolithic.model.common.AbstractAuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -33,4 +35,27 @@ public class UserProfile extends AbstractAuditableEntity {
 
     @Column(name = "reputation_score")
     private Double reputationScore = 100.0; // Default 100, decreases on no-show
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
+    private Gender gender;
+
+    @Column(name = "date_of_birth")
+    private java.time.LocalDate dateOfBirth;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "education_level")
+    private EducationLevel educationLevel;
+
+    /**
+     * Calculate age from date of birth
+     * 
+     * @return age in years, or null if date of birth not set
+     */
+    public Integer getAge() {
+        if (dateOfBirth == null) {
+            return null;
+        }
+        return java.time.Period.between(dateOfBirth, java.time.LocalDate.now()).getYears();
+    }
 }

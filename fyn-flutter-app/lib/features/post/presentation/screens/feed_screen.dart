@@ -12,7 +12,7 @@ import '../widgets/create_post_card.dart';
 import '../widgets/create_post_sheet.dart';
 import '../widgets/post_card.dart';
 import '../widgets/post_comments_sheet.dart';
-import '../../../search/presentation/widgets/user_search_view.dart';
+import '../../../connections/presentation/screens/discover_list_screen.dart'; // User Search list with filter
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/dating_colors.dart';
 import '../../../../shared/widgets/responsive_container.dart';
@@ -123,7 +123,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         index: _currentIndex > 3 ? 0 : _currentIndex,
         children: [
           _buildHomeTab(user, feedState),
-          const UserSearchView(),
+          const DiscoverListScreen(), // Search tab with user list + filter
           const ReelsScreen(),
           const ConnectionHubScreen(), // Dating, Friendship, Meetups
         ],
@@ -192,6 +192,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ],
         ),
       ),
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton(
+              onPressed: () => context.push('/create-post'),
+              backgroundColor: DatingColors.indigo,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
   }
 
@@ -416,6 +423,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                           .read(postFeedProvider.notifier)
                           .toggleReaction(post.id, post.likedByCurrentUser),
                       onOpenComments: () => _openCommentsSheet(post),
+                      onTapPlace: (placeCode, placeName) {
+                        context.push(
+                          '/posts/place/$placeCode',
+                          extra: {'placeName': placeName},
+                        );
+                      },
                     );
                   },
                   childCount: feedState.posts.length,

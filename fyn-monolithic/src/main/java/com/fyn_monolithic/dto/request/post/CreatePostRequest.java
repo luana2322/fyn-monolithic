@@ -17,4 +17,11 @@ public class CreatePostRequest {
     private Set<String> mentionUsernames;
 
     private PostVisibility visibility = PostVisibility.PUBLIC;
+
+    // Location fields - MUTUALLY EXCLUSIVE: use either (lat/lng) OR placeCode
+    private Double latitude;
+
+    private Double longitude;
+
+    private String placeCode;
 }

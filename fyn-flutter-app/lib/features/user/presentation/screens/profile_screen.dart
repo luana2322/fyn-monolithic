@@ -80,10 +80,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final profileState = ref.watch(userProfileProvider(params));
     final profileNotifier = ref.read(userProfileProvider(params).notifier);
 
-    final isOwnProfile = (widget.userId == null && widget.username == null) ||
-        (authState.user != null &&
-            (widget.userId == authState.user!.id ||
-                widget.username == authState.user!.username));
+    // Check if viewing own profile
+    // First check widget params, then check loaded profile
+    bool isOwnProfile = (widget.userId == null && widget.username == null);
+    if (!isOwnProfile && authState.user != null) {
+      // Check widget params
+      if (widget.userId == authState.user!.id ||
+          widget.username == authState.user!.username) {
+        isOwnProfile = true;
+      }
+      // Also check loaded profile user id
+      if (!isOwnProfile && profileState.user != null) {
+        isOwnProfile = profileState.user!.id == authState.user!.id;
+      }
+    }
 
     final shouldShowBack =
         (widget.userId != null || widget.username != null) || canPop;
@@ -643,10 +653,66 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+
   Widget _buildFollowButton(
     UserProfileState profileState,
     UserProfileNotifier profileNotifier,
   ) {
+    // If following: show "Send Message" and "Unfollow" buttons
+    if (profileState.isFollowing) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                // TODO: Navigate to chat
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Tính năng nhắn tin đang phát triển')),
+                );
+              },
+              icon: const Icon(Icons.message_outlined, size: 18),
+              label: const Text('Nhắn tin'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondary,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: OutlinedButton(
+              onPressed: profileState.isLoading
+                  ? null
+                  : () {
+                      profileNotifier.toggleFollow();
+                    },
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                side: const BorderSide(color: Colors.red, width: 1.5),
+                foregroundColor: Colors.red,
+              ),
+              child: profileState.isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text(
+                      'Bỏ theo dõi',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // If not following: show only "Follow" button
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -656,12 +722,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 profileNotifier.toggleFollow();
               },
         style: ElevatedButton.styleFrom(
-          backgroundColor: profileState.isFollowing
-              ? Colors.grey.shade300
-              : AppColors.secondary,
-          foregroundColor: profileState.isFollowing
-              ? AppColors.primaryText
-              : Colors.black,
+          backgroundColor: AppColors.secondary,
+          foregroundColor: Colors.black,
           padding: const EdgeInsets.symmetric(vertical: 12),
         ),
         child: profileState.isLoading
@@ -670,9 +732,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 width: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : Text(
-                profileState.isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
-                style: const TextStyle(
+            : const Text(
+                'Theo dõi',
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

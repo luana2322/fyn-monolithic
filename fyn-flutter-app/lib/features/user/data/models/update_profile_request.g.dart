@@ -14,6 +14,11 @@ UpdateProfileRequest _$UpdateProfileRequestFromJson(
       website: json['website'] as String?,
       location: json['location'] as String?,
       isPrivate: json['isPrivate'] as bool?,
+      gender: json['gender'] as String?,
+      dateOfBirth: json['dateOfBirth'] == null
+          ? null
+          : DateTime.parse(json['dateOfBirth'] as String),
+      educationLevel: json['educationLevel'] as String?,
     );
 
 Map<String, dynamic> _$UpdateProfileRequestToJson(
@@ -24,4 +29,7 @@ Map<String, dynamic> _$UpdateProfileRequestToJson(
       'website': instance.website,
       'location': instance.location,
       'isPrivate': instance.isPrivate,
+      'gender': instance.gender,
+      'dateOfBirth': instance.dateOfBirth?.toIso8601String(),
+      'educationLevel': instance.educationLevel,
     };

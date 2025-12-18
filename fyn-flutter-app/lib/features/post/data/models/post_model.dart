@@ -2,6 +2,8 @@ import '../../../../core/utils/date_utils.dart';
 import '../../../auth/data/models/user_response.dart';
 import 'post_media.dart';
 import 'post_visibility.dart';
+import 'location_info.dart';
+import 'place_info.dart';
 
 class PostModel {
   final String id;
@@ -13,6 +15,8 @@ class PostModel {
   final DateTime? createdAt;
   final List<PostMedia> media;
   final bool likedByCurrentUser;
+  final LocationInfo? location;
+  final PlaceInfo? place;
 
   PostModel({
     required this.id,
@@ -24,6 +28,8 @@ class PostModel {
     required this.createdAt,
     required this.media,
     required this.likedByCurrentUser,
+    this.location,
+    this.place,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -39,6 +45,12 @@ class PostModel {
       media: (json['media'] as List<dynamic>? ?? [])
           .map((item) => PostMedia.fromJson(item as Map<String, dynamic>))
           .toList(),
+      location: json['location'] != null
+          ? LocationInfo.fromJson(json['location'] as Map<String, dynamic>)
+          : null,
+      place: json['place'] != null
+          ? PlaceInfo.fromJson(json['place'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -57,6 +69,8 @@ class PostModel {
       createdAt: createdAt,
       media: media,
       likedByCurrentUser: likedByCurrentUser ?? this.likedByCurrentUser,
+      location: location,
+      place: place,
     );
   }
 }

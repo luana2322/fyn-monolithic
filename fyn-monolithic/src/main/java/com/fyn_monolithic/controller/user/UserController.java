@@ -1,14 +1,13 @@
 package com.fyn_monolithic.controller.user;
 
+import com.fyn_monolithic.dto.request.user.UpdateProfileRequest;
 import com.fyn_monolithic.dto.response.common.ApiResponse;
 import com.fyn_monolithic.dto.response.user.UserResponse;
 import com.fyn_monolithic.service.user.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 

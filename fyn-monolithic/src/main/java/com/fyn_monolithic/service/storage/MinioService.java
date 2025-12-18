@@ -21,8 +21,14 @@ public class MinioService {
 
     private final MinioClient minioClient;
 
-    @Value("${minio.bucket-name}")
+    @Value("${minio.bucket-name:fyn-data}")
     private String bucket;
+
+    @Value("${minio.endpoint:http://localhost:9000}")
+    private String minioEndpoint;
+
+    @Value("${minio.presign-endpoint:http://localhost:9000}")
+    private String presignEndpoint;
 
     public String upload(MultipartFile file) {
         try {
@@ -68,15 +74,12 @@ public class MinioService {
     }
 
     public String getPresignedUrl(String objectKey) {
-        try {
-            return minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
-                    .bucket(bucket)
-                    .method(Method.GET)
-                    .object(objectKey)
-                    .build());
-        } catch (Exception ex) {
-            throw new IllegalStateException("Failed to create pre-signed URL", ex);
-        }
+        // Since bucket is public (mc anonymous set public), use direct URL instead of
+        // presigned
+        // This avoids signature mismatch when Docker hostname differs from
+        // browser-accessible hostname
+        // Direct URL format: {presignEndpoint}/{bucket}/{objectKey}
+        return presignEndpoint + "/" + bucket + "/" + objectKey;
     }
 
     public MediaType detectMediaType(MultipartFile file) {
@@ -105,21 +108,21 @@ public class MinioService {
         if (contentType != null && !contentType.equals("application/octet-stream")) {
             return contentType;
         }
-        
+
         // Nếu không có filename, trả về application/octet-stream
         if (filename == null || filename.isEmpty()) {
             return "application/octet-stream";
         }
-        
+
         // Detect từ extension
         String lowerFilename = filename.toLowerCase(Locale.ROOT);
         int lastDot = lowerFilename.lastIndexOf('.');
         if (lastDot == -1 || lastDot == lowerFilename.length() - 1) {
             return "application/octet-stream";
         }
-        
+
         String extension = lowerFilename.substring(lastDot + 1);
-        
+
         // Images
         switch (extension) {
             case "jpg":

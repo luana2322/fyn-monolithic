@@ -11,11 +11,22 @@ class ImageUtils {
       return null;
     }
 
-    // If it's already a full URL (starts with http:// or https://), return as is
+    // If it's already a full URL (starts with http:// or https://)
     if (urlOrKey.startsWith('http://') || urlOrKey.startsWith('https://')) {
-      // Với các URL đã được backend/presigned URL generate, không encode lại
-      // để tránh làm hỏng chữ ký hoặc path đã được mã hóa sẵn.
-      return urlOrKey;
+      // Fix Docker internal hostname for browser access
+      // Replace fyn-minio:9000 with localhost:9000 for MinIO presigned URLs
+      String fixedUrl = urlOrKey;
+      if (fixedUrl.contains('fyn-minio:9000')) {
+        fixedUrl = fixedUrl.replaceAll('fyn-minio:9000', 'localhost:9000');
+      }
+      if (fixedUrl.contains('fyn-minio:9001')) {
+        fixedUrl = fixedUrl.replaceAll('fyn-minio:9001', 'localhost:9001');
+      }
+      // Also handle minio container name without prefix
+      if (fixedUrl.contains('minio:9000')) {
+        fixedUrl = fixedUrl.replaceAll('minio:9000', 'localhost:9000');
+      }
+      return fixedUrl;
     }
 
     // If it's an object key, build full URL

@@ -51,6 +51,10 @@ public class PostService {
         post.setAuthor(author);
         post.setContent(request.getContent());
         post.setVisibility(request.getVisibility());
+
+        // Handle location - MUTUALLY EXCLUSIVE validation
+        handleLocation(post, request);
+
         Post saved = postRepository.save(post);
 
         if (mediaFiles != null) {
@@ -72,6 +76,36 @@ public class PostService {
                 .build();
     }
 
+    private void handleLocation(Post post, CreatePostRequest request) {
+        boolean hasGpsLocation = request.getLatitude() != null && request.getLongitude() != null;
+        boolean hasPlaceTag = request.getPlaceCode() != null && !request.getPlaceCode().isBlank();
+
+        // Validate mutual exclusivity
+        if (hasGpsLocation && hasPlaceTag) {
+            throw new IllegalArgumentException("Cannot specify both GPS location and place tag");
+        }
+
+        if (hasGpsLocation) {
+            // Create PostGIS Point from lat/lng
+            org.locationtech.jts.geom.GeometryFactory geometryFactory = new org.locationtech.jts.geom.GeometryFactory(
+                    new org.locationtech.jts.geom.PrecisionModel(), 4326);
+            org.locationtech.jts.geom.Point point = geometryFactory.createPoint(
+                    new org.locationtech.jts.geom.Coordinate(request.getLongitude(), request.getLatitude()));
+            post.setLocation(point);
+        } else if (hasPlaceTag) {
+            // Validate and set place tag
+            com.fyn_monolithic.model.post.PlaceTag placeTag = com.fyn_monolithic.model.post.PlaceTag
+                    .fromCode(request.getPlaceCode());
+
+            if (placeTag == null) {
+                throw new IllegalArgumentException("Invalid place code: " + request.getPlaceCode());
+            }
+
+            post.setPlaceCode(placeTag.getCode());
+            post.setPlaceName(placeTag.getDisplayName());
+        }
+    }
+
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> getFeed(int page, int size) {
         Page<Post> result = postRepository.findAll(PageRequest.of(page, size));
@@ -88,6 +122,23 @@ public class PostService {
     public PageResponse<PostResponse> getPostsOfUser(UUID userId, int page, int size) {
         User user = userService.findEntity(userId);
         Page<Post> result = postRepository.findByAuthor(user, PageRequest.of(page, size));
+        return PageResponse.<PostResponse>builder()
+                .content(applyUserContext(result.getContent()))
+                .page(page)
+                .size(size)
+                .totalElements(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<PostResponse> getPostsByPlace(String placeCode, int page, int size) {
+        // Validate place code
+        if (!com.fyn_monolithic.model.post.PlaceTag.isValidCode(placeCode)) {
+            throw new IllegalArgumentException("Invalid place code: " + placeCode);
+        }
+
+        Page<Post> result = postRepository.findByPlaceCode(placeCode, PageRequest.of(page, size));
         return PageResponse.<PostResponse>builder()
                 .content(applyUserContext(result.getContent()))
                 .page(page)

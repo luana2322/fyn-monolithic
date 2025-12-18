@@ -20,6 +20,7 @@ class PostCard extends StatefulWidget {
   final VoidCallback? onOpenComments;
   final String? currentUserAvatarUrl;
   final String? currentUsername;
+  final void Function(String placeCode, String placeName)? onTapPlace;
 
   const PostCard({
     super.key,
@@ -31,6 +32,7 @@ class PostCard extends StatefulWidget {
     this.onOpenComments,
     this.currentUserAvatarUrl,
     this.currentUsername,
+    this.onTapPlace,
   });
 
   @override
@@ -157,15 +159,86 @@ class _PostCardState extends State<PostCard> {
             ),
           ),
           
-          // Text Content với hashtags - only show if content is not empty
-          if (post.content.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _buildTextWithHashtags(post.content, isDark: isDark),
-            ),
-          
-          // Media Content - supports multiple media with carousel
-          if (post.media.isNotEmpty)
+            // Post content
+            if (widget.post.content.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildTextWithHashtags(
+                  widget.post.content,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Location display
+            if (widget.post.location != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.near_me,
+                      size: 14,
+                      color: isDark ? DatingColors.darkSecondaryText : Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Gần đây',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? DatingColors.darkSecondaryText : Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Place tag display (clickable)
+            if (widget.post.place != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GestureDetector(
+                  onTap: () {
+                    // Navigate to posts by place screen
+                    if (widget.onTapPlace != null) {
+                      widget.onTapPlace!(widget.post.place!.code, widget.post.place!.name);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: DatingColors.indigo.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          size: 14,
+                          color: DatingColors.indigo,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          widget.post.place!.name,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: DatingColors.indigo,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+            if (widget.post.location != null || widget.post.place != null)
+              const SizedBox(height: 12),
+
+            // Media Content - supports multiple media with carousel
+            if (post.media.isNotEmpty)
             _MultiMediaView(mediaList: _getSortedMedia()),
           
           // Engagement Metrics (Likes, Comments, Share, Bookmark)

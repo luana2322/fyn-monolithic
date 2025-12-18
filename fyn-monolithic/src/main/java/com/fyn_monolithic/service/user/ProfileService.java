@@ -34,6 +34,18 @@ public class ProfileService {
         profile.setBio(request.getBio());
         profile.setLocation(request.getLocation());
         profile.setWebsite(request.getWebsite());
+
+        // Update new fields
+        if (request.getGender() != null) {
+            profile.setGender(request.getGender());
+        }
+        if (request.getDateOfBirth() != null) {
+            profile.setDateOfBirth(request.getDateOfBirth());
+        }
+        if (request.getEducationLevel() != null) {
+            profile.setEducationLevel(request.getEducationLevel());
+        }
+
         profileRepository.save(profile);
 
         user.setFullName(request.getFullName());
@@ -54,7 +66,7 @@ public class ProfileService {
         profileRepository.save(profile);
         return buildUserResponseWithPresignedUrl(user);
     }
-    
+
     private UserResponse buildUserResponseWithPresignedUrl(User user) {
         UserResponse response = userMapper.toUserResponse(user);
         if (response.getProfile() != null && response.getProfile().getAvatarUrl() != null) {
@@ -77,6 +89,10 @@ public class ProfileService {
                                     .location(response.getProfile().getLocation())
                                     .avatarUrl(presignedUrl)
                                     .isPrivate(response.getProfile().isPrivate())
+                                    .gender(response.getProfile().getGender())
+                                    .age(response.getProfile().getAge())
+                                    .educationLevel(response.getProfile().getEducationLevel())
+                                    .reputationScore(response.getProfile().getReputationScore())
                                     .build())
                             .build();
                 }

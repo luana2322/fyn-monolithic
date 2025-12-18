@@ -21,6 +21,10 @@ public interface UserMapper {
                     .location(null)
                     .website(null)
                     .isPrivate(isPrivate)
+                    .gender(null)
+                    .age(null)
+                    .educationLevel(null)
+                    .reputationScore(100.0) // Default
                     .build();
         }
 
@@ -30,6 +34,10 @@ public interface UserMapper {
                 .location(profile.getLocation())
                 .website(profile.getWebsite())
                 .isPrivate(isPrivate)
+                .gender(profile.getGender())
+                .age(profile.getAge()) // Calculated from dateOfBirth
+                .educationLevel(profile.getEducationLevel())
+                .reputationScore(profile.getReputationScore())
                 .build();
     }
 }

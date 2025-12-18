@@ -75,10 +75,11 @@ class UserProfileState {
 // Notifier cho user profile
 class UserProfileNotifier extends StateNotifier<UserProfileState> {
   final UserService _userService;
+  final Ref _ref;
   final String? userId;
   final String? username;
 
-  UserProfileNotifier(this._userService, {this.userId, this.username})
+  UserProfileNotifier(this._userService, this._ref, {this.userId, this.username})
       : super(UserProfileState());
 
   Future<void> loadUser() async {
@@ -97,9 +98,21 @@ class UserProfileNotifier extends StateNotifier<UserProfileState> {
       final followers = await _userService.getFollowers(user.id, size: 1);
       final following = await _userService.getFollowing(user.id, size: 1);
 
+      // Check if current user is following this user
+      bool isFollowing = false;
+      final authState = _ref.read(authNotifierProvider);
+      if (authState.user != null && authState.user!.id != user.id) {
+        // Only check if it's not the current user's own profile
+        isFollowing = await _userService.checkIsFollowing(
+          user.id,
+          authState.user!.id,
+        );
+      }
+
       state = state.copyWith(
         user: user,
         isLoading: false,
+        isFollowing: isFollowing,
         followersCount: followers.totalElements,
         followingCount: following.totalElements,
       );
@@ -164,6 +177,7 @@ final userProfileProvider = StateNotifierProvider.family<UserProfileNotifier,
   final userService = ref.watch(userServiceProvider);
   return UserProfileNotifier(
     userService,
+    ref,
     userId: params.userId,
     username: params.username,
   );

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/meetup_model.dart';
-import 'discover_screen.dart';
+import 'discover_screen.dart'; // Swipe cards
+import 'discover_list_screen.dart'; // Search list with filter
 import 'matches_screen.dart';
 import 'public_dates_screen.dart';
 import 'my_dates_screen.dart';
@@ -26,10 +27,11 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
   void initState() {
     super.initState();
     _pages.addAll([
-      const DiscoverScreen(),
-      const MatchesScreen(),
-      const PublicDatesScreen(),
-      const MyDatesScreen(),
+      const DiscoverScreen(), // Tab 0: Swipe cards (unchanged)
+      const DiscoverListScreen(), // Tab 1: Search list with filter (NEW)
+      const MatchesScreen(), // Tab 2: Matches
+      const PublicDatesScreen(), // Tab 3: Dates
+      const MyDatesScreen(), // Tab 4: My Plans
     ]);
   }
 
@@ -43,7 +45,7 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
         children: _pages,
       ),
       bottomNavigationBar: _buildBottomNav(theme),
-      floatingActionButton: _currentIndex >= 2
+      floatingActionButton: _currentIndex >= 3
           ? FloatingActionButton.extended(
               onPressed: () => _showCreateDateSheet(),
               icon: const Icon(Icons.add),
@@ -67,7 +69,7 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -79,24 +81,31 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
                 color: Colors.pink,
               ),
               _NavItem(
-                icon: Icons.favorite,
-                label: 'Matches',
+                icon: Icons.search,
+                label: 'Search',
                 isSelected: _currentIndex == 1,
                 onTap: () => setState(() => _currentIndex = 1),
+                color: Colors.orange,
+              ),
+              _NavItem(
+                icon: Icons.favorite,
+                label: 'Matches',
+                isSelected: _currentIndex == 2,
+                onTap: () => setState(() => _currentIndex = 2),
                 color: Colors.red,
               ),
               _NavItem(
                 icon: Icons.calendar_today,
                 label: 'Dates',
-                isSelected: _currentIndex == 2,
-                onTap: () => setState(() => _currentIndex = 2),
+                isSelected: _currentIndex == 3,
+                onTap: () => setState(() => _currentIndex = 3),
                 color: Colors.purple,
               ),
               _NavItem(
                 icon: Icons.event_note,
                 label: 'My Plans',
-                isSelected: _currentIndex == 3,
-                onTap: () => setState(() => _currentIndex = 3),
+                isSelected: _currentIndex == 4,
+                onTap: () => setState(() => _currentIndex = 4),
                 color: Colors.teal,
               ),
             ],

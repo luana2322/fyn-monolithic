@@ -28,6 +28,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _isPrivate = false;
   XFile? _selectedImage;
   Uint8List? _selectedImageBytes; // Cache bytes for web
+  
+  // New fields
+  String? _selectedGender;
+  DateTime? _selectedDateOfBirth;
+  String? _selectedEducationLevel;
 
   @override
   void initState() {
@@ -46,6 +51,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _websiteController.text = user.profile.website ?? '';
       _locationController.text = user.profile.location ?? '';
       _isPrivate = user.profile.isPrivate;
+      _selectedGender = user.profile.gender;
+      _selectedEducationLevel = user.profile.educationLevel;
+      // Note: DateOfBirth calculated as age on server, not stored in response
       setState(() {});
     }
   }
@@ -144,6 +152,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ? null
           : _locationController.text.trim(),
       isPrivate: _isPrivate,
+      gender: _selectedGender,
+      dateOfBirth: _selectedDateOfBirth,
+      educationLevel: _selectedEducationLevel,
     );
 
     final success = await editNotifier.updateProfile(request);
@@ -382,10 +393,115 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                             textInputAction: TextInputAction.done,
                           ),
+                          const SizedBox(height: 16),
+
+                          // Gender
+                          DropdownButtonFormField<String>(
+                            value: _selectedGender,
+                            decoration: const InputDecoration(
+                              labelText: 'Giới tính',
+                              prefixIcon: Icon(Icons.wc_outlined),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: null, child: Text('Không chọn')),
+                              DropdownMenuItem(value: 'MALE', child: Text('Nam')),
+                              DropdownMenuItem(value: 'FEMALE', child: Text('Nữ')),
+                              DropdownMenuItem(value: 'OTHER', child: Text('Khác')),
+                              DropdownMenuItem(value: 'PREFER_NOT_TO_SAY', child: Text('Không muốn nói')),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedGender = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Date of Birth
+                          InkWell(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: _selectedDateOfBirth ?? DateTime(2000, 1, 1),
+                                firstDate: DateTime(1950),
+                                lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  _selectedDateOfBirth = picked;
+                                });
+                              }
+                            },
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Ngày sinh',
+                                prefixIcon: Icon(Icons.cake_outlined),
+                                border: OutlineInputBorder(),
+                              ),
+                              child: Text(
+                                _selectedDateOfBirth != null
+                                    ? '${_selectedDateOfBirth!.day}/${_selectedDateOfBirth!.month}/${_selectedDateOfBirth!.year}'
+                                    : 'Chọn ngày sinh',
+                                style: TextStyle(
+                                  color: _selectedDateOfBirth != null
+                                      ? (isDark ? DatingColors.darkPrimaryText : AppColors.primaryText)
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Education Level
+                          DropdownButtonFormField<String>(
+                            value: _selectedEducationLevel,
+                            decoration: const InputDecoration(
+                              labelText: 'Học vấn',
+                              prefixIcon: Icon(Icons.school_outlined),
+                              border: OutlineInputBorder(),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: null, child: Text('Không chọn')),
+                              DropdownMenuItem(value: 'HIGH_SCHOOL', child: Text('Trung học phổ thông')),
+                              DropdownMenuItem(value: 'COLLEGE', child: Text('Cao đẳng')),
+                              DropdownMenuItem(value: 'UNIVERSITY', child: Text('Đại học')),
+                              DropdownMenuItem(value: 'GRADUATE', child: Text('Thạc sĩ')),
+                              DropdownMenuItem(value: 'POSTGRADUATE', child: Text('Tiến sĩ')),
+                              DropdownMenuItem(value: 'OTHER', child: Text('Khác')),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedEducationLevel = value;
+                              });
+                            },
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
+
+                    // Bio character counter
+                    if (_bioController.text.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: Text(
+                          '${_bioController.text.length}/500 ký tự',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _bioController.text.length > 500
+                                ? Colors.red
+                                : Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    if (_bioController.text.isNotEmpty) const SizedBox(height: 8),
 
                     // Privacy Setting
                     Container(

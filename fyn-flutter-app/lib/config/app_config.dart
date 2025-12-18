@@ -21,6 +21,8 @@ import '../features/connections/presentation/screens/matches_screen.dart';
 import '../features/connections/presentation/screens/connection_hub_screen.dart';
 import '../features/connections/presentation/screens/public_dates_screen.dart';
 import '../features/connections/presentation/screens/my_dates_screen.dart';
+import '../features/post/presentation/screens/create_post_screen.dart';
+import '../features/post/presentation/screens/posts_by_place_screen.dart';
 
 class AppConfig {
   static const String appName = 'FYN Social';
@@ -69,6 +71,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/feed',
         name: 'feed',
         builder: (context, state) => const FeedScreen(),
+      ),
+      GoRoute(
+        path: '/create-post',
+        name: 'create-post',
+        builder: (context, state) => const CreatePostScreen(),
+      ),
+      GoRoute(
+        path: '/posts/place/:placeCode',
+        name: 'posts-by-place',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final placeCode = state.pathParameters['placeCode']!;
+          final placeName = extra?['placeName'] ?? placeCode;
+          return PostsByPlaceScreen(
+            placeCode: placeCode,
+            placeName: placeName,
+          );
+        },
       ),
       GoRoute(
         path: '/profile',

@@ -29,12 +29,17 @@ class ApiEndpoints {
   static String unfollow(String userId) => '/api/users/$userId/follow';
   static String followers(String userId) => '/api/users/$userId/followers';
   static String following(String userId) => '/api/users/$userId/following';
+  static const String searchUsers = '/api/v1/users/search';
   
   // Post endpoints
   static const String createPost = '/api/posts';
   static const String feed = '/api/posts/feed';
   static String postsByUser(String userId) => '/api/posts/user/$userId';
+  static String postsByPlace(String placeCode) => '/api/posts/place/$placeCode';
   static String deletePost(String postId) => '/api/posts/$postId';
+  
+  // Place endpoints
+  static const String places = '/api/places';
   
   // Like endpoints
   static String likePost(String postId) => '/api/posts/$postId/likes';
@@ -61,7 +66,6 @@ class ApiEndpoints {
   
   // Search endpoints
   static const String searchHashtags = '/api/search/hashtags';
-  static const String searchUsers = '/api/search/users';
   
   // Event endpoints (v1 API)
   static const String events = '/api/v1/events';

@@ -21,4 +21,6 @@ public class PostResponse {
     Instant createdAt;
     List<PostMediaResponse> media;
     boolean likedByCurrentUser;
+    LocationInfo location;
+    PlaceInfo place;
 }

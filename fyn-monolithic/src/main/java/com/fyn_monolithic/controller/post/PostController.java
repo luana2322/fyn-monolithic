@@ -22,27 +22,29 @@ public class PostController {
 
     private final PostService postService;
 
-//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<ApiResponse<PostResponse>> createPost(
-//            @Valid @RequestPart("payload") CreatePostRequest request,
-//            @RequestPart(value = "media", required = false) List<MultipartFile> media) {
-//        return ResponseEntity.ok(ApiResponse.ok(postService.createPost(request, media)));
-//    }
-@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-public ResponseEntity<ApiResponse<PostResponse>> createPost(
-        @Valid @RequestPart("payload") CreatePostRequest request,
-        @RequestPart(value = "media", required = false) List<MultipartFile> media) {
-    return ResponseEntity.ok(ApiResponse.ok(postService.createPost(request, media)));
-}
-//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//public ResponseEntity<ApiResponse<PostResponse>> createPost(
-//        @RequestHeader("Content-Type") String contentType,
-//        @Valid @RequestPart("payload") CreatePostRequest request,
-//        @RequestPart(value = "media", required = false) List<MultipartFile> media) {
-//
-//    System.out.println("Content-Type received: " + contentType);
-//    return ResponseEntity.ok(ApiResponse.ok(postService.createPost(request, media)));
-//}
+    // @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // public ResponseEntity<ApiResponse<PostResponse>> createPost(
+    // @Valid @RequestPart("payload") CreatePostRequest request,
+    // @RequestPart(value = "media", required = false) List<MultipartFile> media) {
+    // return ResponseEntity.ok(ApiResponse.ok(postService.createPost(request,
+    // media)));
+    // }
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<PostResponse>> createPost(
+            @Valid @RequestPart("payload") CreatePostRequest request,
+            @RequestPart(value = "media", required = false) List<MultipartFile> media) {
+        return ResponseEntity.ok(ApiResponse.ok(postService.createPost(request, media)));
+    }
+    // @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // public ResponseEntity<ApiResponse<PostResponse>> createPost(
+    // @RequestHeader("Content-Type") String contentType,
+    // @Valid @RequestPart("payload") CreatePostRequest request,
+    // @RequestPart(value = "media", required = false) List<MultipartFile> media) {
+    //
+    // System.out.println("Content-Type received: " + contentType);
+    // return ResponseEntity.ok(ApiResponse.ok(postService.createPost(request,
+    // media)));
+    // }
 
     @GetMapping("/feed")
     public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> feed(
@@ -57,6 +59,14 @@ public ResponseEntity<ApiResponse<PostResponse>> createPost(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ApiResponse.ok(postService.getPostsOfUser(userId, page, size)));
+    }
+
+    @GetMapping("/place/{placeCode}")
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> postsByPlace(
+            @PathVariable String placeCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(postService.getPostsByPlace(placeCode, page, size)));
     }
 
     @DeleteMapping("/{postId}")

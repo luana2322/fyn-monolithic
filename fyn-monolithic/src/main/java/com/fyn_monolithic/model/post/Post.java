@@ -52,6 +52,16 @@ public class Post extends AbstractAuditableEntity {
     @OneToMany(mappedBy = "post")
     private Set<PostHashtag> hashtags = new LinkedHashSet<>();
 
+    // Location fields - supports both GPS and place tagging
+    @Column(name = "location", columnDefinition = "geometry(Point,4326)")
+    private org.locationtech.jts.geom.Point location;
+
+    @Column(name = "place_code", length = 50)
+    private String placeCode;
+
+    @Column(name = "place_name")
+    private String placeName;
+
     public void increaseLikeCount() {
         this.likeCount = this.likeCount + 1;
     }

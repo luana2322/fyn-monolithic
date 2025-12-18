@@ -64,5 +64,19 @@ class UserService {
   }) async {
     return await _followerRepository.getFollowing(userId, page: page, size: size);
   }
+
+  /// Check if current user is following a target user
+  Future<bool> checkIsFollowing(String targetUserId, String currentUserId) async {
+    try {
+      // Get the following list of current user with a reasonable page size
+      final following = await getFollowing(currentUserId, page: 0, size: 100);
+      
+      // Check if target user is in the following list
+      return following.content.any((user) => user.id == targetUserId);
+    } catch (e) {
+      // Default to not following on error
+      return false;
+    }
+  }
 }
 

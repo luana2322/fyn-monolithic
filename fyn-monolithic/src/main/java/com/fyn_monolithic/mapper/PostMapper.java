@@ -19,6 +19,8 @@ public interface PostMapper {
 
     @Mapping(target = "media", expression = "java(toMediaResponses(post.getMedia()))")
     @Mapping(target = "likedByCurrentUser", constant = "false")
+    @Mapping(target = "location", expression = "java(toLocationInfo(post.getLocation()))")
+    @Mapping(target = "place", expression = "java(toPlaceInfo(post.getPlaceCode(), post.getPlaceName()))")
     PostResponse toPostResponse(Post post);
 
     default List<PostMediaResponse> toMediaResponses(Iterable<PostMedia> media) {
@@ -48,5 +50,25 @@ public interface PostMapper {
 
     private <T> Stream<T> toStream(Iterable<T> iterable) {
         return iterable == null ? Stream.empty() : StreamSupport.stream(iterable.spliterator(), false);
+    }
+
+    default com.fyn_monolithic.dto.response.post.LocationInfo toLocationInfo(org.locationtech.jts.geom.Point location) {
+        if (location == null) {
+            return null;
+        }
+        return com.fyn_monolithic.dto.response.post.LocationInfo.builder()
+                .latitude(location.getY())
+                .longitude(location.getX())
+                .build();
+    }
+
+    default com.fyn_monolithic.dto.response.post.PlaceInfo toPlaceInfo(String placeCode, String placeName) {
+        if (placeCode == null || placeName == null) {
+            return null;
+        }
+        return com.fyn_monolithic.dto.response.post.PlaceInfo.builder()
+                .code(placeCode)
+                .name(placeName)
+                .build();
     }
 }

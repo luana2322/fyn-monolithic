@@ -74,6 +74,35 @@ class PostRepository {
     return apiResponse.data!;
   }
 
+  Future<PageResponse<PostModel>> getPostsByPlace(
+    String placeCode, {
+    int page = 0,
+    int size = 10,
+  }) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.postsByPlace(placeCode),
+      queryParameters: {'page': page, 'size': size},
+    );
+
+    final apiResponse = ApiResponse<PageResponse<PostModel>>.fromJson(
+      response.data,
+      (data) => PageResponse.fromJson(
+        data as Map<String, dynamic>,
+        (item) => PostModel.fromJson(item as Map<String, dynamic>),
+      ),
+    );
+
+    if (!apiResponse.success || apiResponse.data == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        message: apiResponse.message ?? 'Không thể tải bài viết',
+      );
+    }
+
+    return apiResponse.data!;
+  }
+
   Future<PostModel> createPost(
     CreatePostRequest request, {
     List<XFile>? mediaFiles,
