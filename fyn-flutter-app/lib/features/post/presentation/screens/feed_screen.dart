@@ -363,6 +363,62 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       );
                     },
                   ),
+                  const SizedBox(height: 8),
+                  // AI Recommendation Toggle
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        FilterChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                feedState.useRecommended 
+                                    ? Icons.auto_awesome 
+                                    : Icons.auto_awesome_outlined,
+                                size: 16,
+                                color: feedState.useRecommended 
+                                    ? Colors.white 
+                                    : DatingColors.rose,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                feedState.useRecommended ? 'Đề xuất AI' : 'Đề xuất AI',
+                                style: TextStyle(
+                                  color: feedState.useRecommended 
+                                      ? Colors.white 
+                                      : (isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          selected: feedState.useRecommended,
+                          onSelected: (_) => ref.read(postFeedProvider.notifier).toggleRecommended(),
+                          selectedColor: DatingColors.rose,
+                          backgroundColor: isDark 
+                              ? DatingColors.darkSurfaceElevated 
+                              : DatingColors.lightSurfaceElevated,
+                          side: BorderSide(
+                            color: feedState.useRecommended 
+                                ? DatingColors.rose 
+                                : (isDark ? DatingColors.darkNavBorder : DatingColors.lightNavBorder),
+                          ),
+                        ),
+                        if (feedState.useRecommended) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            'Dựa trên bài viết bạn thích',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? DatingColors.darkMutedText : DatingColors.lightMutedText,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Divider(height: 1, color: AppColors.muted),
                 ],

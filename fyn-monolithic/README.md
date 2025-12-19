@@ -316,13 +316,350 @@ java -jar target/fyn-monolithic-1.0.0.jar --spring.profiles.active=prod
 
 Update `application-prod.yml` with your production database credentials.
 
-## 📝 License
-
 MIT License
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
+
+---
+
+## 🤖 AI Embedding & Post Recommendation System
+
+### Tổng Quan (Overview)
+
+Hệ thống đề xuất bài viết thông minh sử dụng **HuggingFace Sentence Transformers** để phân tích nội dung bài viết và đề xuất các bài viết phù hợp dựa trên sở thích của người dùng.
+
+**Mô hình AI:** `sentence-transformers/all-MiniLM-L6-v2` (384 chiều embedding)
+
+### Kiến Trúc Hệ Thống (System Architecture)
+
+```mermaid
+graph TB
+    subgraph "Frontend - Flutter App"
+        UI[Feed Screen]
+        Toggle[AI Toggle Chip]
+        Provider[Post Feed Provider]
+    end
+
+    subgraph "Backend - Spring Boot"
+        Controller[Post Controller]
+        PostService[Post Service]
+        RecommendService[Recommendation Service]
+        EmbedService[Embedding Service]
+        Cache[Redis Cache]
+    end
+
+    subgraph "External Services"
+        HF[HuggingFace API]
+        DB[(PostgreSQL)]
+    end
+
+    UI -->|Bật/Tắt AI| Toggle
+    Toggle -->|toggleRecommended| Provider
+    Provider -->|GET /recommended| Controller
+    Controller --> PostService
+    PostService --> RecommendService
+    RecommendService -->|Check Cache| Cache
+    RecommendService -->|Get Liked Posts| DB
+    RecommendService --> EmbedService
+    EmbedService -->|Generate Embeddings| HF
+    HF -->|384-dim vectors| EmbedService
+    EmbedService -->|Embeddings| RecommendService
+    RecommendService -->|Ranked Posts| PostService
+    PostService -->|Response| Controller
+    Controller -->|JSON| Provider
+    Provider -->|Update UI| UI
+
+    style HF fill:#ff6b6b
+    style Cache fill:#4ecdc4
+    style DB fill:#45b7d1
+    style Toggle fill:#95e1d3
+```
+
+### Biểu Đồ Tuần Tự (Sequence Diagram)
+
+#### 1. Quy Trình Đề Xuất Bài Viết (Post Recommendation Flow)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👤 Người Dùng
+    participant UI as Flutter UI
+    participant Provider as Feed Provider
+    participant API as Backend API
+    participant RecService as Recommendation<br/>Service
+    participant Cache as Redis Cache
+    participant EmbedService as Embedding<br/>Service
+    participant HF as HuggingFace<br/>API
+    participant DB as PostgreSQL
+
+    User->>UI: Nhấn chip "✨ Đề xuất AI"
+    UI->>Provider: toggleRecommended()
+    Provider->>Provider: useRecommended = true
+    Provider->>API: GET /api/posts/recommended
+    
+    API->>RecService: getRecommendedPosts(limit=10)
+    
+    Note over RecService: Kiểm tra số lượng tương tác
+    RecService->>DB: findLikedPostsByUser(userId)
+    DB-->>RecService: List<Post> (liked posts)
+    
+    alt Ít hơn 3 bài viết đã thích
+        RecService-->>API: Trả về feed thông thường
+    else Đủ dữ liệu để đề xuất
+        RecService->>Cache: getUserPreferenceVector(userId)
+        
+        alt Vector đã có trong cache
+            Cache-->>RecService: Cached preference vector
+        else Cần tính toán mới
+            Note over RecService: Trích xuất nội dung từ bài viết đã thích
+            RecService->>EmbedService: getEmbeddings(List<String> contents)
+            EmbedService->>HF: POST /models/{model}<br/>inputs: [text1, text2, ...]
+            Note over HF: Xử lý batch embedding
+            HF-->>EmbedService: [[emb1], [emb2], ...] (384-dim)
+            EmbedService-->>RecService: List<float[]> embeddings
+            
+            Note over RecService: Tính trung bình các vector
+            RecService->>RecService: averageVectors(embeddings)
+            RecService->>Cache: Lưu preference vector (TTL: 30 phút)
+        end
+        
+        Note over RecService: Lấy bài viết ứng cử viên
+        RecService->>DB: findAll(PageRequest) + filter
+        DB-->>RecService: List<Post> candidates
+        
+        Note over RecService: Tạo embeddings cho bài viết ứng cử viên
+        RecService->>EmbedService: getEmbeddings(candidate contents)
+        EmbedService->>HF: POST /models/{model}
+        HF-->>EmbedService: Embeddings
+        EmbedService-->>RecService: List<float[]>
+        
+        Note over RecService: Tính độ tương đồng cosine
+        loop For each candidate post
+            RecService->>RecService: cosineSimilarity(userVector, postVector)
+        end
+        
+        Note over RecService: Sắp xếp theo điểm tương đồng
+        RecService->>RecService: sort by similarity (desc)
+        RecService-->>API: Ranked List<PostResponse>
+    end
+    
+    API-->>Provider: PageResponse<Post>
+    Provider->>UI: Cập nhật danh sách bài viết
+    UI-->>User: Hiển thị bài viết đề xuất
+```
+
+#### 2. Quy Trình Tính Toán Độ Tương Đồng (Similarity Calculation)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant RecService as Recommendation Service
+    participant User as User Preference<br/>Vector [384]
+    participant Post as Post Embedding<br/>Vector [384]
+    participant Calc as Cosine<br/>Calculator
+
+    RecService->>User: Get user preference vector
+    User-->>RecService: [0.12, -0.45, 0.78, ...]
+    
+    RecService->>Post: Get post embedding
+    Post-->>RecService: [0.34, -0.21, 0.89, ...]
+    
+    RecService->>Calc: cosineSimilarity(userVec, postVec)
+    
+    Note over Calc: 1. Tính tích vô hướng (dot product)
+    Calc->>Calc: dotProduct = Σ(u[i] * p[i])
+    
+    Note over Calc: 2. Tính norm của vector u
+    Calc->>Calc: normA = √(Σ(u[i]²))
+    
+    Note over Calc: 3. Tính norm của vector p
+    Calc->>Calc: normB = √(Σ(p[i]²))
+    
+    Note over Calc: 4. Tính cosine similarity
+    Calc->>Calc: similarity = dotProduct / (normA * normB)
+    
+    Calc-->>RecService: similarity score (0.0 - 1.0)
+    Note over RecService: Điểm càng cao = càng giống
+```
+
+### Biểu Đồ Hoạt Động (Activity Diagram)
+
+```mermaid
+flowchart TD
+    Start([Người dùng mở Feed]) --> CheckToggle{Check Toggle<br/>AI Recommendation?}
+    
+    CheckToggle -->|Tắt| NormalFeed[Load Normal Feed<br/>Chronological Order]
+    NormalFeed --> DisplayPosts[Hiển thị bài viết]
+    
+    CheckToggle -->|Bật| GetLikes[Query: Lấy danh sách<br/>bài viết đã like]
+    GetLikes --> CountCheck{Số lượng likes<br/>>= 3?}
+    
+    CountCheck -->|Không| Fallback[Fallback: Load Normal Feed]
+    Fallback --> DisplayPosts
+    
+    CountCheck -->|Có| CacheCheck{Kiểm tra cache<br/>preference vector?}
+    
+    CacheCheck -->|Hit| UseCache[Dùng cached vector]
+    UseCache --> GetCandidates
+    
+    CacheCheck -->|Miss| ExtractContent[Trích xuất nội dung<br/>từ liked posts]
+    ExtractContent --> BatchEmbed[Gọi HuggingFace API<br/>Batch Embedding]
+    BatchEmbed --> WaitAPI[Chờ response<br/>384-dim vectors]
+    WaitAPI --> Average[Tính trung bình<br/>tất cả embeddings]
+    Average --> SaveCache[Lưu vào cache<br/>TTL: 30 phút]
+    SaveCache --> GetCandidates[Lấy bài viết ứng cử viên<br/>Max: 500 posts]
+    
+    GetCandidates --> EmbedCandidates[Tạo embeddings<br/>cho candidates]
+    EmbedCandidates --> CalcSim[Tính cosine similarity<br/>cho từng post]
+    CalcSim --> RankPosts[Sắp xếp posts theo<br/>điểm similarity giảm dần]
+    RankPosts --> TakeTop[Lấy top N posts<br/>default: 10]
+    TakeTop --> DisplayPosts
+    
+    DisplayPosts --> End([Kết thúc])
+    
+    style Start fill:#e1f5e1
+    style End fill:#ffe1e1
+    style BatchEmbed fill:#fff4e1
+    style CalcSim fill:#e1f0ff
+    style CacheCheck fill:#f0e1ff
+    style CountCheck fill:#ffe1f0
+```
+
+### Công Thức Toán Học (Mathematical Formulas)
+
+#### 1. Cosine Similarity
+
+Độ tương đồng cosine giữa 2 vector **u** và **v**:
+
+```
+similarity(u, v) = (u · v) / (||u|| × ||v||)
+
+Trong đó:
+- u · v = Σ(uᵢ × vᵢ)           (tích vô hướng)
+- ||u|| = √(Σ(uᵢ²))            (độ dài vector u)
+- ||v|| = √(Σ(vᵢ²))            (độ dài vector v)
+- Kết quả: -1 ≤ similarity ≤ 1
+  · 1  = hoàn toàn giống nhau
+  · 0  = không liên quan
+  · -1 = hoàn toàn đối lập
+```
+
+#### 2. User Preference Vector
+
+Vector sở thích người dùng = trung bình các embedding của bài viết đã like:
+
+```
+preferenceVector = (1/N) × Σ embedding(likedPostᵢ)
+
+N = số lượng bài viết đã like (tối đa 50 gần nhất)
+```
+
+### Cấu Hình (Configuration)
+
+#### Backend Configuration (`application-ai.yml`)
+
+```yaml
+huggingface:
+  api:
+    token: ${HUGGINGFACE_API_TOKEN:}  # API token
+  model: sentence-transformers/all-MiniLM-L6-v2
+
+ai:
+  recommendation:
+    enabled: true
+    min-interaction-count: 3        # Tối thiểu 3 likes
+    max-candidate-posts: 500        # Tối đa 500 ứng cử viên
+    cache-ttl-minutes: 30           # Cache 30 phút
+
+spring:
+  cache:
+    type: simple
+    cache-names:
+      - userPreferenceVectors
+```
+
+#### Environment Variables
+
+Tạo file `.env`:
+
+```env
+HUGGINGFACE_API_TOKEN=hf_your_token_here
+```
+
+### API Endpoints
+
+| Endpoint | Method | Mô tả |
+|----------|--------|-------|
+| `/api/posts/recommended` | GET | Lấy bài viết đề xuất AI |
+| `/api/posts/feed` | GET | Lấy feed thông thường |
+| `/api/ai/health` | GET | Kiểm tra trạng thái HuggingFace API |
+| `/api/ai/embed` | POST | Test embedding (debug only) |
+
+### Ví Dụ Request/Response
+
+#### Request: Get Recommended Posts
+
+```bash
+curl -X GET "http://localhost:8080/api/posts/recommended?page=0&size=10" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "id": "uuid",
+        "content": "AI-recommended post content...",
+        "author": {...},
+        "likeCount": 42,
+        "commentCount": 15,
+        "createdAt": "2025-12-19T12:00:00Z"
+      }
+    ],
+    "page": 0,
+    "size": 10,
+    "totalElements": 50
+  }
+}
+```
+
+### Tối Ưu Hóa & Performance
+
+1. **Caching Strategy**
+   - User preference vectors được cache 30 phút
+   - Giảm thiểu số lần gọi HuggingFace API
+   - Cache invalidation khi user like bài viết mới
+
+2. **Batch Processing**
+   - Gửi nhiều texts trong 1 request đến HuggingFace
+   - Giảm latency và tối ưu băng thông
+
+3. **Fallback Mechanism**
+   - Nếu < 3 likes → trả về feed thông thường
+   - Nếu HuggingFace API lỗi → trả về feed thông thường
+   - Đảm bảo UX luôn mượt mà
+
+### Hạn Chế & Cải Tiến Tương Lai
+
+**Hạn chế hiện tại:**
+- Chỉ phân tích text content, chưa xử lý images/videos
+- Cold start problem cho user mới
+- Phụ thuộc vào HuggingFace API availability
+
+**Cải tiến tương lai:**
+- Pre-compute embeddings cho tất cả posts (background job)
+- Sử dụng multimodal embeddings (CLIP) cho images
+- Self-hosted embedding model để giảm dependency
+- Collaborative filtering kết hợp content-based
+- A/B testing để đánh giá hiệu quả
+
+---
 
 ## 📧 Contact
 

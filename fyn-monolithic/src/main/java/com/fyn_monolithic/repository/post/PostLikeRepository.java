@@ -19,4 +19,11 @@ public interface PostLikeRepository extends JpaRepository<PostLike, UUID> {
 
     @Query("select pl.post.id from PostLike pl where pl.user = :user and pl.post in :posts")
     Set<UUID> findPostIdsLikedByUser(@Param("user") User user, @Param("posts") List<Post> posts);
+
+    /**
+     * Find all posts liked by a user, ordered by most recent first.
+     * Used for building user preference vectors in recommendation system.
+     */
+    @Query("select pl.post from PostLike pl where pl.user = :user order by pl.createdAt desc")
+    List<Post> findLikedPostsByUser(@Param("user") User user);
 }

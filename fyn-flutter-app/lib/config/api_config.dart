@@ -34,6 +34,7 @@ class ApiEndpoints {
   // Post endpoints
   static const String createPost = '/api/posts';
   static const String feed = '/api/posts/feed';
+  static const String recommendedFeed = '/api/posts/recommended';
   static String postsByUser(String userId) => '/api/posts/user/$userId';
   static String postsByPlace(String placeCode) => '/api/posts/place/$placeCode';
   static String deletePost(String postId) => '/api/posts/$postId';

@@ -17,6 +17,11 @@ class PostService {
     return _postRepository.getFeed(page: page, size: size);
   }
 
+  /// Get AI-powered recommended posts based on user's likes
+  Future<PageResponse<PostModel>> getRecommendedFeed({int page = 0, int size = 10}) {
+    return _postRepository.getRecommendedFeed(page: page, size: size);
+  }
+
   Future<PageResponse<PostModel>> getPostsByUser(
     String userId, {
     int page = 0,

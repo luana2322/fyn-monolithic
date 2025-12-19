@@ -17,6 +17,7 @@ import com.fyn_monolithic.repository.post.PostMediaRepository;
 import com.fyn_monolithic.repository.post.PostRepository;
 import com.fyn_monolithic.repository.search.HashtagRepository;
 import com.fyn_monolithic.repository.search.PostHashtagRepository;
+import com.fyn_monolithic.service.ai.PostRecommendationService;
 import com.fyn_monolithic.service.storage.MinioService;
 import com.fyn_monolithic.service.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class PostService {
     private final UserService userService;
     private final MinioService minioService;
     private final PostLikeRepository postLikeRepository;
+    private final PostRecommendationService postRecommendationService;
 
     @Transactional
     public PostResponse createPost(CreatePostRequest request, List<MultipartFile> mediaFiles) {
@@ -115,6 +117,23 @@ public class PostService {
                 .size(size)
                 .totalElements(result.getTotalElements())
                 .totalPages(result.getTotalPages())
+                .build();
+    }
+
+    /**
+     * Get AI-powered personalized feed based on user's liked post history.
+     * Uses HuggingFace embeddings and cosine similarity for post ranking.
+     * Falls back to chronological feed if user has insufficient interactions.
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<PostResponse> getRecommendedFeed(int page, int size) {
+        List<PostResponse> recommended = postRecommendationService.getRecommendedPosts(size);
+        return PageResponse.<PostResponse>builder()
+                .content(recommended)
+                .page(page)
+                .size(size)
+                .totalElements(recommended.size())
+                .totalPages(1) // Recommendations are computed, not paginated from DB
                 .build();
     }
 

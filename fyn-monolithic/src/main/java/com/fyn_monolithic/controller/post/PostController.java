@@ -53,6 +53,18 @@ public class PostController {
         return ResponseEntity.ok(ApiResponse.ok(postService.getFeed(page, size)));
     }
 
+    /**
+     * Get AI-powered personalized post recommendations.
+     * Uses HuggingFace embeddings to rank posts based on user's liked post history.
+     * Falls back to chronological feed if user has fewer than 3 liked posts.
+     */
+    @GetMapping("/recommended")
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> recommended(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(postService.getRecommendedFeed(page, size)));
+    }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> postsByUser(
             @PathVariable UUID userId,

@@ -45,6 +45,32 @@ class PostRepository {
     return apiResponse.data!;
   }
 
+  /// Get AI-powered recommended posts based on user's likes
+  Future<PageResponse<PostModel>> getRecommendedFeed({int page = 0, int size = 10}) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.recommendedFeed,
+      queryParameters: {'page': page, 'size': size},
+    );
+
+    final apiResponse = ApiResponse<PageResponse<PostModel>>.fromJson(
+      response.data,
+      (data) => PageResponse.fromJson(
+        data as Map<String, dynamic>,
+        (item) => PostModel.fromJson(item as Map<String, dynamic>),
+      ),
+    );
+
+    if (!apiResponse.success || apiResponse.data == null) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        message: apiResponse.message ?? 'Không thể tải bài viết đề xuất',
+      );
+    }
+
+    return apiResponse.data!;
+  }
+
   Future<PageResponse<PostModel>> getPostsByUser(
     String userId, {
     int page = 0,
