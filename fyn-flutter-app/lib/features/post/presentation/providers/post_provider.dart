@@ -25,8 +25,6 @@ class FeedState {
   final bool isLoadingMore;
   final bool hasMore;
   final String? error;
-  final bool useRecommended; // Toggle for AI recommendations
-
   const FeedState({
     this.posts = const [],
     this.isLoading = false,
@@ -34,7 +32,6 @@ class FeedState {
     this.isLoadingMore = false,
     this.hasMore = true,
     this.error,
-    this.useRecommended = false,
   });
 
   FeedState copyWith({
@@ -45,7 +42,6 @@ class FeedState {
     bool? hasMore,
     String? error,
     bool clearError = false,
-    bool? useRecommended,
   }) {
     return FeedState(
       posts: posts ?? this.posts,
@@ -54,7 +50,6 @@ class FeedState {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMore: hasMore ?? this.hasMore,
       error: clearError ? null : (error ?? this.error),
-      useRecommended: useRecommended ?? this.useRecommended,
     );
   }
 }
@@ -73,13 +68,6 @@ class FeedNotifier extends StateNotifier<FeedState> {
     await refresh(isInitial: true);
   }
 
-  /// Toggle between normal feed and AI-recommended feed
-  Future<void> toggleRecommended() async {
-    state = state.copyWith(useRecommended: !state.useRecommended);
-    _initialized = false; // Force reload
-    await loadInitial();
-  }
-
   Future<void> refresh({bool isInitial = false}) async {
     state = state.copyWith(
       isLoading: isInitial,
@@ -88,9 +76,8 @@ class FeedNotifier extends StateNotifier<FeedState> {
     );
     try {
       _currentPage = 0;
-      final page = state.useRecommended
-          ? await _postService.getRecommendedFeed(page: _currentPage, size: _pageSize)
-          : await _postService.getFeed(page: _currentPage, size: _pageSize);
+      // Always use AI recommended feed (backend falls back to chronological if <3 likes)
+      final page = await _postService.getRecommendedFeed(page: _currentPage, size: _pageSize);
       _currentPage += 1;
       state = state.copyWith(
         posts: page.content,
@@ -112,9 +99,8 @@ class FeedNotifier extends StateNotifier<FeedState> {
     if (!state.hasMore || state.isLoadingMore || state.isLoading) return;
     state = state.copyWith(isLoadingMore: true, clearError: true);
     try {
-      final page = state.useRecommended
-          ? await _postService.getRecommendedFeed(page: _currentPage, size: _pageSize)
-          : await _postService.getFeed(page: _currentPage, size: _pageSize);
+      // Always use AI recommended feed (backend falls back to chronological if <3 likes)
+      final page = await _postService.getRecommendedFeed(page: _currentPage, size: _pageSize);
       _currentPage += 1;
       state = state.copyWith(
         posts: [...state.posts, ...page.content],

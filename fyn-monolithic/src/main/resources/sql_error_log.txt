@@ -1,0 +1,25 @@
+DO
+NOTICE:  Found 4 existing users. Proceeding with data generation...
+BEGIN
+INSERT 0 60
+DO
+ROLLBACK
+ERROR:  there is no unique or exclusion constraint matching the ON CONFLICT specification
+CONTEXT:  SQL statement "INSERT INTO post_likes (id, post_id, user_id, created_at, version)
+            VALUES (
+                gen_random_uuid(),
+                v_post.id,
+                v_user.id,
+                NOW() - (floor(random() * 50)::INTEGER || ' days')::INTERVAL,
+                0
+            )
+            ON CONFLICT (post_id, user_id) DO NOTHING"
+PL/pgSQL function inline_code_block line 18 at SQL statement
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ users | posts | likes | comments 
+-------+-------+-------+----------
+     4 |     8 |    12 |        1
+(1 row)
+

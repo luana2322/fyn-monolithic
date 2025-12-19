@@ -14,7 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class HuggingFaceConfig {
 
-    private static final String HUGGINGFACE_INFERENCE_API_BASE = "https://api-inference.huggingface.co";
+    private static final String HUGGINGFACE_INFERENCE_API_BASE = "https://router.huggingface.co";
 
     @Value("${huggingface.api.token:}")
     private String apiToken;

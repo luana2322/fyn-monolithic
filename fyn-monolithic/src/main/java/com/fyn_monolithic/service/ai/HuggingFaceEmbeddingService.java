@@ -41,7 +41,7 @@ public class HuggingFaceEmbeddingService {
         }
 
         try {
-            String endpoint = "/pipeline/feature-extraction/" + huggingFaceConfig.getModel();
+            String endpoint = "/hf-inference/models/" + huggingFaceConfig.getModel() + "/pipeline/feature-extraction";
 
             // HuggingFace expects: {"inputs": "text"} for single input
             Map<String, Object> requestBody = Map.of(
@@ -86,7 +86,7 @@ public class HuggingFaceEmbeddingService {
         }
 
         try {
-            String endpoint = "/pipeline/feature-extraction/" + huggingFaceConfig.getModel();
+            String endpoint = "/hf-inference/models/" + huggingFaceConfig.getModel() + "/pipeline/feature-extraction";
 
             // HuggingFace expects: {"inputs": ["text1", "text2"]} for batch input
             Map<String, Object> requestBody = Map.of(
