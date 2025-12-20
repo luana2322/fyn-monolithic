@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/models/meetup_model.dart';
 import '../providers/discover_provider.dart';
-import '../widgets/compact_match_card.dart';
+import '../widgets/rich_match_card.dart';
 import '../../../../shared/widgets/responsive_container.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/dating_colors.dart';
@@ -162,25 +162,9 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
         itemCount: state.matches.length,
         itemBuilder: (context, index) {
           final match = state.matches[index];
-          return CompactMatchCard(
+          return RichMatchCard(
             match: match,
-            status: 'ACCEPTED', // TODO: Get actual status from match
-            onTap: () => context.push('/profile/${match.user.id}'),
-            onComplete: () => _showActionDialog(
-              'Mark as Completed?',
-              'This will mark the meetup as successfully completed.',
-              () => ref.read(matchesProvider.notifier).completeMatch(match.id),
-            ),
-            onCancel: () => _showActionDialog(
-              'Cancel this match?',
-              'You can rematch in the future.',
-              () => ref.read(matchesProvider.notifier).cancelMatch(match.id),
-            ),
-            onNoShow: () => _showActionDialog(
-              'Report No-show?',
-              'This will apply a penalty to the other user\'s reputation.',
-              () => ref.read(matchesProvider.notifier).reportNoShow(match.id),
-            ),
+            onRefresh: () => ref.read(matchesProvider.notifier).loadMatches(status: _selectedStatus),
           );
         },
       ),

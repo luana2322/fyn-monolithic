@@ -22,6 +22,7 @@ import java.util.UUID;
 public class MatchingController {
 
         private final MatchingService matchingService;
+        private final com.fyn_monolithic.service.match.DateFeedbackService dateFeedbackService;
 
         /**
          * Get potential matches for swiping (discover)
@@ -148,5 +149,125 @@ public class MatchingController {
 
                 matchingService.reportNoShow(userDetails.getUser().getId(), matchId);
                 return ResponseEntity.ok(Map.of("success", true, "message", "No-show reported, penalty applied"));
+        }
+
+        // ==================== Simplified Dating Flow Endpoints ====================
+
+        /**
+         * Create date for a match (mandatory after matching)
+         * Each match can only have ONE date
+         */
+        @PostMapping("/{matchId}/date")
+        public ResponseEntity<Map<String, Object>> createDateForMatch(
+                        @PathVariable UUID matchId,
+                        @AuthenticationPrincipal CustomUserDetails userDetails,
+                        @Valid @RequestBody com.fyn_monolithic.dto.request.match.CreateDateForMatchRequest request) {
+
+                System.out.println("DEBUG: Creating date for match " + matchId);
+                System.out.println("DEBUG: scheduledAt = " + request.getScheduledAt());
+                System.out.println("DEBUG: description = " + request.getDescription());
+                System.out.println("DEBUG: location = " + request.getLocation());
+
+                var connection = matchingService.createDateForMatch(
+                                userDetails.getUser().getId(), matchId, request);
+
+                return ResponseEntity.ok(Map.of(
+                                "success", true,
+                                "message", "Date created successfully",
+                                "data", Map.of(
+                                                "matchId", connection.getId(),
+                                                "dateScheduledAt", connection.getDateScheduledAt(),
+                                                "location", Map.of(
+                                                                "name", connection.getDateLocationName(),
+                                                                "address", connection.getDateLocationAddress(),
+                                                                "latitude", connection.getDateLatitude(),
+                                                                "longitude", connection.getDateLongitude()),
+                                                "description", connection.getDateDescription(),
+                                                "status", connection.getDateStatus())));
+        }
+
+        /**
+         * Update location of an existing date
+         */
+        @PatchMapping("/{matchId}/location")
+        public ResponseEntity<Map<String, Object>> updateDateLocation(
+                        @PathVariable UUID matchId,
+                        @AuthenticationPrincipal CustomUserDetails userDetails,
+                        @Valid @RequestBody com.fyn_monolithic.dto.request.match.UpdateDateLocationRequest request) {
+
+                var connection = matchingService.updateDateLocation(
+                                userDetails.getUser().getId(), matchId, request);
+
+                return ResponseEntity.ok(Map.of(
+                                "success", true,
+                                "message", "Location updated",
+                                "data", Map.of(
+                                                "location", Map.of(
+                                                                "name", connection.getDateLocationName(),
+                                                                "address", connection.getDateLocationAddress(),
+                                                                "latitude", connection.getDateLatitude(),
+                                                                "longitude", connection.getDateLongitude()))));
+        }
+
+        /**
+         * Get match details with full date information
+         */
+        @GetMapping("/{matchId}")
+        public ResponseEntity<Map<String, Object>> getMatchById(
+                        @PathVariable UUID matchId,
+                        @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+                var connection = matchingService.getMatchById(
+                                userDetails.getUser().getId(), matchId);
+
+                // Get the other user in the connection
+                var other = connection.getRequester().getId().equals(userDetails.getUser().getId())
+                                ? connection.getReceiver()
+                                : connection.getRequester();
+
+                var response = Map.of(
+                                "success", true,
+                                "data", Map.of(
+                                                "id", connection.getId(),
+                                                "user", Map.of(
+                                                                "id", other.getId(),
+                                                                "username", other.getUsername(),
+                                                                "fullName",
+                                                                other.getFullName() != null ? other.getFullName()
+                                                                                : other.getUsername()),
+                                                "matchedAt", connection.getRequestedAt(),
+                                                "status", connection.getStatus().name(),
+                                                "date", connection.getDateScheduledAt() != null ? Map.of(
+                                                                "scheduledAt", connection.getDateScheduledAt(),
+                                                                "description", connection.getDateDescription(),
+                                                                "location", Map.of(
+                                                                                "name",
+                                                                                connection.getDateLocationName(),
+                                                                                "address",
+                                                                                connection.getDateLocationAddress(),
+                                                                                "latitude",
+                                                                                connection.getDateLatitude(),
+                                                                                "longitude",
+                                                                                connection.getDateLongitude()),
+                                                                "status", connection.getDateStatus()) : null));
+
+                return ResponseEntity.ok(response);
+        }
+
+        /**
+         * Submit post-date feedback (12-24h after date)
+         */
+        @PostMapping("/{matchId}/feedback")
+        public ResponseEntity<Map<String, Object>> submitFeedback(
+                        @PathVariable UUID matchId,
+                        @AuthenticationPrincipal CustomUserDetails userDetails,
+                        @Valid @RequestBody com.fyn_monolithic.dto.request.match.DateFeedbackRequest request) {
+
+                dateFeedbackService.submitFeedback(
+                                userDetails.getUser().getId(), matchId, request);
+
+                return ResponseEntity.ok(Map.of(
+                                "success", true,
+                                "message", "Feedback submitted successfully"));
         }
 }

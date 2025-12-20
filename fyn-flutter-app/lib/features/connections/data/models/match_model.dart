@@ -1,3 +1,5 @@
+import 'date_info.dart';
+
 /// Match model representing a potential connection
 class MatchModel {
   final String id;
@@ -8,6 +10,7 @@ class MatchModel {
   final String status; // pending, liked, rejected, matched
   final String connectionType; // dating, friendship, hobby, group, community
   final DateTime? matchedAt;
+  final DateInfo? date; // ✨ NEW: Embedded date from simplified flow
 
   MatchModel({
     required this.id,
@@ -18,6 +21,7 @@ class MatchModel {
     this.status = 'pending',
     this.connectionType = 'dating',
     this.matchedAt,
+    this.date, // ✨ NEW
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
@@ -47,6 +51,7 @@ class MatchModel {
       status: json['status']?.toString() ?? 'pending',
       connectionType: json['connectionType']?.toString() ?? json['connection_type']?.toString() ?? 'dating',
       matchedAt: json['matchedAt'] != null ? DateTime.parse(json['matchedAt'].toString()) : null,
+      date: json['date'] != null ? DateInfo.fromJson(json['date'] as Map<String, dynamic>) : null,
     );
   }
 
@@ -149,4 +154,7 @@ class UserPreview {
 
   /// Primary photo URL
   String? get primaryPhoto => photos.isNotEmpty ? photos.first : null;
+  
+  /// Avatar URL (alias for primaryPhoto for compatibility)
+  String? get avatarUrl => primaryPhoto;
 }

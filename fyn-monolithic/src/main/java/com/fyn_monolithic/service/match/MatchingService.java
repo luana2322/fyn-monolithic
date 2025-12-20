@@ -252,6 +252,65 @@ public class MatchingService {
         return true;
     }
 
+    /**
+     * Create or update date for a match (simplified dating flow)
+     * Each match can have only ONE date
+     */
+    @Transactional
+    public Connection createDateForMatch(UUID userId, UUID matchId,
+            com.fyn_monolithic.dto.request.match.CreateDateForMatchRequest request) {
+
+        Connection connection = findConnectionForUser(userId, matchId);
+
+        // Prevent duplicate dates if already exists
+        if (connection.getDateScheduledAt() != null) {
+            throw new com.fyn_monolithic.exception.BadRequestException(
+                    "Date already exists for this match. Use update location endpoint to modify.");
+        }
+
+        // Set all date information
+        connection.setDateScheduledAt(request.getScheduledAt());
+        connection.setDateDescription(request.getDescription());
+        connection.setDateLocationName(request.getLocation().getName());
+        connection.setDateLocationAddress(request.getLocation().getAddress());
+        connection.setDateLatitude(request.getLocation().getLatitude());
+        connection.setDateLongitude(request.getLocation().getLongitude());
+        connection.setDateCreatedAt(java.time.ZonedDateTime.now());
+        connection.setDateStatus("PENDING");
+        connection.setFeedbackStatus("PENDING");
+
+        return connectionRepository.save(connection);
+    }
+
+    /**
+     * Update location for an existing date
+     */
+    @Transactional
+    public Connection updateDateLocation(UUID userId, UUID matchId,
+            com.fyn_monolithic.dto.request.match.UpdateDateLocationRequest request) {
+
+        Connection connection = findConnectionForUser(userId, matchId);
+
+        if (connection.getDateScheduledAt() == null) {
+            throw new com.fyn_monolithic.exception.BadRequestException(
+                    "No date exists for this match. Create one first.");
+        }
+
+        connection.setDateLocationName(request.getName());
+        connection.setDateLocationAddress(request.getAddress());
+        connection.setDateLatitude(request.getLatitude());
+        connection.setDateLongitude(request.getLongitude());
+
+        return connectionRepository.save(connection);
+    }
+
+    /**
+     * Get single match by ID with full date information
+     */
+    public Connection getMatchById(UUID userId, UUID matchId) {
+        return findConnectionForUser(userId, matchId);
+    }
+
     private void _createMatch(User u1, User u2) {
         // Check if connection already exists
         if (connectionRepository.existsByRequesterIdAndReceiverId(u1.getId(), u2.getId()) ||

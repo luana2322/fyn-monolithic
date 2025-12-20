@@ -122,6 +122,72 @@ class MatchRepository {
       throw Exception('Failed to report no-show: $e');
     }
   }
+
+  // ==================== Simplified Dating Flow Methods ====================
+
+  /// Create a date for a match (mandatory after matching)
+  Future<void> createDateForMatch(String matchId, {
+    required DateTime scheduledAt,
+    required String description,
+    required Map<String, dynamic> location,
+  }) async {
+    try {
+      await _apiClient.post(
+        '/api/v1/matches/$matchId/date',
+        data: {
+          'scheduledAt': scheduledAt.toIso8601String(),
+          'description': description,
+          'location': location,
+        },
+      );
+    } catch (e) {
+      throw Exception('Failed to create date: $e');
+    }
+  }
+
+  /// Update location for an existing date
+  Future<void> updateDateLocation(String matchId, Map<String, dynamic> location) async {
+    try {
+      await _apiClient.patch(
+        '/api/v1/matches/$matchId/location',
+        data: location,
+      );
+    } catch (e) {
+      throw Exception('Failed to update location: $e');
+    }
+  }
+
+  /// Get match details with full date information
+  Future<MatchModel> getMatchById(String matchId) async {
+    try {
+      final response = await _apiClient.get('/api/v1/matches/$matchId');
+      return MatchModel.fromJson(response.data['data']);
+    } catch (e) {
+      throw Exception('Failed to load match details: $e');
+    }
+  }
+
+  /// Submit post-date feedback (12-24h after date)
+  Future<void> submitFeedback(String matchId, {
+    required bool didMeet,
+    String? noShowReason,
+    String? rating,
+    String? feedbackText,
+  }) async {
+    try {
+      await _apiClient.post(
+        '/api/v1/matches/$matchId/feedback',
+        data: {
+          'didMeet': didMeet,
+          if (noShowReason != null) 'noShowReason': noShowReason,
+          if (rating != null) 'rating': rating,
+          if (feedbackText != null) 'feedbackText': feedbackText,
+        },
+      );
+    } catch (e) {
+      throw Exception('Failed to submit feedback: $e');
+    }
+  }
 }
 
 /// Result of a swipe action

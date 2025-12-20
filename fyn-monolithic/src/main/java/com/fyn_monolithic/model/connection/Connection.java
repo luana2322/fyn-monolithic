@@ -16,6 +16,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Getter
@@ -64,6 +65,34 @@ public class Connection extends AbstractAuditableEntity {
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
+
+    // Embedded date information (simplified dating flow)
+    @Column(name = "date_scheduled_at")
+    private ZonedDateTime dateScheduledAt;
+
+    @Column(name = "date_description", columnDefinition = "TEXT")
+    private String dateDescription;
+
+    @Column(name = "date_location_name")
+    private String dateLocationName;
+
+    @Column(name = "date_location_address", columnDefinition = "TEXT")
+    private String dateLocationAddress;
+
+    @Column(name = "date_latitude")
+    private Double dateLatitude;
+
+    @Column(name = "date_longitude")
+    private Double dateLongitude;
+
+    @Column(name = "date_created_at")
+    private ZonedDateTime dateCreatedAt;
+
+    @Column(name = "date_status", length = 20)
+    private String dateStatus = "PENDING"; // PENDING, COMPLETED, NO_SHOW, CANCELLED
+
+    @Column(name = "feedback_status", length = 20)
+    private String feedbackStatus = "PENDING"; // PENDING, REQUESTED, COMPLETED
 
     @Column(name = "requester_follows_receiver")
     private Boolean requesterFollowsReceiver = true;

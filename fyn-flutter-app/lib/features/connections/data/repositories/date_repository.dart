@@ -137,7 +137,7 @@ class DateRepository {
   /// Accept a proposal
   Future<void> acceptProposal(String proposalId) async {
     try {
-      await _apiClient.patch('/api/v1/proposals/$proposalId/accept');
+      await _apiClient.patch('/api/v1/dates/proposals/$proposalId/accept');
     } catch (e) {
       throw Exception('Failed to accept proposal: $e');
     }
@@ -146,7 +146,7 @@ class DateRepository {
   /// Reject a proposal
   Future<void> rejectProposal(String proposalId) async {
     try {
-      await _apiClient.patch('/api/v1/proposals/$proposalId/reject');
+      await _apiClient.patch('/api/v1/dates/proposals/$proposalId/reject');
     } catch (e) {
       throw Exception('Failed to reject proposal: $e');
     }

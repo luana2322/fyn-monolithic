@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/meetup_model.dart';
 import 'discover_screen.dart'; // Swipe cards
-import 'discover_list_screen.dart'; // Search list with filter
 import 'matches_screen.dart';
+import 'meetups_screen.dart'; // Meetups
 import 'public_dates_screen.dart';
 import 'my_dates_screen.dart';
 
@@ -27,9 +27,9 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
   void initState() {
     super.initState();
     _pages.addAll([
-      const DiscoverScreen(), // Tab 0: Swipe cards (unchanged)
-      const DiscoverListScreen(), // Tab 1: Search list with filter (NEW)
-      const MatchesScreen(), // Tab 2: Matches
+      const DiscoverScreen(), // Tab 0: Swipe cards
+      const MatchesScreen(), // Tab 1: Matches
+      const MeetupsScreen(), // Tab 2: Meetups
       const PublicDatesScreen(), // Tab 3: Dates
       const MyDatesScreen(), // Tab 4: My Plans
     ]);
@@ -81,18 +81,18 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
                 color: Colors.pink,
               ),
               _NavItem(
-                icon: Icons.search,
-                label: 'Search',
-                isSelected: _currentIndex == 1,
-                onTap: () => setState(() => _currentIndex = 1),
-                color: Colors.orange,
-              ),
-              _NavItem(
                 icon: Icons.favorite,
                 label: 'Matches',
+                isSelected: _currentIndex == 1,
+                onTap: () => setState(() => _currentIndex = 1),
+                color: Colors.red,
+              ),
+              _NavItem(
+                icon: Icons.groups,
+                label: 'Meetups',
                 isSelected: _currentIndex == 2,
                 onTap: () => setState(() => _currentIndex = 2),
-                color: Colors.red,
+                color: Colors.orange,
               ),
               _NavItem(
                 icon: Icons.calendar_today,
