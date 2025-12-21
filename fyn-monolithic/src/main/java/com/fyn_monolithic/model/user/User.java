@@ -48,6 +48,12 @@ public class User extends AbstractAuditableEntity {
     @Column(name = "status", nullable = false)
     private UserStatus status = UserStatus.PENDING_VERIFICATION;
 
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
     @Column(name = "no_show_count")
     private Integer noShowCount = 0;
 

@@ -17,7 +17,7 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/dating_colors.dart';
 import '../../../../shared/widgets/responsive_container.dart';
 import 'reels_screen.dart' show ReelsScreen, _ReelsScreenState;
-import '../../../connections/presentation/screens/connection_hub_screen.dart';
+import '../../../meetup/presentation/screens/discover_meetups_screen.dart'; // ONLY meetup-based dating now
 import '../../../story/presentation/widgets/story_widgets.dart';
 import '../../../story/presentation/screens/create_story_screen.dart';
 
@@ -125,7 +125,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           _buildHomeTab(user, feedState),
           const DiscoverListScreen(), // Search tab with user list + filter
           const ReelsScreen(),
-          const ConnectionHubScreen(), // Dating, Friendship, Meetups
+          const DiscoverMeetupsScreen(), // Meetup-based dating (replaced ConnectionHubScreen)
         ],
       ),
       bottomNavigationBar: Container(

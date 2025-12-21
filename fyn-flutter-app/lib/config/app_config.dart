@@ -16,13 +16,14 @@ import '../features/video_call/presentation/screens/active_call_screen.dart';
 import '../features/events/presentation/screens/event_list_screen.dart';
 import '../features/events/presentation/screens/create_event_screen.dart';
 import '../features/events/presentation/screens/event_detail_screen.dart';
-import '../features/connections/presentation/screens/discover_screen.dart';
-import '../features/connections/presentation/screens/matches_screen.dart';
-import '../features/connections/presentation/screens/connection_hub_screen.dart';
-import '../features/connections/presentation/screens/public_dates_screen.dart';
-import '../features/connections/presentation/screens/my_dates_screen.dart';
+// Removed: ALL connections feature screens (person-matching deleted)
 import '../features/post/presentation/screens/create_post_screen.dart';
 import '../features/post/presentation/screens/posts_by_place_screen.dart';
+import '../features/meetup/presentation/screens/discover_meetups_screen.dart';
+import '../features/meetup/presentation/screens/create_meetup_screen.dart';
+import '../features/meetup/presentation/screens/meetup_details_screen.dart';
+import '../features/meetup/presentation/screens/my_meets_screen.dart';
+import '../features/meetup/presentation/screens/match_requests_screen.dart';
 
 class AppConfig {
   static const String appName = 'FYN Social';
@@ -179,34 +180,40 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // Connection features routes
+      // Removed: ALL /connections, /discover, /matches, /dates routes
+      // Meetup routes (ONLY dating feature)
       GoRoute(
-        path: '/discover',
-        name: 'discover',
-        builder: (context, state) => const DiscoverScreen(),
+        path: '/meetups',
+        name: 'meetups',
+        builder: (context, state) => const DiscoverMeetupsScreen(),
       ),
       GoRoute(
-        path: '/matches',
-        name: 'matches',
-        builder: (context, state) => const MatchesScreen(),
+        path: '/meetups/create',
+        name: 'create-meetup',
+        builder: (context, state) => const CreateMeetupScreen(),
       ),
       GoRoute(
-        path: '/connections',
-        name: 'connections',
-        builder: (context, state) => const ConnectionHubScreen(),
+        path: '/meetups/my',
+        name: 'my-meetups',
+        builder: (context, state) => const MyMeetsScreen(),
       ),
       GoRoute(
-        path: '/dates',
-        name: 'dates',
-        builder: (context, state) => const PublicDatesScreen(),
+        path: '/meetups/:id',
+        name: 'meetup-details',
+        builder: (context, state) {
+          final meetupId = state.pathParameters['id']!;
+          return MeetupDetailsScreen(meetupId: meetupId);
+        },
       ),
       GoRoute(
-        path: '/my-dates',
-        name: 'my-dates',
-        builder: (context, state) => const MyDatesScreen(),
+        path: '/meetups/:id/matches',
+        name: 'meetup-matches',
+        builder: (context, state) {
+          final meetupId = state.pathParameters['id']!;
+          return MatchRequestsScreen(meetupId: meetupId);
+        },
       ),
     ],
   );
 });
-
 

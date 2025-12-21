@@ -47,6 +47,15 @@ public class UserProfile extends AbstractAuditableEntity {
     @Column(name = "education_level")
     private EducationLevel educationLevel;
 
+    @Column(name = "total_meets_completed")
+    private Integer totalMeetsCompleted = 0;
+
+    @Column(name = "total_meets_cancelled")
+    private Integer totalMeetsCancelled = 0;
+
+    @Column(name = "total_no_shows")
+    private Integer totalNoShows = 0;
+
     /**
      * Calculate age from date of birth
      * 
@@ -57,5 +66,15 @@ public class UserProfile extends AbstractAuditableEntity {
             return null;
         }
         return java.time.Period.between(dateOfBirth, java.time.LocalDate.now()).getYears();
+    }
+
+    /**
+     * Calculate cancellation rate
+     * 
+     * @return cancellation rate (0.0 to 1.0)
+     */
+    public double getCancellationRate() {
+        int total = totalMeetsCompleted + totalMeetsCancelled + totalNoShows;
+        return total > 0 ? (double) totalMeetsCancelled / total : 0.0;
     }
 }

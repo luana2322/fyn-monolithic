@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'app.dart';
+import 'config/meetup_providers.dart';
+import 'features/meetup/presentation/providers/meetup_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,8 +24,12 @@ void main() async {
   }
   
   runApp(
-    const ProviderScope(
-      child: FynApp(),
+    ProviderScope(
+      overrides: [
+        // Wire up meetup repository with Dio
+        meetupRepositoryProvider.overrideWithProvider(actualMeetupRepositoryProvider),
+      ],
+      child: const FynApp(),
     ),
   );
 }

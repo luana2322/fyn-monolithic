@@ -1,5 +1,6 @@
 /// Search filter for user discovery
 class SearchFilter {
+  final String? keyword; // Search by name, interests, etc.
   final String? gender; // MALE, FEMALE, OTHER, null = all
   final int? minAge;
   final int? maxAge;
@@ -7,6 +8,7 @@ class SearchFilter {
   final int? maxDistanceKm;
 
   SearchFilter({
+    this.keyword,
     this.gender,
     this.minAge,
     this.maxAge,
@@ -16,6 +18,7 @@ class SearchFilter {
 
   /// Check if any filter is active
   bool get hasActiveFilters =>
+      (keyword != null && keyword!.isNotEmpty) ||
       gender != null ||
       minAge != null ||
       maxAge != null ||
@@ -25,6 +28,7 @@ class SearchFilter {
   /// Convert to query parameters
   Map<String, dynamic> toQueryParams() {
     final params = <String, dynamic>{};
+    if (keyword != null && keyword!.isNotEmpty) params['keyword'] = keyword;
     if (gender != null) params['gender'] = gender;
     if (minAge != null) params['minAge'] = minAge;
     if (maxAge != null) params['maxAge'] = maxAge;
@@ -37,11 +41,13 @@ class SearchFilter {
 
   /// Create a copy with modifications
   SearchFilter copyWith({
+    String? keyword,
     String? gender,
     int? minAge,
     int? maxAge,
     String? location,
     int? maxDistanceKm,
+    bool clearKeyword = false,
     bool clearGender = false,
     bool clearMinAge = false,
     bool clearMaxAge = false,
@@ -49,6 +55,7 @@ class SearchFilter {
     bool clearMaxDistance = false,
   }) {
     return SearchFilter(
+      keyword: clearKeyword ? null : (keyword ?? this.keyword),
       gender: clearGender ? null : (gender ?? this.gender),
       minAge: clearMinAge ? null : (minAge ?? this.minAge),
       maxAge: clearMaxAge ? null : (maxAge ?? this.maxAge),

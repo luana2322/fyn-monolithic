@@ -53,6 +53,15 @@ public class UserSearchService {
 
         List<Predicate> predicates = new ArrayList<>();
 
+        // Filter by keyword (search username, full name, or bio)
+        if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
+            String keyword = "%" + request.getKeyword().toLowerCase() + "%";
+            Predicate usernamePredicate = cb.like(cb.lower(user.get("username")), keyword);
+            Predicate fullNamePredicate = cb.like(cb.lower(user.get("fullName")), keyword);
+            Predicate bioPredicate = cb.like(cb.lower(profile.get("bio")), keyword);
+            predicates.add(cb.or(usernamePredicate, fullNamePredicate, bioPredicate));
+        }
+
         // Filter by gender
         if (request.getGender() != null) {
             predicates.add(cb.equal(profile.get("gender"), request.getGender()));
@@ -102,6 +111,16 @@ public class UserSearchService {
         Join<User, UserProfile> countProfile = countRoot.join("profile", JoinType.LEFT);
 
         List<Predicate> countPredicates = new ArrayList<>();
+
+        // Keyword filter for count
+        if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
+            String keyword = "%" + request.getKeyword().toLowerCase() + "%";
+            Predicate usernamePredicate = cb.like(cb.lower(countRoot.get("username")), keyword);
+            Predicate fullNamePredicate = cb.like(cb.lower(countRoot.get("fullName")), keyword);
+            Predicate bioPredicate = cb.like(cb.lower(countProfile.get("bio")), keyword);
+            countPredicates.add(cb.or(usernamePredicate, fullNamePredicate, bioPredicate));
+        }
+
         if (request.getGender() != null) {
             countPredicates.add(cb.equal(countProfile.get("gender"), request.getGender()));
         }

@@ -35,8 +35,12 @@ public class Meetup {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String category; // sports, gaming, music, art, etc.
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "meet_type", nullable = false)
+    private MeetType meetType = MeetType.GROUP;
 
     @Column(length = 255)
     private String location;
@@ -50,6 +54,9 @@ public class Meetup {
     @Column(name = "scheduled_at", nullable = false)
     private ZonedDateTime scheduledAt;
 
+    @Column(name = "expires_at")
+    private ZonedDateTime expiresAt; // When applications close
+
     @Column(name = "duration_minutes")
     private Integer durationMinutes = 120;
 
@@ -60,9 +67,23 @@ public class Meetup {
     @Column(nullable = false)
     private MeetupStatus status = MeetupStatus.OPEN;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "confirmation_status")
+    private ConfirmationStatus confirmationStatus = ConfirmationStatus.NONE;
+
+    @Column(name = "organizer_confirmed")
+    private Boolean organizerConfirmed = false;
+
+    @Column(name = "participant_confirmed")
+    private Boolean participantConfirmed = false;
+
+    @Column(name = "confirmation_sent_at")
+    private ZonedDateTime confirmationSentAt;
+
+    // Accepted participants (approved matches)
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "meetup_participants", joinColumns = @JoinColumn(name = "meetup_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private List<User> participants = new ArrayList<>();
+    private List<User> acceptedParticipants = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -74,7 +95,7 @@ public class Meetup {
 
     // Helper methods
     public int getParticipantCount() {
-        return participants.size();
+        return acceptedParticipants.size();
     }
 
     public int getSpotsLeft() {
@@ -82,16 +103,20 @@ public class Meetup {
     }
 
     public boolean isFull() {
-        return getSpotsLeft() <= 0;
+        return acceptedParticipants.size() >= maxParticipants;
     }
 
     public boolean isOpen() {
         return status == MeetupStatus.OPEN && !isFull();
     }
 
-    public boolean canJoin(User user) {
-        return isOpen() &&
-                !user.getId().equals(organizer.getId()) &&
-                !participants.contains(user);
+    public boolean isOneToOne() {
+        return meetType == MeetType.ONE_TO_ONE;
+    }
+
+    public boolean needsConfirmation() {
+        return scheduledAt.plusHours(12).isBefore(ZonedDateTime.now())
+                && status == MeetupStatus.MATCHED
+                && (!Boolean.TRUE.equals(organizerConfirmed) || !Boolean.TRUE.equals(participantConfirmed));
     }
 }

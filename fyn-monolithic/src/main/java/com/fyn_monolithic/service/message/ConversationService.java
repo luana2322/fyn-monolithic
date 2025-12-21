@@ -57,6 +57,39 @@ public class ConversationService {
         return messageMapper.toConversationResponse(saved);
     }
 
+    /**
+     * Create a conversation linked to a meetup match
+     * This ensures chat is only available after match acceptance
+     */
+    @Transactional
+    public ConversationResponse createConversationForMatch(UUID meetMatchId, UUID organizerId, UUID participantId,
+            String title) {
+        User organizer = userService.findEntity(organizerId);
+        User participant = userService.findEntity(participantId);
+
+        Conversation conversation = new Conversation();
+        conversation.setTitle(title);
+        conversation.setType(ConversationType.DIRECT);
+        conversation.setMeetMatchId(meetMatchId); // Link to the match
+        Conversation saved = conversationRepository.save(conversation);
+
+        // Add organizer as member
+        ConversationMember organizerMember = new ConversationMember();
+        organizerMember.setConversation(saved);
+        organizerMember.setMember(organizer);
+        memberRepository.save(organizerMember);
+        saved.getMembers().add(organizerMember);
+
+        // Add participant as member
+        ConversationMember participantMember = new ConversationMember();
+        participantMember.setConversation(saved);
+        participantMember.setMember(participant);
+        memberRepository.save(participantMember);
+        saved.getMembers().add(participantMember);
+
+        return messageMapper.toConversationResponse(saved);
+    }
+
     @Transactional(readOnly = true)
     public List<ConversationResponse> listConversations() {
         User user = userService.getCurrentUser();

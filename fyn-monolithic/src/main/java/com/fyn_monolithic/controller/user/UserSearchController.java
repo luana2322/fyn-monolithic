@@ -26,6 +26,7 @@ public class UserSearchController {
     /**
      * Search users with filters
      * 
+     * @param keyword  Search text for username, full name, or bio
      * @param gender   Filter by gender
      * @param minAge   Minimum age
      * @param maxAge   Maximum age
@@ -36,6 +37,7 @@ public class UserSearchController {
      */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PageResponse<UserListItemResponse>>> searchUsers(
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Gender gender,
             @RequestParam(required = false) Integer minAge,
             @RequestParam(required = false) Integer maxAge,
@@ -49,13 +51,14 @@ public class UserSearchController {
         }
 
         SearchUserRequest request = new SearchUserRequest();
+        request.setKeyword(keyword);
         request.setGender(gender);
         request.setMinAge(minAge);
         request.setMaxAge(maxAge);
         request.setLocation(location);
 
-        log.debug("Searching users with filters: gender={}, minAge={}, maxAge={}, location={}",
-                gender, minAge, maxAge, location);
+        log.debug("Searching users with filters: keyword={}, gender={}, minAge={}, maxAge={}, location={}",
+                keyword, gender, minAge, maxAge, location);
 
         PageResponse<UserListItemResponse> result = userSearchService.searchUsers(
                 request,

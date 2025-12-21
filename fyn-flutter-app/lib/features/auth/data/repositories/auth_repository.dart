@@ -171,7 +171,9 @@ class AuthRepository {
       if (data is Map<String, dynamic>) {
         // Try to get detailed error message
         if (data['message'] != null) {
-          return data['message'] as String;
+          final message = data['message'] as String;
+          // Translate common error messages to Vietnamese
+          return _translateErrorMessage(message);
         }
         // Try to get validation errors
         if (data['errors'] != null && data['errors'] is List) {
@@ -182,24 +184,57 @@ class AuthRepository {
         }
         // Try to get error details
         if (data['error'] != null) {
-          return data['error'].toString();
+          return _translateErrorMessage(data['error'].toString());
         }
       }
       // Return status message with status code
       final statusCode = error.response?.statusCode;
-      final statusMessage = error.response?.statusMessage ?? 'Có lỗi xảy ra';
       if (statusCode == 400) {
-        return 'Dữ liệu không hợp lệ: $statusMessage';
+        return 'Dữ liệu không hợp lệ';
       } else if (statusCode == 401) {
         return 'Không có quyền truy cập';
       } else if (statusCode == 404) {
         return 'Không tìm thấy tài nguyên';
       } else if (statusCode == 500) {
-        return 'Lỗi server: $statusMessage';
+        return 'Lỗi server, vui lòng thử lại sau';
       }
-      return statusMessage;
+      return error.response?.statusMessage ?? 'Có lỗi xảy ra';
     }
     return error.message ?? 'Có lỗi xảy ra';
   }
-}
 
+  /// Translate common error messages to Vietnamese
+  String _translateErrorMessage(String message) {
+    final lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.contains('invalid credentials') || 
+        lowerMessage.contains('bad credentials')) {
+      return 'Email/Username hoặc mật khẩu không chính xác';
+    }
+    if (lowerMessage.contains('user not found')) {
+      return 'Tài khoản không tồn tại';
+    }
+    if (lowerMessage.contains('email already exists') ||
+        lowerMessage.contains('email already registered')) {
+      return 'Email đã được đăng ký';
+    }
+    if (lowerMessage.contains('username already exists') ||
+        lowerMessage.contains('username already taken')) {
+      return 'Username đã được sử dụng';
+    }
+    if (lowerMessage.contains('password') && lowerMessage.contains('weak')) {
+      return 'Mật khẩu quá yếu';
+    }
+    if (lowerMessage.contains('account disabled') || 
+        lowerMessage.contains('account locked')) {
+      return 'Tài khoản đã bị khóa';
+    }
+    if (lowerMessage.contains('token expired') ||
+        lowerMessage.contains('session expired')) {
+      return 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại';
+    }
+    
+    // Return original message if no translation found
+    return message;
+  }
+}

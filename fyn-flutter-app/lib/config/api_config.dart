@@ -74,6 +74,10 @@ class ApiEndpoints {
   
   // Matching endpoints (v1 API)
   static const String swipe = '/api/v1/matches/swipe';
+  
+  // Connection endpoints (v1 API)
+  static const String followingIds = '/api/v1/connections/following/ids';
+  static const String followUser = '/api/v1/connections/follow';
 }
 
 

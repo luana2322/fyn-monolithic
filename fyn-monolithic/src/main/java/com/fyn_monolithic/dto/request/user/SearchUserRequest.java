@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 @Data
 public class SearchUserRequest {
+    private String keyword; // Search by username, full name, or bio
     private Gender gender;
     private Integer minAge;
     private Integer maxAge;
