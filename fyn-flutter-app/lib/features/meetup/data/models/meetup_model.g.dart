@@ -15,7 +15,7 @@ _$MeetupModelImpl _$$MeetupModelImplFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String?,
       meetType: $enumDecode(_$MeetTypeEnumMap, json['meetType']),
       category: json['category'] as String?,
-      location: json['location'] as String,
+      location: json['location'] as String?,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       scheduledAt: DateTime.parse(json['scheduledAt'] as String),
@@ -33,7 +33,9 @@ _$MeetupModelImpl _$$MeetupModelImplFromJson(Map<String, dynamic> json) =>
       userHasApplied: json['userHasApplied'] as bool,
       userMatchStatus:
           $enumDecodeNullable(_$MatchStatusEnumMap, json['userMatchStatus']),
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
     );
 
 Map<String, dynamic> _$$MeetupModelImplToJson(_$MeetupModelImpl instance) =>
@@ -59,7 +61,7 @@ Map<String, dynamic> _$$MeetupModelImplToJson(_$MeetupModelImpl instance) =>
       'distanceKm': instance.distanceKm,
       'userHasApplied': instance.userHasApplied,
       'userMatchStatus': _$MatchStatusEnumMap[instance.userMatchStatus],
-      'createdAt': instance.createdAt.toIso8601String(),
+      'createdAt': instance.createdAt?.toIso8601String(),
     };
 
 const _$MeetTypeEnumMap = {
@@ -117,7 +119,9 @@ _$MeetupMatchModelImpl _$$MeetupMatchModelImplFromJson(
       message: json['message'] as String?,
       status: $enumDecode(_$MatchStatusEnumMap, json['status']),
       conversationId: json['conversationId'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
       respondedAt: json['respondedAt'] == null
           ? null
           : DateTime.parse(json['respondedAt'] as String),
@@ -132,6 +136,6 @@ Map<String, dynamic> _$$MeetupMatchModelImplToJson(
       'message': instance.message,
       'status': _$MatchStatusEnumMap[instance.status]!,
       'conversationId': instance.conversationId,
-      'createdAt': instance.createdAt.toIso8601String(),
+      'createdAt': instance.createdAt?.toIso8601String(),
       'respondedAt': instance.respondedAt?.toIso8601String(),
     };

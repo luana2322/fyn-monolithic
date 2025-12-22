@@ -54,6 +54,8 @@ class ApiEndpoints {
   
   // Conversation endpoints
   static const String conversations = '/api/conversations';
+  static String conversationById(String conversationId) =>
+      '/api/conversations/$conversationId';
   static String conversationMessages(String conversationId) => 
       '/api/conversations/$conversationId/messages';
   static String sendMessage(String conversationId) => 

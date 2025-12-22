@@ -189,10 +189,10 @@ class _ApplicantCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundImage: user.avatarUrl != null
-                      ? NetworkImage(user.avatarUrl!)
+                  backgroundImage: user.fullAvatarUrl != null
+                      ? NetworkImage(user.fullAvatarUrl!)
                       : null,
-                  child: user.avatarUrl == null
+                  child: user.fullAvatarUrl == null
                       ? Text(user.username[0].toUpperCase())
                       : null,
                 ),

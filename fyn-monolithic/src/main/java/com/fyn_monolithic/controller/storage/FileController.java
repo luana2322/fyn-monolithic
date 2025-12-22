@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api/v1/files")
 @RequiredArgsConstructor
 public class FileController {
 
@@ -21,15 +21,15 @@ public class FileController {
             // Decode URL-encoded objectKey
             String decodedKey = java.net.URLDecoder.decode(objectKey, java.nio.charset.StandardCharsets.UTF_8);
             byte[] fileData = minioService.download(decodedKey);
-            
+
             // Determine content type from object key
             String contentType = determineContentType(objectKey);
-            
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType(contentType));
             headers.setContentLength(fileData.length);
             headers.setCacheControl("public, max-age=31536000"); // Cache for 1 year
-            
+
             return new ResponseEntity<>(fileData, headers, HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
@@ -54,4 +54,3 @@ public class FileController {
         return "application/octet-stream";
     }
 }
-

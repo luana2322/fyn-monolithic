@@ -56,10 +56,10 @@ class MeetupCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 12,
-                    backgroundImage: meetup.organizer.avatarUrl != null
-                        ? NetworkImage(meetup.organizer.avatarUrl!)
+                    backgroundImage: meetup.organizer.fullAvatarUrl != null
+                        ? NetworkImage(meetup.organizer.fullAvatarUrl!)
                         : null,
-                    child: meetup.organizer.avatarUrl == null
+                    child: meetup.organizer.fullAvatarUrl == null
                         ? const Icon(Icons.person, size: 16)
                         : null,
                   ),
@@ -90,7 +90,7 @@ class MeetupCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      meetup.location,
+                      meetup.location ?? 'Unknown location',
                       style: theme.textTheme.bodyMedium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

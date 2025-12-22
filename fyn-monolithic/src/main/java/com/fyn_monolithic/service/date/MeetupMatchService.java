@@ -1,7 +1,8 @@
 package com.fyn_monolithic.service.date;
 
 import com.fyn_monolithic.dto.request.date.CreateMeetupRequest;
-import com.fyn_monolithic.dto.request.message.CreateConversationRequest;
+import com.fyn_monolithic.dto.request.date.UpdateMeetupRequest;
+import com.fyn_monolithic.dto.request.date.MeetupFeedbackRequest;
 import com.fyn_monolithic.dto.response.date.MeetupMatchResponse;
 import com.fyn_monolithic.dto.response.date.MeetupResponse;
 import com.fyn_monolithic.dto.response.date.UserSummary;
@@ -10,8 +11,6 @@ import com.fyn_monolithic.exception.BadRequestException;
 import com.fyn_monolithic.exception.ForbiddenException;
 import com.fyn_monolithic.exception.ResourceNotFoundException;
 import com.fyn_monolithic.model.date.*;
-import com.fyn_monolithic.model.message.Conversation;
-import com.fyn_monolithic.model.message.ConversationType;
 import com.fyn_monolithic.model.user.User;
 import com.fyn_monolithic.repository.date.MeetupMatchRepository;
 import com.fyn_monolithic.repository.date.MeetupRepository;
@@ -27,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -75,6 +73,46 @@ public class MeetupMatchService {
     }
 
     /**
+     * Update a meetup
+     */
+    @Transactional
+    public MeetupResponse updateMeetup(UUID meetupId, UUID userId, UpdateMeetupRequest request) {
+        Meetup meetup = getMeetup(meetupId);
+
+        if (!meetup.getOrganizer().getId().equals(userId)) {
+            throw new ForbiddenException("Only the organizer can update the meetup");
+        }
+
+        if (meetup.getStatus() != MeetupStatus.OPEN && meetup.getStatus() != MeetupStatus.MATCHED) {
+            throw new BadRequestException("Cannot update meetup in its current status: " + meetup.getStatus());
+        }
+
+        meetup.setTitle(request.title());
+        meetup.setDescription(request.description());
+        meetup.setMeetType(request.meetType());
+        meetup.setLocation(request.location());
+        meetup.setLatitude(request.latitude());
+        meetup.setLongitude(request.longitude());
+        meetup.setScheduledAt(request.scheduledAt());
+        meetup.setExpiresAt(request.expiresAt());
+        meetup.setDurationMinutes(request.durationMinutes() != null ? request.durationMinutes() : 120);
+        meetup.setMaxParticipants(request.maxParticipants());
+        meetup.setCategory(request.category());
+
+        meetup = meetupRepository.save(meetup);
+        return toResponse(meetup, userId);
+    }
+
+    /**
+     * Get a single meetup detail
+     */
+    @Transactional(readOnly = true)
+    public MeetupResponse getMeetupById(UUID meetupId, UUID userId) {
+        Meetup meetup = getMeetup(meetupId);
+        return toResponse(meetup, userId);
+    }
+
+    /**
      * Discover nearby meetups with filters
      */
     @Transactional(readOnly = true)
@@ -108,6 +146,34 @@ public class MeetupMatchService {
         Page<Meetup> meetups = meetupRepository.findByOrganizerIdOrderByScheduledAtDesc(organizerId, pageable);
 
         return meetups.map(m -> toResponse(m, organizerId));
+    }
+
+    /**
+     * Get meetups that the current user has applied to
+     */
+    @Transactional(readOnly = true)
+    public Page<MeetupMatchResponse> getMyAppliedMeetups(
+            UUID userId,
+            MatchStatus status,
+            Pageable pageable) {
+
+        Page<MeetupMatch> matches = status != null
+                ? meetupMatchRepository.findByUserIdAndStatus(userId, status, pageable)
+                : meetupMatchRepository.findByUserId(userId, pageable);
+
+        return matches.map(this::toMatchResponseWithMeetup);
+    }
+
+    private MeetupMatchResponse toMatchResponseWithMeetup(MeetupMatch match) {
+        return new MeetupMatchResponse(
+                match.getId(),
+                match.getMeetup().getId(),
+                UserSummary.fromUser(match.getUser()),
+                match.getMessage(),
+                match.getStatus(),
+                match.getConversationId(),
+                match.getCreatedAt(),
+                match.getRespondedAt());
     }
 
     /**
@@ -145,6 +211,7 @@ public class MeetupMatchService {
         match.setUser(user);
         match.setMessage(message);
         match.setStatus(MatchStatus.PENDING);
+        match.setCreatedAt(ZonedDateTime.now()); // Set manually to ensure it's not null in response
 
         match = meetupMatchRepository.save(match);
         return toMatchResponse(match);
@@ -200,16 +267,12 @@ public class MeetupMatchService {
         // Add to accepted participants
         meetup.getAcceptedParticipants().add(match.getUser());
 
-        // Create chat conversation linked to this match
-        String chatTitle = "Chat: " + meetup.getTitle();
-        ConversationResponse conversationResponse = conversationService.createConversationForMatch(
-                match.getId(),
-                meetup.getOrganizer().getId(),
-                match.getUser().getId(),
-                chatTitle);
-        match.setConversationId(conversationResponse.getId());
+        // Create chat conversation linked to this match (if not exists)
+        if (match.getConversationId() == null) {
+            initiateChat(match, organizerId);
+        }
 
-        meetupMatchRepository.save(match);
+        match = meetupMatchRepository.save(match);
 
         // AUTO-REJECT LOGIC
         if (meetup.isOneToOne()) {
@@ -247,6 +310,37 @@ public class MeetupMatchService {
     }
 
     /**
+     * Initiate chat for a match request without accepting it
+     */
+    @Transactional
+    public MeetupMatchResponse initiateChat(UUID matchId, UUID organizerId) {
+        MeetupMatch match = getMatch(matchId);
+        Meetup meetup = match.getMeetup();
+
+        if (!meetup.getOrganizer().getId().equals(organizerId)) {
+            throw new ForbiddenException("Only organizer can initiate chat");
+        }
+
+        if (match.getConversationId() != null) {
+            return toMatchResponse(match);
+        }
+
+        initiateChat(match, organizerId);
+        match = meetupMatchRepository.save(match);
+        return toMatchResponse(match);
+    }
+
+    private void initiateChat(MeetupMatch match, UUID organizerId) {
+        String chatTitle = "Chat: " + match.getMeetup().getTitle();
+        ConversationResponse conversationResponse = conversationService.createConversationForMatch(
+                match.getId(),
+                organizerId,
+                match.getUser().getId(),
+                chatTitle);
+        match.setConversationId(conversationResponse.getId());
+    }
+
+    /**
      * Reject a match
      */
     @Transactional
@@ -269,11 +363,15 @@ public class MeetupMatchService {
 
     /**
      * Confirm meetup completion (post-meet) with result tracking
+     * 
+     * @param request The feedback request containing result, comment and rating
      */
     @Transactional
-    public void confirmMeetup(UUID meetupId, UUID userId, MeetupConfirmation.ConfirmationResult result) {
+    public void confirmMeetup(UUID meetupId, UUID userId, MeetupFeedbackRequest request) {
         Meetup meetup = getMeetup(meetupId);
         User user = getUser(userId);
+
+        MeetupConfirmation.ConfirmationResult result = MeetupConfirmation.ConfirmationResult.valueOf(request.result());
 
         boolean isOrganizer = meetup.getOrganizer().getId().equals(userId);
         boolean isParticipant = meetup.getAcceptedParticipants().stream()
@@ -297,6 +395,8 @@ public class MeetupMatchService {
         confirmation.setMeetupMatch(match);
         confirmation.setUser(user);
         confirmation.setResult(result);
+        confirmation.setComment(request.feedback());
+        confirmation.setRating(request.rating());
         confirmationRepository.save(confirmation);
 
         // Update embedded flags for backwards compatibility

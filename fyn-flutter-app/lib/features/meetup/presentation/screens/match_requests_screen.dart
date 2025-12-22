@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../data/models/meetup_model.dart';
 import '../../data/models/meetup_enums.dart';
 import '../providers/meetup_provider.dart';
+import '../../../message/presentation/screens/chat_detail_screen.dart';
+import '../../../message/presentation/providers/message_provider.dart';
 
 class MatchRequestsScreen extends ConsumerStatefulWidget {
   final String meetupId;
@@ -53,17 +55,50 @@ class _MatchRequestsScreenState extends ConsumerState<MatchRequestsScreen> {
   }
 
   Future<void> _rejectMatch(String matchId) async {
+    await ref.read(matchRequestsProvider.notifier).rejectMatch(matchId);
+  }
+
+  Future<void> _openChat(MeetupMatchModel match) async {
+    String? conversationId = match.conversationId;
+
+    if (conversationId == null) {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đang khởi tạo cuộc trò chuyện...')),
+      );
+
+      try {
+        final updatedMatch = await ref
+            .read(matchRequestsProvider.notifier)
+            .initiateChat(match.id);
+        conversationId = updatedMatch.conversationId;
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Không thể khởi tạo chat: $e')),
+          );
+        }
+        return;
+      }
+    }
+
+    if (conversationId == null) return;
+
     try {
-      await ref.read(matchRequestsProvider.notifier).rejectMatch(matchId);
+      final messageRepo = ref.read(messageRepositoryProvider);
+      final conversation = await messageRepo.getConversationById(conversationId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Match rejected')),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatDetailScreen(conversation: conversation),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('Không thể mở chat: $e')),
         );
       }
     }
@@ -181,6 +216,7 @@ class _MatchRequestsScreenState extends ConsumerState<MatchRequestsScreen> {
           match: match,
           onAccept: () => _acceptMatch(match.id),
           onReject: () => _rejectMatch(match.id),
+          onChat: () => _openChat(match),
         );
       },
     );
@@ -191,11 +227,13 @@ class _MatchRequestCard extends StatelessWidget {
   final MeetupMatchModel match;
   final VoidCallback onAccept;
   final VoidCallback onReject;
+  final VoidCallback onChat;
 
   const _MatchRequestCard({
     required this.match,
     required this.onAccept,
     required this.onReject,
+    required this.onChat,
   });
 
   @override
@@ -214,10 +252,10 @@ class _MatchRequestCard extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundImage: match.user.avatarUrl != null
-                      ? NetworkImage(match.user.avatarUrl!)
+                  backgroundImage: match.user.fullAvatarUrl != null
+                      ? NetworkImage(match.user.fullAvatarUrl!)
                       : null,
-                  child: match.user.avatarUrl == null
+                  child: match.user.fullAvatarUrl == null
                       ? const Icon(Icons.person)
                       : null,
                 ),
@@ -233,7 +271,7 @@ class _MatchRequestCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Applied ${dateFormat.format(match.createdAt)}',
+                        'Applied: ${match.createdAt != null ? dateFormat.format(match.createdAt!) : 'N/A'}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                         ),
@@ -267,18 +305,26 @@ class _MatchRequestCard extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: onReject,
                       icon: const Icon(Icons.close),
-                      label: const Text('Reject'),
+                      label: const Text('Từ chối'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onChat,
+                      icon: const Icon(Icons.chat),
+                      label: const Text('Chat'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: onAccept,
                       icon: const Icon(Icons.check),
-                      label: const Text('Accept'),
+                      label: const Text('Nhận'),
                     ),
                   ),
                 ],

@@ -38,7 +38,10 @@ public class MeetupConfirmation {
     private ConfirmationResult result; // SUCCESS, NO_SHOW
 
     @Column(columnDefinition = "TEXT")
-    private String notes;
+    private String comment;
+
+    @Column
+    private Double rating;
 
     @CreationTimestamp
     @Column(name = "confirmed_at", updatable = false)

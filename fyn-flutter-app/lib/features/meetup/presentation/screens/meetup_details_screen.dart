@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/meetup_model.dart';
 import '../../data/models/meetup_enums.dart';
 import '../providers/meetup_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import 'match_requests_screen.dart';
+import 'owner_meetup_detail_screen.dart';
+import 'edit_meetup_screen.dart';
 
 class MeetupDetailsScreen extends ConsumerStatefulWidget {
   final String meetupId;
@@ -26,6 +31,11 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
   void dispose() {
     _messageController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   Future<void> _applyToMeetup(MeetupModel meetup) async {
@@ -83,13 +93,22 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Application sent successfully!')),
         );
-        // Refresh the page
-        ref.invalidate(discoveredMeetupsProvider);
+        ref.invalidate(meetupDetailProvider(widget.meetupId));
       }
     } catch (e) {
+      String errorMessage = e.toString();
+      if (e is DioException) {
+        final data = e.response?.data;
+        if (data != null && data is Map && data.containsKey('message')) {
+          errorMessage = data['message'];
+        } else if (e.message != null) {
+          errorMessage = e.message!;
+        }
+      }
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('Error: $errorMessage')),
         );
       }
     } finally {
@@ -99,26 +118,45 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
     }
   }
 
+  void _triggerInitialLoad() {
+    // This is a bit of a hack since we don't have the user's current location here easily
+    // But we can at least call the provider's discover method with defaults
+    ref.read(discoveredMeetupsProvider.notifier).discoverMeetups(
+      latitude: 16.0544, // Default location fallback
+      longitude: 108.2022,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // In a real app, we'd fetch the specific meetup by ID
-    // For now, we'll find it from the discovered meetups
-    final meetupsAsync = ref.watch(discoveredMeetupsProvider);
+    final meetupAsync = ref.watch(meetupDetailProvider(widget.meetupId));
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meetup Details'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(meetupDetailProvider(widget.meetupId)),
+          ),
+        ],
       ),
-      body: meetupsAsync.when(
-        data: (meetups) {
-          final meetup = meetups.firstWhere(
-            (m) => m.id == widget.meetupId,
-            orElse: () => meetups.first, // Fallback
-          );
-          return _buildDetails(meetup);
-        },
+      body: meetupAsync.when(
+        data: (meetup) => _buildDetails(meetup),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(meetupDetailProvider(widget.meetupId)),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -126,9 +164,11 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
   Widget _buildDetails(MeetupModel meetup) {
     final dateFormat = DateFormat('EEEE, MMMM d, yyyy \'at\' h:mm a');
     final theme = Theme.of(context);
-    
-    // TODO: Get current user ID to check if organizer
-    final isOrganizer = false; // meetup.organizer.id == currentUser.id
+    final currentUser = ref.watch(authNotifierProvider).user;
+    final isOrganizer = meetup.organizer.id == currentUser?.id;
+    final isMatched = meetup.status == MeetupStatus.matched;
+    final isPast = meetup.scheduledAt.isBefore(DateTime.now());
+    final canConfirm = isMatched && isPast;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -154,10 +194,10 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
           // Organizer
           ListTile(
             leading: CircleAvatar(
-              backgroundImage: meetup.organizer.avatarUrl != null
-                  ? NetworkImage(meetup.organizer.avatarUrl!)
+              backgroundImage: meetup.organizer.fullAvatarUrl != null
+                  ? NetworkImage(meetup.organizer.fullAvatarUrl!)
                   : null,
-              child: meetup.organizer.avatarUrl == null
+              child: meetup.organizer.fullAvatarUrl == null
                   ? const Icon(Icons.person)
                   : null,
             ),
@@ -180,6 +220,11 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
             Icons.location_on,
             'Where',
             '${meetup.location}${meetup.distanceKm != null ? " (${meetup.distanceKm!.toStringAsFixed(1)} km away)" : ""}',
+            trailing: IconButton(
+              icon: const Icon(Icons.directions),
+              onPressed: () => _openMap(meetup),
+              tooltip: 'Get Directions',
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -215,7 +260,7 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
           ],
 
           // Action buttons
-          if (isOrganizer)
+          if (isOrganizer) ...[
             FilledButton.icon(
               onPressed: () {
                 Navigator.push(
@@ -227,8 +272,14 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
               },
               icon: const Icon(Icons.inbox),
               label: Text('View Applications (${meetup.pendingMatchCount})'),
-            )
-          else if (!meetup.userHasApplied)
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _editMeetup(meetup),
+              icon: const Icon(Icons.edit),
+              label: const Text('Edit Meetup'),
+            ),
+          ] else if (!meetup.userHasApplied)
             FilledButton.icon(
               onPressed: _isApplying ? null : () => _applyToMeetup(meetup),
               icon: const Icon(Icons.send),
@@ -236,12 +287,143 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
                   ? const Text('Applying...')
                   : const Text('Apply to Join'),
             ),
+
+          if (canConfirm) ...[
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () => _showConfirmationDialog(meetup),
+              icon: const Icon(Icons.check_circle_outline),
+              label: const Text('Confirm Meetup Outcome'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  void _editMeetup(MeetupModel meetup) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditMeetupScreen(meetup: meetup),
+      ),
+    ).then((updated) {
+      if (updated == true) {
+        ref.invalidate(meetupDetailProvider(widget.meetupId));
+      }
+    });
+  }
+
+  Future<void> _showConfirmationDialog(MeetupModel meetup) async {
+    double rating = 5.0;
+    String? feedback;
+    String result = 'SUCCESS';
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Confirm Meetup'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('How was your meetup?'),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: result,
+                items: const [
+                  DropdownMenuItem(value: 'SUCCESS', child: Text('Successful')),
+                  DropdownMenuItem(value: 'NO_SHOW', child: Text('No Show')),
+                ],
+                onChanged: (val) => setState(() => result = val!),
+                decoration: const InputDecoration(labelText: 'Outcome'),
+              ),
+              const SizedBox(height: 16),
+              const Text('Rating:'),
+              Slider(
+                value: rating,
+                min: 1,
+                max: 5,
+                divisions: 4,
+                label: rating.toString(),
+                onChanged: (val) => setState(() => rating = val),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                onChanged: (val) => feedback = val,
+                decoration: const InputDecoration(
+                  labelText: 'Feedback (Optional)',
+                  hintText: 'Share your experience...',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await ref.read(confirmMeetupProvider((
+                    meetupId: meetup.id,
+                    result: result,
+                    feedback: feedback,
+                    rating: rating,
+                  )).future);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Feedback submitted!')),
+                    );
+                    ref.invalidate(meetupDetailProvider(widget.meetupId));
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openMap(MeetupModel meetup) async {
+    final url = 'https://www.google.com/maps/dir/?api=1&destination=${meetup.latitude},${meetup.longitude}';
+    final uri = Uri.parse(url);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not open map')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error opening map: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, {Widget? trailing}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -264,6 +446,7 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
             ],
           ),
         ),
+        if (trailing != null) trailing,
       ],
     );
   }

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/meetup_model.dart';
 import '../../data/models/meetup_enums.dart';
 import '../providers/meetup_provider.dart';
+import 'edit_meetup_screen.dart';
+import '../../../message/presentation/screens/chat_detail_screen.dart';
+import '../../../message/presentation/providers/message_provider.dart';
 
 /// Owner view for meetup details - shows full info + applicants management
 class OwnerMeetupDetailScreen extends ConsumerStatefulWidget {
@@ -189,7 +193,7 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    meetup.location,
+                    meetup.location ?? 'Unknown location',
                     style: theme.textTheme.bodyLarge,
                   ),
                 ),
@@ -271,7 +275,11 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
     if (pending.isEmpty) return const SizedBox.shrink();
 
     // Sort by earliest apply
-    pending.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    pending.sort((a, b) {
+      final aDate = a.createdAt ?? DateTime.now();
+      final bDate = b.createdAt ?? DateTime.now();
+      return aDate.compareTo(bDate);
+    });
     final earliest = pending.first;
 
     return Card(
@@ -295,7 +303,7 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
             _buildSuggestionItem(
               '🥇 Apply sớm nhất',
               earliest.user.fullName ?? earliest.user.username,
-              earliest.user.avatarUrl,
+              earliest.user.fullAvatarUrl,
               () => _acceptApplicant(earliest),
             ),
           ],
@@ -381,10 +389,10 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
                     padding: const EdgeInsets.only(right: 4),
                     child: CircleAvatar(
                       radius: 20,
-                      backgroundImage: a.user.avatarUrl != null 
-                          ? NetworkImage(a.user.avatarUrl!) 
+                      backgroundImage: a.user.fullAvatarUrl != null 
+                          ? NetworkImage(a.user.fullAvatarUrl!) 
                           : null,
-                      child: a.user.avatarUrl == null 
+                      child: a.user.fullAvatarUrl == null 
                           ? Text(a.user.username[0].toUpperCase()) 
                           : null,
                     ),
@@ -522,7 +530,9 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
           ..sort((a, b) {
             if (a.status == MatchStatus.pending && b.status != MatchStatus.pending) return -1;
             if (b.status == MatchStatus.pending && a.status != MatchStatus.pending) return 1;
-            return (b.createdAt).compareTo(a.createdAt);
+            final aDate = a.createdAt ?? DateTime.now();
+            final bDate = b.createdAt ?? DateTime.now();
+            return bDate.compareTo(aDate);
           });
 
         return SliverList(
@@ -559,10 +569,10 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
                 // Avatar
                 CircleAvatar(
                   radius: 28,
-                  backgroundImage: user.avatarUrl != null
-                      ? NetworkImage(user.avatarUrl!)
+                  backgroundImage: user.fullAvatarUrl != null
+                      ? NetworkImage(user.fullAvatarUrl!)
                       : null,
-                  child: user.avatarUrl == null
+                  child: user.fullAvatarUrl == null
                       ? Text(user.username[0].toUpperCase(), style: const TextStyle(fontSize: 20))
                       : null,
                 ),
@@ -620,7 +630,8 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
             Wrap(
               spacing: 6,
               children: [
-                _buildTag('${_timeAgo(applicant.createdAt)}', Icons.access_time),
+                if (applicant.createdAt != null)
+                  _buildTag('${_timeAgo(applicant.createdAt!)}', Icons.access_time),
                 // Add more tags here based on data
               ],
             ),
@@ -638,12 +649,21 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
                       style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
+                  // Added Chat button for pending
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openChat(applicant),
+                      icon: const Icon(Icons.chat, size: 18),
+                      label: const Text('Chat'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () => _acceptApplicant(applicant),
                       icon: const Icon(Icons.check, size: 18),
-                      label: const Text('Chấp nhận'),
+                      label: const Text('Nhận'),
                       style: FilledButton.styleFrom(backgroundColor: Colors.green),
                     ),
                   ),
@@ -838,10 +858,18 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
   void _handleMenuAction(String action) {
     switch (action) {
       case 'edit':
-        // TODO: Navigate to edit screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tính năng chỉnh sửa đang phát triển')),
-        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EditMeetupScreen(meetup: widget.meetup),
+          ),
+        ).then((updated) {
+          if (updated == true && mounted) {
+            // Since this screen takes a model, we might need to refresh it
+            // or use a provider in the parent. For now, pop with true to notify parent.
+            Navigator.pop(context, true);
+          }
+        });
         break;
       case 'cancel':
         _confirmCancelMeetup();
@@ -866,11 +894,28 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
     );
 
     if (confirm == true) {
-      // TODO: Call cancel API
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã hủy cuộc hẹn')),
-      );
-      Navigator.pop(context);
+      try {
+        // Call cancel API
+        await ref.read(meetupRepositoryProvider).cancelMeetup(widget.meetup.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã hủy cuộc hẹn thành công'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true); // Return true to indicate cancellation
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Lỗi khi hủy cuộc hẹn: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -925,76 +970,187 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
     }
   }
 
-  void _openMap(MeetupModel meetup) {
-    // TODO: Open map with location using url_launcher
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Mở bản đồ: ${meetup.location}')),
-    );
-  }
-
-  void _openChat(MeetupMatchModel applicant) {
-    // TODO: Navigate to chat screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Mở chat với ${applicant.user.username}')),
-    );
-  }
-
-  void _openGroupChat(List<MeetupMatchModel> accepted) {
-    // TODO: Navigate to group chat or first match's chat
-    if (accepted.isNotEmpty && accepted.first.conversationId != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Mở chat với ${accepted.length} người')),
-      );
-      // Navigator.push(context, MaterialPageRoute(
-      //   builder: (_) => ChatScreen(conversationId: accepted.first.conversationId!),
-      // ));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa có chat được tạo')),
-      );
-    }
-  }
-
-  Future<void> _confirmMeetup(String result) async {
-    final resultText = result == 'SUCCESS' ? 'thành công' : 'không gặp';
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xác nhận'),
-        content: Text('Xác nhận cuộc hẹn $resultText?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xác nhận'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
+  Future<void> _openMap(MeetupModel meetup) async {
+    final url = 'https://www.google.com/maps/dir/?api=1&destination=${meetup.latitude},${meetup.longitude}';
+    final uri = Uri.parse(url);
     try {
-      // Call API to confirm meetup
-      await ref.read(meetupRepositoryProvider).confirmMeetup(widget.meetup.id, result);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đã xác nhận cuộc hẹn $resultText'),
-            backgroundColor: result == 'SUCCESS' ? Colors.green : Colors.orange,
-          ),
-        );
-        Navigator.pop(context); // Go back after confirmation
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không thể mở bản đồ')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text('Lỗi khi mở bản đồ: $e')),
         );
       }
     }
+  }
+
+  Future<void> _openChat(MeetupMatchModel applicant) async {
+    String? conversationId = applicant.conversationId;
+
+    if (conversationId == null) {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đang khởi tạo cuộc trò chuyện...')),
+      );
+
+      try {
+        final updatedMatch = await ref
+            .read(applicantsProvider(widget.meetup.id).notifier)
+            .initiateChat(applicant.id);
+        conversationId = updatedMatch.conversationId;
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Không thể khởi tạo chat: $e')),
+          );
+        }
+        return;
+      }
+    }
+
+    if (conversationId == null) return;
+
+    try {
+      final messageRepo = ref.read(messageRepositoryProvider);
+      final conversation = await messageRepo.getConversationById(conversationId);
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatDetailScreen(conversation: conversation),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể mở chat: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _openGroupChat(List<MeetupMatchModel> accepted) async {
+    if (accepted.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Chưa có người tham gia được chấp nhận')),
+      );
+      return;
+    }
+
+    // Find first match with conversationId
+    final matchWithChat = accepted.firstWhere(
+      (m) => m.conversationId != null,
+      orElse: () => accepted.first,
+    );
+
+    if (matchWithChat.conversationId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Chưa có cuộc hội thoại được tạo')),
+      );
+      return;
+    }
+
+    try {
+      final messageRepo = ref.read(messageRepositoryProvider);
+      final conversation = await messageRepo.getConversationById(matchWithChat.conversationId!);
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatDetailScreen(conversation: conversation),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể mở chat: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmMeetup(String result) async {
+    double rating = 5.0;
+    String? feedback;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(result == 'SUCCESS' ? 'Xác nhận thành công' : 'Xác nhận không gặp'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Bạn đánh giá cuộc gặp này thế nào?'),
+              const SizedBox(height: 16),
+              const Text('Rating:'),
+              Slider(
+                value: rating,
+                min: 1,
+                max: 5,
+                divisions: 4,
+                label: rating.toString(),
+                onChanged: (val) => setState(() => rating = val),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                onChanged: (val) => feedback = val,
+                decoration: const InputDecoration(
+                  labelText: 'Góp ý (Tùy chọn)',
+                  hintText: 'Chia sẻ trải nghiệm...',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await ref.read(confirmMeetupProvider((
+                    meetupId: widget.meetup.id,
+                    result: result,
+                    feedback: feedback,
+                    rating: rating,
+                  )).future);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã gửi xác nhận và đánh giá'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    Navigator.pop(context, true);
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Lỗi: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Gửi'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

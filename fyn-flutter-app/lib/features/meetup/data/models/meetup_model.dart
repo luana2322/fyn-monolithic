@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../../config/app_config.dart';
 import 'meetup_enums.dart';
 
 part 'meetup_model.freezed.dart';
@@ -13,7 +14,7 @@ class MeetupModel with _$MeetupModel {
     String? description,
     required MeetType meetType,
     String? category,
-    required String location,
+    String? location, // Made nullable to handle null from backend
     required double latitude,
     required double longitude,
     required DateTime scheduledAt,
@@ -27,7 +28,7 @@ class MeetupModel with _$MeetupModel {
     double? distanceKm,
     required bool userHasApplied,
     MatchStatus? userMatchStatus,
-    required DateTime createdAt,
+    DateTime? createdAt,
   }) = _MeetupModel;
 
   factory MeetupModel.fromJson(Map<String, dynamic> json) =>
@@ -36,12 +37,20 @@ class MeetupModel with _$MeetupModel {
 
 @freezed
 class UserSummary with _$UserSummary {
+  const UserSummary._();
   const factory UserSummary({
     required String id,
     required String username,
     String? fullName,
     String? avatarUrl,
   }) = _UserSummary;
+
+  String? get fullAvatarUrl {
+    if (avatarUrl == null) return null;
+    if (avatarUrl!.startsWith('http')) return avatarUrl;
+    // Prepend base URL if it's a relative path
+    return '${AppConfig.baseUrl}$avatarUrl';
+  }
 
   factory UserSummary.fromJson(Map<String, dynamic> json) =>
       _$UserSummaryFromJson(json);
@@ -56,7 +65,7 @@ class MeetupMatchModel with _$MeetupMatchModel {
     String? message,
     required MatchStatus status,
     String? conversationId,
-    required DateTime createdAt,
+    DateTime? createdAt,
     DateTime? respondedAt,
   }) = _MeetupMatchModel;
 

@@ -18,6 +18,12 @@ class MeetupApiService {
     return MeetupModel.fromJson(response.data['data']);
   }
 
+  /// Get a single meetup by ID
+  Future<MeetupModel> getMeetup(String id) async {
+    final response = await _dio.get('$_basePath/$id');
+    return MeetupModel.fromJson(response.data['data']);
+  }
+
   /// Discover nearby meetups
   Future<List<MeetupModel>> discoverMeetups({
     double? latitude,
@@ -100,6 +106,25 @@ class MeetupApiService {
     return content.map((json) => MeetupMatchModel.fromJson(json)).toList();
   }
 
+  /// Get meetups the current user has applied to
+  Future<List<MeetupMatchModel>> getMyAppliedMeetups({
+    MatchStatus? status,
+    int page = 0,
+    int size = 20,
+  }) async {
+    final response = await _dio.get(
+      '$_basePath/my-applied',
+      queryParameters: {
+        if (status != null) 'status': status.value,
+        'page': page,
+        'size': size,
+      },
+    );
+    
+    final List<dynamic> content = response.data['data']['content'];
+    return content.map((json) => MeetupMatchModel.fromJson(json)).toList();
+  }
+
   /// Accept a match request
   Future<void> acceptMatch(String matchId) async {
     await _dio.post('$_basePath/matches/$matchId/accept');
@@ -108,6 +133,12 @@ class MeetupApiService {
   /// Reject a match request
   Future<void> rejectMatch(String matchId) async {
     await _dio.post('$_basePath/matches/$matchId/reject');
+  }
+
+  /// Initiate chat for a match request without accepting it
+  Future<MeetupMatchModel> initiateMatchChat(String matchId) async {
+    final response = await _dio.post('$_basePath/matches/$matchId/chat');
+    return MeetupMatchModel.fromJson(response.data['data']);
   }
 
   /// Confirm meetup completion
@@ -119,6 +150,15 @@ class MeetupApiService {
       '$_basePath/$meetupId/confirm',
       data: request.toJson(),
     );
+  }
+
+  /// Update an existing meetup
+  Future<MeetupModel> updateMeetup(String id, UpdateMeetupRequest request) async {
+    final response = await _dio.put(
+      '$_basePath/$id',
+      data: request.toJson(),
+    );
+    return MeetupModel.fromJson(response.data['data']);
   }
 
   /// Cancel meetup

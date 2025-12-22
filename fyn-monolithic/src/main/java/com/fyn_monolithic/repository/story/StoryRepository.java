@@ -25,7 +25,7 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
      */
     @Query("""
                 SELECT s FROM Story s
-                WHERE s.user.id IN (
+                WHERE (s.user.id IN (
                     SELECT CASE
                         WHEN c.requester.id = :userId THEN c.receiver.id
                         ELSE c.requester.id
@@ -33,7 +33,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
                     FROM Connection c
                     WHERE (c.requester.id = :userId OR c.receiver.id = :userId)
                     AND c.status = 'ACCEPTED'
-                )
+                ) OR s.user.id IN (
+                    SELECT f.user.id FROM UserFollower f WHERE f.follower.id = :userId
+                ))
                 AND s.expiresAt > :now
                 ORDER BY s.createdAt DESC
             """)
@@ -50,7 +52,7 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
      */
     @Query("""
                 SELECT DISTINCT s.user.id FROM Story s
-                WHERE s.user.id IN (
+                WHERE (s.user.id IN (
                     SELECT CASE
                         WHEN c.requester.id = :userId THEN c.receiver.id
                         ELSE c.requester.id
@@ -58,7 +60,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
                     FROM Connection c
                     WHERE (c.requester.id = :userId OR c.receiver.id = :userId)
                     AND c.status = 'ACCEPTED'
-                )
+                ) OR s.user.id IN (
+                    SELECT f.user.id FROM UserFollower f WHERE f.follower.id = :userId
+                ))
                 AND s.expiresAt > :now
             """)
     List<UUID> findUsersWithActiveStories(@Param("userId") UUID userId, @Param("now") LocalDateTime now);

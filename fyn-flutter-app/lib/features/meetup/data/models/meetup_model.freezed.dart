@@ -26,7 +26,8 @@ mixin _$MeetupModel {
   String? get description => throw _privateConstructorUsedError;
   MeetType get meetType => throw _privateConstructorUsedError;
   String? get category => throw _privateConstructorUsedError;
-  String get location => throw _privateConstructorUsedError;
+  String? get location =>
+      throw _privateConstructorUsedError; // Made nullable to handle null from backend
   double get latitude => throw _privateConstructorUsedError;
   double get longitude => throw _privateConstructorUsedError;
   DateTime get scheduledAt => throw _privateConstructorUsedError;
@@ -41,7 +42,7 @@ mixin _$MeetupModel {
   double? get distanceKm => throw _privateConstructorUsedError;
   bool get userHasApplied => throw _privateConstructorUsedError;
   MatchStatus? get userMatchStatus => throw _privateConstructorUsedError;
-  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this MeetupModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -66,7 +67,7 @@ abstract class $MeetupModelCopyWith<$Res> {
       String? description,
       MeetType meetType,
       String? category,
-      String location,
+      String? location,
       double latitude,
       double longitude,
       DateTime scheduledAt,
@@ -80,7 +81,7 @@ abstract class $MeetupModelCopyWith<$Res> {
       double? distanceKm,
       bool userHasApplied,
       MatchStatus? userMatchStatus,
-      DateTime createdAt});
+      DateTime? createdAt});
 
   $UserSummaryCopyWith<$Res> get organizer;
 }
@@ -106,7 +107,7 @@ class _$MeetupModelCopyWithImpl<$Res, $Val extends MeetupModel>
     Object? description = freezed,
     Object? meetType = null,
     Object? category = freezed,
-    Object? location = null,
+    Object? location = freezed,
     Object? latitude = null,
     Object? longitude = null,
     Object? scheduledAt = null,
@@ -120,7 +121,7 @@ class _$MeetupModelCopyWithImpl<$Res, $Val extends MeetupModel>
     Object? distanceKm = freezed,
     Object? userHasApplied = null,
     Object? userMatchStatus = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -147,10 +148,10 @@ class _$MeetupModelCopyWithImpl<$Res, $Val extends MeetupModel>
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
               as String?,
-      location: null == location
+      location: freezed == location
           ? _value.location
           : location // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       latitude: null == latitude
           ? _value.latitude
           : latitude // ignore: cast_nullable_to_non_nullable
@@ -203,10 +204,10 @@ class _$MeetupModelCopyWithImpl<$Res, $Val extends MeetupModel>
           ? _value.userMatchStatus
           : userMatchStatus // ignore: cast_nullable_to_non_nullable
               as MatchStatus?,
-      createdAt: null == createdAt
+      createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
     ) as $Val);
   }
 
@@ -236,7 +237,7 @@ abstract class _$$MeetupModelImplCopyWith<$Res>
       String? description,
       MeetType meetType,
       String? category,
-      String location,
+      String? location,
       double latitude,
       double longitude,
       DateTime scheduledAt,
@@ -250,7 +251,7 @@ abstract class _$$MeetupModelImplCopyWith<$Res>
       double? distanceKm,
       bool userHasApplied,
       MatchStatus? userMatchStatus,
-      DateTime createdAt});
+      DateTime? createdAt});
 
   @override
   $UserSummaryCopyWith<$Res> get organizer;
@@ -275,7 +276,7 @@ class __$$MeetupModelImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? meetType = null,
     Object? category = freezed,
-    Object? location = null,
+    Object? location = freezed,
     Object? latitude = null,
     Object? longitude = null,
     Object? scheduledAt = null,
@@ -289,7 +290,7 @@ class __$$MeetupModelImplCopyWithImpl<$Res>
     Object? distanceKm = freezed,
     Object? userHasApplied = null,
     Object? userMatchStatus = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
   }) {
     return _then(_$MeetupModelImpl(
       id: null == id
@@ -316,10 +317,10 @@ class __$$MeetupModelImplCopyWithImpl<$Res>
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
               as String?,
-      location: null == location
+      location: freezed == location
           ? _value.location
           : location // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       latitude: null == latitude
           ? _value.latitude
           : latitude // ignore: cast_nullable_to_non_nullable
@@ -372,10 +373,10 @@ class __$$MeetupModelImplCopyWithImpl<$Res>
           ? _value.userMatchStatus
           : userMatchStatus // ignore: cast_nullable_to_non_nullable
               as MatchStatus?,
-      createdAt: null == createdAt
+      createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
     ));
   }
 }
@@ -390,7 +391,7 @@ class _$MeetupModelImpl implements _MeetupModel {
       this.description,
       required this.meetType,
       this.category,
-      required this.location,
+      this.location,
       required this.latitude,
       required this.longitude,
       required this.scheduledAt,
@@ -404,7 +405,7 @@ class _$MeetupModelImpl implements _MeetupModel {
       this.distanceKm,
       required this.userHasApplied,
       this.userMatchStatus,
-      required this.createdAt});
+      this.createdAt});
 
   factory _$MeetupModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$MeetupModelImplFromJson(json);
@@ -422,7 +423,8 @@ class _$MeetupModelImpl implements _MeetupModel {
   @override
   final String? category;
   @override
-  final String location;
+  final String? location;
+// Made nullable to handle null from backend
   @override
   final double latitude;
   @override
@@ -450,7 +452,7 @@ class _$MeetupModelImpl implements _MeetupModel {
   @override
   final MatchStatus? userMatchStatus;
   @override
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   @override
   String toString() {
@@ -554,7 +556,7 @@ abstract class _MeetupModel implements MeetupModel {
       final String? description,
       required final MeetType meetType,
       final String? category,
-      required final String location,
+      final String? location,
       required final double latitude,
       required final double longitude,
       required final DateTime scheduledAt,
@@ -568,7 +570,7 @@ abstract class _MeetupModel implements MeetupModel {
       final double? distanceKm,
       required final bool userHasApplied,
       final MatchStatus? userMatchStatus,
-      required final DateTime createdAt}) = _$MeetupModelImpl;
+      final DateTime? createdAt}) = _$MeetupModelImpl;
 
   factory _MeetupModel.fromJson(Map<String, dynamic> json) =
       _$MeetupModelImpl.fromJson;
@@ -586,7 +588,7 @@ abstract class _MeetupModel implements MeetupModel {
   @override
   String? get category;
   @override
-  String get location;
+  String? get location; // Made nullable to handle null from backend
   @override
   double get latitude;
   @override
@@ -614,7 +616,7 @@ abstract class _MeetupModel implements MeetupModel {
   @override
   MatchStatus? get userMatchStatus;
   @override
-  DateTime get createdAt;
+  DateTime? get createdAt;
 
   /// Create a copy of MeetupModel
   /// with the given fields replaced by the non-null parameter values.
@@ -747,12 +749,10 @@ class __$$UserSummaryImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$UserSummaryImpl implements _UserSummary {
+class _$UserSummaryImpl extends _UserSummary {
   const _$UserSummaryImpl(
-      {required this.id,
-      required this.username,
-      this.fullName,
-      this.avatarUrl});
+      {required this.id, required this.username, this.fullName, this.avatarUrl})
+      : super._();
 
   factory _$UserSummaryImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserSummaryImplFromJson(json);
@@ -806,12 +806,13 @@ class _$UserSummaryImpl implements _UserSummary {
   }
 }
 
-abstract class _UserSummary implements UserSummary {
+abstract class _UserSummary extends UserSummary {
   const factory _UserSummary(
       {required final String id,
       required final String username,
       final String? fullName,
       final String? avatarUrl}) = _$UserSummaryImpl;
+  const _UserSummary._() : super._();
 
   factory _UserSummary.fromJson(Map<String, dynamic> json) =
       _$UserSummaryImpl.fromJson;
@@ -845,7 +846,7 @@ mixin _$MeetupMatchModel {
   String? get message => throw _privateConstructorUsedError;
   MatchStatus get status => throw _privateConstructorUsedError;
   String? get conversationId => throw _privateConstructorUsedError;
-  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime? get createdAt => throw _privateConstructorUsedError;
   DateTime? get respondedAt => throw _privateConstructorUsedError;
 
   /// Serializes this MeetupMatchModel to a JSON map.
@@ -871,7 +872,7 @@ abstract class $MeetupMatchModelCopyWith<$Res> {
       String? message,
       MatchStatus status,
       String? conversationId,
-      DateTime createdAt,
+      DateTime? createdAt,
       DateTime? respondedAt});
 
   $UserSummaryCopyWith<$Res> get user;
@@ -898,7 +899,7 @@ class _$MeetupMatchModelCopyWithImpl<$Res, $Val extends MeetupMatchModel>
     Object? message = freezed,
     Object? status = null,
     Object? conversationId = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
     Object? respondedAt = freezed,
   }) {
     return _then(_value.copyWith(
@@ -926,10 +927,10 @@ class _$MeetupMatchModelCopyWithImpl<$Res, $Val extends MeetupMatchModel>
           ? _value.conversationId
           : conversationId // ignore: cast_nullable_to_non_nullable
               as String?,
-      createdAt: null == createdAt
+      createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
       respondedAt: freezed == respondedAt
           ? _value.respondedAt
           : respondedAt // ignore: cast_nullable_to_non_nullable
@@ -963,7 +964,7 @@ abstract class _$$MeetupMatchModelImplCopyWith<$Res>
       String? message,
       MatchStatus status,
       String? conversationId,
-      DateTime createdAt,
+      DateTime? createdAt,
       DateTime? respondedAt});
 
   @override
@@ -989,7 +990,7 @@ class __$$MeetupMatchModelImplCopyWithImpl<$Res>
     Object? message = freezed,
     Object? status = null,
     Object? conversationId = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
     Object? respondedAt = freezed,
   }) {
     return _then(_$MeetupMatchModelImpl(
@@ -1017,10 +1018,10 @@ class __$$MeetupMatchModelImplCopyWithImpl<$Res>
           ? _value.conversationId
           : conversationId // ignore: cast_nullable_to_non_nullable
               as String?,
-      createdAt: null == createdAt
+      createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
       respondedAt: freezed == respondedAt
           ? _value.respondedAt
           : respondedAt // ignore: cast_nullable_to_non_nullable
@@ -1039,7 +1040,7 @@ class _$MeetupMatchModelImpl implements _MeetupMatchModel {
       this.message,
       required this.status,
       this.conversationId,
-      required this.createdAt,
+      this.createdAt,
       this.respondedAt});
 
   factory _$MeetupMatchModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -1058,7 +1059,7 @@ class _$MeetupMatchModelImpl implements _MeetupMatchModel {
   @override
   final String? conversationId;
   @override
-  final DateTime createdAt;
+  final DateTime? createdAt;
   @override
   final DateTime? respondedAt;
 
@@ -1116,7 +1117,7 @@ abstract class _MeetupMatchModel implements MeetupMatchModel {
       final String? message,
       required final MatchStatus status,
       final String? conversationId,
-      required final DateTime createdAt,
+      final DateTime? createdAt,
       final DateTime? respondedAt}) = _$MeetupMatchModelImpl;
 
   factory _MeetupMatchModel.fromJson(Map<String, dynamic> json) =
@@ -1135,7 +1136,7 @@ abstract class _MeetupMatchModel implements MeetupMatchModel {
   @override
   String? get conversationId;
   @override
-  DateTime get createdAt;
+  DateTime? get createdAt;
   @override
   DateTime? get respondedAt;
 

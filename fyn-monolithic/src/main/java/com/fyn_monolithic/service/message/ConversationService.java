@@ -99,7 +99,7 @@ public class ConversationService {
 
     @Transactional(readOnly = true)
     public Conversation getConversation(UUID conversationId) {
-        return conversationRepository.findById(conversationId)
+        return conversationRepository.findWithMembersById(conversationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
     }
 }

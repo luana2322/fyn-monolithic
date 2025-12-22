@@ -52,6 +52,37 @@ class MessageRepository {
     }
   }
 
+  /// Lấy conversation theo ID
+  Future<ConversationModel> getConversationById(String conversationId) async {
+    try {
+      final response = await _apiClient.get(ApiEndpoints.conversationById(conversationId));
+
+      final apiResponse = ApiResponse<ConversationModel>.fromJson(
+        response.data,
+        (data) {
+          if (data is Map<String, dynamic>) {
+            return ConversationModel.fromJson(data);
+          }
+          throw Exception('Invalid response data format');
+        },
+      );
+
+      if (!apiResponse.success || apiResponse.data == null) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: apiResponse.message ?? 'Không thể tải cuộc trò chuyện',
+        );
+      }
+
+      return apiResponse.data!;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    } catch (e) {
+      throw 'Lỗi xử lý dữ liệu: ${e.toString()}';
+    }
+  }
+
   /// Tạo conversation mới
   Future<ConversationModel> createConversation(
     CreateConversationRequest request,

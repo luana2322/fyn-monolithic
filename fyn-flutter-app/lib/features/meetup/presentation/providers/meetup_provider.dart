@@ -69,6 +69,30 @@ final myMeetupsProvider =
   return MyMeetupsNotifier(repository);
 });
 
+/// State notifier for user's applied meetups
+class AppliedMeetupsNotifier extends StateNotifier<AsyncValue<List<MeetupMatchModel>>> {
+  final MeetupRepository _repository;
+
+  AppliedMeetupsNotifier(this._repository) : super(const AsyncValue.loading());
+
+  Future<void> loadAppliedMeetups({MatchStatus? status}) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _repository.getMyAppliedMeetups(
+      status: status,
+    ));
+  }
+
+  void refresh() {
+    state = const AsyncValue.loading();
+  }
+}
+
+final appliedMeetupsProvider =
+    StateNotifierProvider<AppliedMeetupsNotifier, AsyncValue<List<MeetupMatchModel>>>((ref) {
+  final repository = ref.watch(meetupRepositoryProvider);
+  return AppliedMeetupsNotifier(repository);
+});
+
 /// State notifier for match requests (organizer view)
 class MatchRequestsNotifier extends StateNotifier<AsyncValue<List<MeetupMatchModel>>> {
   final MeetupRepository _repository;
@@ -98,6 +122,16 @@ class MatchRequestsNotifier extends StateNotifier<AsyncValue<List<MeetupMatchMod
       await loadMatchRequests(meetupId);
     }
   }
+
+  Future<MeetupMatchModel> initiateChat(String matchId) async {
+    final updated = await _repository.initiateMatchChat(matchId);
+    // Reload after initiating chat
+    if (state.value != null && state.value!.isNotEmpty) {
+      final meetupId = state.value!.first.meetupId;
+      await loadMatchRequests(meetupId);
+    }
+    return updated;
+  }
 }
 
 final matchRequestsProvider =
@@ -111,6 +145,22 @@ final createMeetupProvider = FutureProvider.family<MeetupModel, CreateMeetupRequ
   (ref, request) {
     final repository = ref.watch(meetupRepositoryProvider);
     return repository.createMeetup(request);
+  },
+);
+
+/// Provider for getting a single meetup
+final meetupDetailProvider = FutureProvider.family<MeetupModel, String>(
+  (ref, id) {
+    final repository = ref.watch(meetupRepositoryProvider);
+    return repository.getMeetup(id);
+  },
+);
+
+/// Provider for updating a meetup
+final updateMeetupProvider = FutureProvider.family<MeetupModel, ({String id, UpdateMeetupRequest request})>(
+  (ref, params) {
+    final repository = ref.watch(meetupRepositoryProvider);
+    return repository.updateMeetup(params.id, params.request);
   },
 );
 
@@ -143,6 +193,12 @@ class ApplicantsNotifier extends StateNotifier<AsyncValue<List<MeetupMatchModel>
     await _repository.rejectMatch(matchId);
     await load();
   }
+
+  Future<MeetupMatchModel> initiateChat(String matchId) async {
+    final updated = await _repository.initiateMatchChat(matchId);
+    await load();
+    return updated;
+  }
 }
 
 /// Family provider for applicants per meetup
@@ -150,5 +206,18 @@ final applicantsProvider = StateNotifierProvider.family<ApplicantsNotifier, Asyn
   (ref, meetupId) {
     final repository = ref.watch(meetupRepositoryProvider);
     return ApplicantsNotifier(repository, meetupId);
+  },
+);
+
+/// Provider for confirming a meetup
+final confirmMeetupProvider = FutureProvider.family<void, ({String meetupId, String result, String? feedback, double? rating})>(
+  (ref, params) {
+    final repository = ref.watch(meetupRepositoryProvider);
+    return repository.confirmMeetup(
+      params.meetupId,
+      params.result,
+      feedback: params.feedback,
+      rating: params.rating,
+    );
   },
 );

@@ -12,6 +12,10 @@ class MeetupRepository {
     return _apiService.createMeetup(request);
   }
 
+  Future<MeetupModel> getMeetup(String id) {
+    return _apiService.getMeetup(id);
+  }
+
   Future<List<MeetupModel>> discoverMeetups({
     double? latitude,
     double? longitude,
@@ -61,6 +65,12 @@ class MeetupRepository {
     return _apiService.getMatchRequests(meetupId, status: status);
   }
 
+  Future<List<MeetupMatchModel>> getMyAppliedMeetups({
+    MatchStatus? status,
+  }) {
+    return _apiService.getMyAppliedMeetups(status: status);
+  }
+
   Future<void> acceptMatch(String matchId) {
     return _apiService.acceptMatch(matchId);
   }
@@ -69,11 +79,19 @@ class MeetupRepository {
     return _apiService.rejectMatch(matchId);
   }
 
-  Future<void> confirmMeetup(String meetupId, String result) {
+  Future<MeetupMatchModel> initiateMatchChat(String matchId) {
+    return _apiService.initiateMatchChat(matchId);
+  }
+
+  Future<void> confirmMeetup(String id, String result, {String? feedback, double? rating}) {
     return _apiService.confirmMeetup(
-      meetupId,
-      ConfirmMeetupRequest(result: result),
+      id,
+      ConfirmMeetupRequest(result: result, feedback: feedback, rating: rating),
     );
+  }
+
+  Future<MeetupModel> updateMeetup(String id, UpdateMeetupRequest request) {
+    return _apiService.updateMeetup(id, request);
   }
 
   Future<void> cancelMeetup(String meetupId) {
