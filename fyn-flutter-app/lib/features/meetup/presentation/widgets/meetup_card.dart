@@ -46,7 +46,10 @@ class MeetupCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _buildTypeBadge(context),
+                  if (meetup.isPast || meetup.isExpired) 
+                    _buildPastBadge(context)
+                  else
+                    _buildTypeBadge(context),
                 ],
               ),
               const SizedBox(height: 8),
@@ -192,6 +195,39 @@ class MeetupCard extends StatelessWidget {
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
       backgroundColor: isFull ? Colors.red.withOpacity(0.1) : null,
+    );
+  }
+
+  Widget _buildPastBadge(BuildContext context) {
+    String label = 'Past';
+    Color color = Colors.grey;
+
+    if (meetup.status == MeetupStatus.completed) {
+      label = 'Finished';
+      color = Colors.green;
+    } else if (meetup.isExpired || meetup.status == MeetupStatus.expired) {
+      label = 'Expired';
+      color = Colors.red;
+    } else if (meetup.status == MeetupStatus.cancelled) {
+      label = 'Cancelled';
+      color = Colors.orange;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 

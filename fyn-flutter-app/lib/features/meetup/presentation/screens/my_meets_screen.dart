@@ -236,31 +236,16 @@ class _MyMeetsScreenState extends ConsumerState<MyMeetsScreen>
       itemCount: meets.length,
       itemBuilder: (context, index) {
         final meet = meets[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: _buildMeetupStatusIcon(meet.status),
-            title: Text(meet.title),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Status: ${_getMeetupStatusText(meet.status)}'),
-                Text(
-                  DateFormat('MMM dd, yyyy HH:mm').format(meet.scheduledAt),
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-              ],
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MeetupDetailsScreen(meetupId: meet.id),
-                ),
-              );
-            },
-          ),
+        return MeetupCard(
+          meetup: meet,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MeetupDetailsScreen(meetupId: meet.id),
+              ),
+            );
+          },
         );
       },
     );

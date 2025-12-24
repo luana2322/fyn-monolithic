@@ -33,6 +33,8 @@ _$MeetupModelImpl _$$MeetupModelImplFromJson(Map<String, dynamic> json) =>
       userHasApplied: json['userHasApplied'] as bool,
       userMatchStatus:
           $enumDecodeNullable(_$MatchStatusEnumMap, json['userMatchStatus']),
+      isPast: json['isPast'] as bool? ?? false,
+      isExpired: json['isExpired'] as bool? ?? false,
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
@@ -61,6 +63,8 @@ Map<String, dynamic> _$$MeetupModelImplToJson(_$MeetupModelImpl instance) =>
       'distanceKm': instance.distanceKm,
       'userHasApplied': instance.userHasApplied,
       'userMatchStatus': _$MatchStatusEnumMap[instance.userMatchStatus],
+      'isPast': instance.isPast,
+      'isExpired': instance.isExpired,
       'createdAt': instance.createdAt?.toIso8601String(),
     };
 

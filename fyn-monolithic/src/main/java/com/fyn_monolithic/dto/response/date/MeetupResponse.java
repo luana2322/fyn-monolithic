@@ -13,25 +13,27 @@ import java.util.UUID;
  * Response DTO for meetup entities
  */
 public record MeetupResponse(
-                UUID id,
-                UserSummary organizer,
-                String title,
-                String description,
-                MeetType meetType,
-                String category,
-                String location,
-                Double latitude,
-                Double longitude,
-                ZonedDateTime scheduledAt,
-                ZonedDateTime expiresAt,
-                Integer durationMinutes,
-                Integer maxParticipants,
-                int acceptedCount,
-                int pendingMatchCount,
-                MeetupStatus status,
-                ConfirmationStatus confirmationStatus,
-                Double distanceKm, // Distance from user (calculated)
-                boolean userHasApplied,
-                MatchStatus userMatchStatus,
-                ZonedDateTime createdAt) {
+        UUID id,
+        UserSummary organizer,
+        String title,
+        String description,
+        MeetType meetType,
+        String category,
+        String location,
+        Double latitude,
+        Double longitude,
+        ZonedDateTime scheduledAt,
+        ZonedDateTime expiresAt,
+        Integer durationMinutes,
+        Integer maxParticipants,
+        int acceptedCount,
+        int pendingMatchCount,
+        MeetupStatus status,
+        ConfirmationStatus confirmationStatus,
+        Double distanceKm, // Distance from user (calculated)
+        boolean userHasApplied,
+        MatchStatus userMatchStatus,
+        boolean isPast,
+        boolean isExpired,
+        ZonedDateTime createdAt) {
 }

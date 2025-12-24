@@ -28,6 +28,8 @@ class MeetupModel with _$MeetupModel {
     double? distanceKm,
     required bool userHasApplied,
     MatchStatus? userMatchStatus,
+    @Default(false) bool isPast,
+    @Default(false) bool isExpired,
     DateTime? createdAt,
   }) = _MeetupModel;
 

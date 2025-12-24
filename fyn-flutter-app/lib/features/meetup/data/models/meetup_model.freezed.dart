@@ -42,6 +42,8 @@ mixin _$MeetupModel {
   double? get distanceKm => throw _privateConstructorUsedError;
   bool get userHasApplied => throw _privateConstructorUsedError;
   MatchStatus? get userMatchStatus => throw _privateConstructorUsedError;
+  bool get isPast => throw _privateConstructorUsedError;
+  bool get isExpired => throw _privateConstructorUsedError;
   DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this MeetupModel to a JSON map.
@@ -81,6 +83,8 @@ abstract class $MeetupModelCopyWith<$Res> {
       double? distanceKm,
       bool userHasApplied,
       MatchStatus? userMatchStatus,
+      bool isPast,
+      bool isExpired,
       DateTime? createdAt});
 
   $UserSummaryCopyWith<$Res> get organizer;
@@ -121,6 +125,8 @@ class _$MeetupModelCopyWithImpl<$Res, $Val extends MeetupModel>
     Object? distanceKm = freezed,
     Object? userHasApplied = null,
     Object? userMatchStatus = freezed,
+    Object? isPast = null,
+    Object? isExpired = null,
     Object? createdAt = freezed,
   }) {
     return _then(_value.copyWith(
@@ -204,6 +210,14 @@ class _$MeetupModelCopyWithImpl<$Res, $Val extends MeetupModel>
           ? _value.userMatchStatus
           : userMatchStatus // ignore: cast_nullable_to_non_nullable
               as MatchStatus?,
+      isPast: null == isPast
+          ? _value.isPast
+          : isPast // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isExpired: null == isExpired
+          ? _value.isExpired
+          : isExpired // ignore: cast_nullable_to_non_nullable
+              as bool,
       createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -251,6 +265,8 @@ abstract class _$$MeetupModelImplCopyWith<$Res>
       double? distanceKm,
       bool userHasApplied,
       MatchStatus? userMatchStatus,
+      bool isPast,
+      bool isExpired,
       DateTime? createdAt});
 
   @override
@@ -290,6 +306,8 @@ class __$$MeetupModelImplCopyWithImpl<$Res>
     Object? distanceKm = freezed,
     Object? userHasApplied = null,
     Object? userMatchStatus = freezed,
+    Object? isPast = null,
+    Object? isExpired = null,
     Object? createdAt = freezed,
   }) {
     return _then(_$MeetupModelImpl(
@@ -373,6 +391,14 @@ class __$$MeetupModelImplCopyWithImpl<$Res>
           ? _value.userMatchStatus
           : userMatchStatus // ignore: cast_nullable_to_non_nullable
               as MatchStatus?,
+      isPast: null == isPast
+          ? _value.isPast
+          : isPast // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isExpired: null == isExpired
+          ? _value.isExpired
+          : isExpired // ignore: cast_nullable_to_non_nullable
+              as bool,
       createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -405,6 +431,8 @@ class _$MeetupModelImpl implements _MeetupModel {
       this.distanceKm,
       required this.userHasApplied,
       this.userMatchStatus,
+      this.isPast = false,
+      this.isExpired = false,
       this.createdAt});
 
   factory _$MeetupModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -452,11 +480,17 @@ class _$MeetupModelImpl implements _MeetupModel {
   @override
   final MatchStatus? userMatchStatus;
   @override
+  @JsonKey()
+  final bool isPast;
+  @override
+  @JsonKey()
+  final bool isExpired;
+  @override
   final DateTime? createdAt;
 
   @override
   String toString() {
-    return 'MeetupModel(id: $id, organizer: $organizer, title: $title, description: $description, meetType: $meetType, category: $category, location: $location, latitude: $latitude, longitude: $longitude, scheduledAt: $scheduledAt, expiresAt: $expiresAt, durationMinutes: $durationMinutes, maxParticipants: $maxParticipants, acceptedCount: $acceptedCount, pendingMatchCount: $pendingMatchCount, status: $status, confirmationStatus: $confirmationStatus, distanceKm: $distanceKm, userHasApplied: $userHasApplied, userMatchStatus: $userMatchStatus, createdAt: $createdAt)';
+    return 'MeetupModel(id: $id, organizer: $organizer, title: $title, description: $description, meetType: $meetType, category: $category, location: $location, latitude: $latitude, longitude: $longitude, scheduledAt: $scheduledAt, expiresAt: $expiresAt, durationMinutes: $durationMinutes, maxParticipants: $maxParticipants, acceptedCount: $acceptedCount, pendingMatchCount: $pendingMatchCount, status: $status, confirmationStatus: $confirmationStatus, distanceKm: $distanceKm, userHasApplied: $userHasApplied, userMatchStatus: $userMatchStatus, isPast: $isPast, isExpired: $isExpired, createdAt: $createdAt)';
   }
 
   @override
@@ -501,6 +535,9 @@ class _$MeetupModelImpl implements _MeetupModel {
                 other.userHasApplied == userHasApplied) &&
             (identical(other.userMatchStatus, userMatchStatus) ||
                 other.userMatchStatus == userMatchStatus) &&
+            (identical(other.isPast, isPast) || other.isPast == isPast) &&
+            (identical(other.isExpired, isExpired) ||
+                other.isExpired == isExpired) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
@@ -529,6 +566,8 @@ class _$MeetupModelImpl implements _MeetupModel {
         distanceKm,
         userHasApplied,
         userMatchStatus,
+        isPast,
+        isExpired,
         createdAt
       ]);
 
@@ -570,6 +609,8 @@ abstract class _MeetupModel implements MeetupModel {
       final double? distanceKm,
       required final bool userHasApplied,
       final MatchStatus? userMatchStatus,
+      final bool isPast,
+      final bool isExpired,
       final DateTime? createdAt}) = _$MeetupModelImpl;
 
   factory _MeetupModel.fromJson(Map<String, dynamic> json) =
@@ -615,6 +656,10 @@ abstract class _MeetupModel implements MeetupModel {
   bool get userHasApplied;
   @override
   MatchStatus? get userMatchStatus;
+  @override
+  bool get isPast;
+  @override
+  bool get isExpired;
   @override
   DateTime? get createdAt;
 

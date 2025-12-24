@@ -566,6 +566,10 @@ public class MeetupMatchService {
         int pendingCount = meetupMatchRepository.countByMeetupIdAndStatus(
                 meetup.getId(), MatchStatus.PENDING);
 
+        ZonedDateTime now = ZonedDateTime.now();
+        boolean isPast = meetup.getScheduledAt().isBefore(now);
+        boolean isExpired = meetup.getExpiresAt() != null && meetup.getExpiresAt().isBefore(now);
+
         return new MeetupResponse(
                 meetup.getId(),
                 UserSummary.fromUser(meetup.getOrganizer()),
@@ -587,6 +591,8 @@ public class MeetupMatchService {
                 null, // distance - calculated in controller if needed
                 userHasApplied,
                 userMatchStatus,
+                isPast,
+                isExpired,
                 meetup.getCreatedAt());
     }
 
