@@ -3,11 +3,15 @@ package com.fyn_monolithic.controller.date;
 import com.fyn_monolithic.dto.request.date.CreateMeetupRequest;
 import com.fyn_monolithic.dto.request.date.UpdateMeetupRequest;
 import com.fyn_monolithic.dto.request.date.MeetupFeedbackRequest;
+import com.fyn_monolithic.dto.request.date.AttendanceConfirmRequest;
 import com.fyn_monolithic.dto.response.date.MeetupMatchResponse;
 import com.fyn_monolithic.dto.response.date.MeetupResponse;
+import com.fyn_monolithic.model.date.AttendanceStatus;
 import com.fyn_monolithic.model.date.MatchStatus;
 import com.fyn_monolithic.model.date.MeetType;
+import com.fyn_monolithic.model.date.MeetupAttendance;
 import com.fyn_monolithic.security.CustomUserDetails;
+import com.fyn_monolithic.service.date.AttendanceService;
 import com.fyn_monolithic.service.date.MeetupMatchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,7 @@ import static org.springframework.format.annotation.DateTimeFormat.ISO;
 public class MeetupController {
 
         private final MeetupMatchService meetupMatchService;
+        private final AttendanceService attendanceService;
 
         /**
          * Create a new meetup
@@ -299,6 +304,32 @@ public class MeetupController {
                 return ResponseEntity.ok(Map.of(
                                 "success", true,
                                 "message", "Meetup confirmation recorded"));
+        }
+
+        /**
+         * Confirm attendance for a GROUP meetup (new system)
+         * Uses AttendanceService for group meetups
+         */
+        @PostMapping("/{id}/attendance")
+        public ResponseEntity<Map<String, Object>> confirmGroupAttendance(
+                        @PathVariable UUID id,
+                        @AuthenticationPrincipal CustomUserDetails userDetails,
+                        @Valid @RequestBody AttendanceConfirmRequest request) {
+
+                AttendanceStatus status = AttendanceStatus.fromValue(request.getStatus());
+                MeetupAttendance attendance = attendanceService.confirmAttendance(
+                                id,
+                                userDetails.getUser().getId(),
+                                status,
+                                request.getFeedback(),
+                                request.getRating());
+
+                return ResponseEntity.ok(Map.of(
+                                "success", true,
+                                "message", "Attendance confirmed",
+                                "data", Map.of(
+                                                "status", attendance.getStatus().getValue(),
+                                                "confirmedAt", attendance.getConfirmedAt())));
         }
 
         /**

@@ -17,6 +17,7 @@ import com.fyn_monolithic.repository.date.MeetupRepository;
 import com.fyn_monolithic.repository.date.MeetupConfirmationRepository;
 import com.fyn_monolithic.repository.user.UserRepository;
 import com.fyn_monolithic.service.message.ConversationService;
+import com.fyn_monolithic.service.message.GroupChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,7 @@ public class MeetupMatchService {
     private final MeetupConfirmationRepository confirmationRepository;
     private final UserRepository userRepository;
     private final ConversationService conversationService;
+    private final GroupChatService groupChatService;
 
     /**
      * Create a meetup
@@ -285,9 +287,18 @@ public class MeetupMatchService {
         // Add to accepted participants
         meetup.getAcceptedParticipants().add(match.getUser());
 
-        // Create chat conversation linked to this match (if not exists)
-        if (match.getConversationId() == null) {
-            initiateChat(match, organizerId);
+        // Create/update chat based on meetup type
+        if (meetup.isOneToOne()) {
+            // For 1-1: Create direct conversation linked to this match
+            if (match.getConversationId() == null) {
+                initiateChat(match, organizerId);
+            }
+        } else {
+            // For GROUP: Create or get group chat and add new member
+            var groupChat = groupChatService.getOrCreateMeetupGroupChat(meetup, meetup.getOrganizer());
+            groupChatService.addAcceptedMemberToGroupChat(meetup.getId(), match.getUser());
+            // Store group chat ID in match for reference
+            match.setConversationId(groupChat.getId());
         }
 
         match = meetupMatchRepository.save(match);

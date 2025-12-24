@@ -2,6 +2,7 @@ package com.fyn_monolithic.repository.message;
 
 import com.fyn_monolithic.model.message.Conversation;
 import com.fyn_monolithic.model.message.ConversationMember;
+import com.fyn_monolithic.model.message.ConversationType;
 import com.fyn_monolithic.model.user.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +18,13 @@ public interface ConversationRepository extends JpaRepository<Conversation, UUID
 
     @EntityGraph(attributePaths = { "members", "members.member", "members.member.profile" })
     Optional<Conversation> findWithMembersById(UUID id);
+
+    // Find group chat by meetup ID
+    Optional<Conversation> findByMeetupId(UUID meetupId);
+
+    // Find conversations by type
+    List<Conversation> findByTypeAndIsArchivedFalse(ConversationType type);
+
+    // Find all group conversations for a user (not archived)
+    List<Conversation> findByMembers_MemberAndTypeInAndIsArchivedFalse(User member, List<ConversationType> types);
 }

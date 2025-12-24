@@ -9,13 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/files")
 @RequiredArgsConstructor
 public class FileController {
 
     private final MinioService minioService;
 
-    @GetMapping("/{objectKey:.+}")
+    // Support both /api/files and /api/v1/files for compatibility
+    @GetMapping({ "/api/files/{objectKey:.+}", "/api/v1/files/{objectKey:.+}" })
     public ResponseEntity<byte[]> getFile(@PathVariable String objectKey) {
         try {
             // Decode URL-encoded objectKey

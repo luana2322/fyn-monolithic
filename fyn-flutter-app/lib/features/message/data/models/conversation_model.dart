@@ -13,6 +13,10 @@ class ConversationModel {
   final String? otherUserId; // For direct messages
   final String? otherUserAvatar;
   final String? otherUserName;
+  // New fields for group chat
+  final String? meetupId; // For GROUP_MEETUP type
+  final bool isArchived;
+  final int memberCount;
 
   ConversationModel({
     required this.id,
@@ -26,6 +30,9 @@ class ConversationModel {
     this.otherUserId,
     this.otherUserAvatar,
     this.otherUserName,
+    this.meetupId,
+    this.isArchived = false,
+    this.memberCount = 0,
   });
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +51,9 @@ class ConversationModel {
       otherUserId: json['otherUserId'] as String?,
       otherUserAvatar: json['otherUserAvatar'] as String?,
       otherUserName: json['otherUserName'] as String?,
+      meetupId: json['meetupId'] as String?,
+      isArchived: json['isArchived'] as bool? ?? false,
+      memberCount: json['memberCount'] as int? ?? 0,
     );
   }
 
@@ -55,8 +65,22 @@ class ConversationModel {
       'memberIds': memberIds.toList(),
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+      if (meetupId != null) 'meetupId': meetupId,
+      'isArchived': isArchived,
+      'memberCount': memberCount,
     };
   }
+
+  /// Display name for the conversation
+  String get displayName {
+    if (type == ConversationType.direct) {
+      return otherUserName ?? 'Unknown';
+    }
+    return title ?? 'Group Chat';
+  }
+
+  /// Icon for the conversation type
+  bool get isGroupChat => type.isGroup;
 }
 
 

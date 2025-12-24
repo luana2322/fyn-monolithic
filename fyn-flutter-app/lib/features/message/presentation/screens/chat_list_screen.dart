@@ -14,6 +14,7 @@ import '../../data/models/conversation_model.dart';
 import '../../data/models/conversation_type.dart';
 import 'chat_detail_screen.dart';
 import 'select_user_to_chat_screen.dart';
+import 'create_group_chat_screen.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   const ChatListScreen({super.key});
@@ -52,6 +53,20 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         ),
         iconTheme: IconThemeData(color: isDark ? DatingColors.darkPrimaryText : null),
         actions: [
+          // Create group chat button
+          IconButton(
+            icon: Icon(Icons.group_add, color: isDark ? DatingColors.darkPrimaryText : null),
+            tooltip: 'Tạo nhóm chat',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateGroupChatScreen(),
+                ),
+              );
+            },
+          ),
+          // Create direct chat button
           IconButton(
             icon: Icon(Icons.add_comment, color: isDark ? DatingColors.darkPrimaryText : null),
             onPressed: () {
@@ -275,25 +290,72 @@ class _ConversationListItemState extends ConsumerState<_ConversationListItem> {
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: widget.isDark ? DatingColors.darkSurfaceElevated : AppColors.muted,
-              backgroundImage: avatarUrl != null
-                  ? CachedNetworkImageProvider(
-                      ImageUtils.getAvatarUrl(avatarUrl) ?? avatarUrl,
-                    )
-                  : null,
-              child: avatarUrl == null
-                  ? Text(
-                      (displayName ?? 'U')[0].toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: widget.isDark ? DatingColors.darkPrimaryText : AppColors.primaryText,
+            // Avatar - different for group vs direct chats
+            if (conversation.isGroupChat)
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: conversation.type == ConversationType.groupMeetup
+                        ? Colors.pink.shade100
+                        : Colors.blue.shade100,
+                    child: Icon(
+                      conversation.type == ConversationType.groupMeetup
+                          ? Icons.calendar_today
+                          : Icons.group,
+                      size: 28,
+                      color: conversation.type == ConversationType.groupMeetup
+                          ? Colors.pink.shade700
+                          : Colors.blue.shade700,
+                    ),
+                  ),
+                  // Member count badge
+                  if (conversation.memberCount > 0)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: widget.isDark ? DatingColors.rose : AppColors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: widget.isDark ? DatingColors.darkSurface : Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                        child: Text(
+                          '${conversation.memberCount}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    )
-                  : null,
-            ),
+                    ),
+                ],
+              )
+            else
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: widget.isDark ? DatingColors.darkSurfaceElevated : AppColors.muted,
+                backgroundImage: avatarUrl != null
+                    ? CachedNetworkImageProvider(
+                        ImageUtils.getAvatarUrl(avatarUrl) ?? avatarUrl,
+                      )
+                    : null,
+                child: avatarUrl == null
+                    ? Text(
+                        (displayName ?? 'U')[0].toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: widget.isDark ? DatingColors.darkPrimaryText : AppColors.primaryText,
+                        ),
+                      )
+                    : null,
+              ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
