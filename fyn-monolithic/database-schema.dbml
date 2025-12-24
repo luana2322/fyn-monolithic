@@ -1,0 +1,285 @@
+Table "users" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "email" VARCHAR(255) [unique, not null]
+  "phone" VARCHAR(32) [unique]
+  "username" VARCHAR(50) [unique, not null]
+  "password_hash" VARCHAR(255) [not null]
+  "full_name" VARCHAR(120)
+  "status" VARCHAR(30) [not null]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "user_profiles" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "user_id" UUID [unique, not null]
+  "bio" VARCHAR(512)
+  "website" VARCHAR(255)
+  "location" VARCHAR(255)
+  "avatar_object_key" VARCHAR(255)
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "user_settings" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "user_id" UUID [unique, not null]
+  "is_private" BOOLEAN [not null, default: FALSE]
+  "allow_messages" BOOLEAN [not null, default: TRUE]
+  "push_notifications" BOOLEAN [not null, default: TRUE]
+  "email_notifications" BOOLEAN [not null, default: TRUE]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "user_followers" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "user_id" UUID [not null]
+  "follower_id" UUID [not null]
+  "muted" BOOLEAN [not null, default: FALSE]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+
+  Indexes {
+    (user_id, follower_id) [unique, name: "uq_follower"]
+  }
+}
+
+Table "user_tokens" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "user_id" UUID [not null]
+  "refresh_token" VARCHAR(512) [unique, not null]
+  "expires_at" TIMESTAMPTZ [not null]
+  "ip_address" VARCHAR(64)
+  "user_agent" VARCHAR(255)
+  "revoked" BOOLEAN [not null, default: FALSE]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "user_login_history" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "user_id" UUID [not null]
+  "ip_address" VARCHAR(64)
+  "user_agent" VARCHAR(255)
+  "success" BOOLEAN [not null, default: TRUE]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "posts" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "author_id" UUID [not null]
+  "content" TEXT
+  "visibility" VARCHAR(20) [not null]
+  "comment_count" BIGINT [not null, default: 0]
+  "like_count" BIGINT [not null, default: 0]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "post_media" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "post_id" UUID [not null]
+  "object_key" VARCHAR(255) [not null]
+  "media_type" VARCHAR(30) [not null]
+  "description" VARCHAR(255)
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "post_likes" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "post_id" UUID [not null]
+  "user_id" UUID [not null]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+
+  Indexes {
+    (post_id, user_id) [unique, name: "uq_post_like"]
+  }
+}
+
+Table "post_comments" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "post_id" UUID [not null]
+  "author_id" UUID [not null]
+  "parent_comment_id" UUID
+  "content" VARCHAR(1024) [not null]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "conversations" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "type" VARCHAR(20) [not null]
+  "title" VARCHAR(255)
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "conversation_members" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "conversation_id" UUID [not null]
+  "member_id" UUID [not null]
+  "is_admin" BOOLEAN [not null, default: FALSE]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+
+  Indexes {
+    (conversation_id, member_id) [unique, name: "uq_member"]
+  }
+}
+
+Table "messages" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "conversation_id" UUID [not null]
+  "sender_id" UUID [not null]
+  "content" TEXT
+  "reaction" VARCHAR(10)
+  "status" VARCHAR(20) [not null]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "message_media" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "message_id" UUID [not null]
+  "object_key" VARCHAR(255) [not null]
+  "media_type" VARCHAR(30) [not null]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "notifications" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "recipient_id" UUID [not null]
+  "type" VARCHAR(30) [not null]
+  "status" VARCHAR(20) [not null, default: 'UNREAD']
+  "reference_id" UUID
+  "message" VARCHAR(255) [not null]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "hashtags" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "tag" VARCHAR(120) [unique, not null]
+  "usage_count" BIGINT [not null, default: 0]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "post_hashtags" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "post_id" UUID [not null]
+  "hashtag_id" UUID [not null]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+
+  Indexes {
+    (post_id, hashtag_id) [unique, name: "uq_post_hashtag"]
+  }
+}
+
+Table "audit_logs" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "actor_id" VARCHAR(255)
+  "action" VARCHAR(255) [not null]
+  "resource" VARCHAR(255) [not null]
+  "payload" JSONB
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Table "file_storage" {
+  "id" UUID [pk, default: `uuid_generate_v4()`]
+  "object_key" VARCHAR(255) [unique, not null]
+  "bucket" VARCHAR(120) [not null]
+  "file_name" VARCHAR(255) [not null]
+  "content_type" VARCHAR(120)
+  "size_bytes" BIGINT [not null]
+  "media_type" VARCHAR(30) [not null]
+  "created_at" TIMESTAMPTZ [not null, default: `NOW()`]
+  "updated_at" TIMESTAMPTZ
+  "deleted_at" TIMESTAMPTZ
+  "version" BIGINT [not null, default: 0]
+}
+
+Ref:"users"."id" < "user_profiles"."user_id"
+
+Ref:"users"."id" < "user_settings"."user_id"
+
+Ref:"users"."id" < "user_followers"."user_id" [delete: cascade]
+
+Ref:"users"."id" < "user_followers"."follower_id" [delete: cascade]
+
+Ref:"users"."id" < "user_tokens"."user_id" [delete: cascade]
+
+Ref:"users"."id" < "user_login_history"."user_id" [delete: cascade]
+
+Ref:"users"."id" < "posts"."author_id" [delete: cascade]
+
+Ref:"posts"."id" < "post_media"."post_id" [delete: cascade]
+
+Ref:"posts"."id" < "post_likes"."post_id" [delete: cascade]
+
+Ref:"users"."id" < "post_likes"."user_id" [delete: cascade]
+
+Ref:"posts"."id" < "post_comments"."post_id" [delete: cascade]
+
+Ref:"users"."id" < "post_comments"."author_id" [delete: cascade]
+
+Ref:"post_comments"."id" < "post_comments"."parent_comment_id" [delete: cascade]
+
+Ref:"conversations"."id" < "conversation_members"."conversation_id" [delete: cascade]
+
+Ref:"users"."id" < "conversation_members"."member_id" [delete: cascade]
+
+Ref:"conversations"."id" < "messages"."conversation_id" [delete: cascade]
+
+Ref:"users"."id" < "messages"."sender_id" [delete: cascade]
+
+Ref:"messages"."id" < "message_media"."message_id" [delete: cascade]
+
+Ref:"users"."id" < "notifications"."recipient_id" [delete: cascade]
+
+Ref:"posts"."id" < "post_hashtags"."post_id" [delete: cascade]
+
+Ref:"hashtags"."id" < "post_hashtags"."hashtag_id" [delete: cascade]
