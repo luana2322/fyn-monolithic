@@ -3,6 +3,7 @@ package com.fyn_monolithic.service.notification;
 import com.fyn_monolithic.dto.response.common.PageResponse;
 import com.fyn_monolithic.dto.response.notification.NotificationResponse;
 import com.fyn_monolithic.mapper.NotificationMapper;
+import com.fyn_monolithic.model.date.Meetup;
 import com.fyn_monolithic.model.notification.Notification;
 import com.fyn_monolithic.model.notification.NotificationType;
 import com.fyn_monolithic.model.notification.NotificationStatus;
@@ -102,5 +103,32 @@ public class NotificationService {
                 ? liker.getUsername() + " đã thích bài viết của bạn"
                 : "Bài viết của bạn có lượt thích mới";
         notify(postAuthor, NotificationType.LIKE, postId, message);
+    }
+
+    /**
+     * Thông báo yêu cầu xác nhận kết quả meetup sau khi kết thúc
+     */
+    @Transactional
+    public void notifyMeetupConfirmation(User recipient, Meetup meetup) {
+        String message = "Cuộc hẹn '" + meetup.getTitle() + "' đã kết thúc. Hãy xác nhận kết quả!";
+        notify(recipient, NotificationType.MEETUP_CONFIRMATION, meetup.getId(), message);
+    }
+
+    /**
+     * Thông báo nhắc nhở meetup sắp diễn ra
+     */
+    @Transactional
+    public void notifyMeetupReminder(User recipient, Meetup meetup) {
+        String message = "Cuộc hẹn '" + meetup.getTitle() + "' sắp diễn ra!";
+        notify(recipient, NotificationType.MEETUP_REMINDER, meetup.getId(), message);
+    }
+
+    /**
+     * Thông báo khi có người apply hoặc được chấp nhận vào meetup
+     */
+    @Transactional
+    public void notifyMeetupMatch(User recipient, Meetup meetup, String action) {
+        String message = action + " cho cuộc hẹn '" + meetup.getTitle() + "'";
+        notify(recipient, NotificationType.MEETUP_MATCH, meetup.getId(), message);
     }
 }

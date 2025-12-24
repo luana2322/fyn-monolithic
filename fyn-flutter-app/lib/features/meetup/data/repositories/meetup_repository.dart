@@ -97,4 +97,12 @@ class MeetupRepository {
   Future<void> cancelMeetup(String meetupId) {
     return _apiService.cancelMeetup(meetupId);
   }
+
+  Future<List<MeetupModel>> getHistory({int page = 0}) {
+    return _apiService.getHistory(page: page);
+  }
+
+  Future<List<MeetupModel>> getAwaitingConfirmation({int page = 0}) {
+    return _apiService.getAwaitingConfirmation(page: page);
+  }
 }

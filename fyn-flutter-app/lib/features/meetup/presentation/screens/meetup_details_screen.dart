@@ -436,7 +436,7 @@ class _MeetupDetailsScreenState extends ConsumerState<MeetupDetailsScreen> {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               Text(

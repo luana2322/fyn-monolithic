@@ -165,4 +165,38 @@ class MeetupApiService {
   Future<void> cancelMeetup(String meetupId) async {
     await _dio.delete('$_basePath/$meetupId');
   }
+
+  /// Get meetup history (completed, cancelled, expired)
+  Future<List<MeetupModel>> getHistory({
+    int page = 0,
+    int size = 20,
+  }) async {
+    final response = await _dio.get(
+      '$_basePath/history',
+      queryParameters: {
+        'page': page,
+        'size': size,
+      },
+    );
+    
+    final List<dynamic> content = response.data['data']['content'];
+    return content.map((json) => MeetupModel.fromJson(json)).toList();
+  }
+
+  /// Get meetups awaiting confirmation
+  Future<List<MeetupModel>> getAwaitingConfirmation({
+    int page = 0,
+    int size = 20,
+  }) async {
+    final response = await _dio.get(
+      '$_basePath/awaiting-confirmation',
+      queryParameters: {
+        'page': page,
+        'size': size,
+      },
+    );
+    
+    final List<dynamic> content = response.data['data']['content'];
+    return content.map((json) => MeetupModel.fromJson(json)).toList();
+  }
 }

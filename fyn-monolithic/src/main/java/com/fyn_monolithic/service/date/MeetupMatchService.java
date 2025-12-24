@@ -164,6 +164,24 @@ public class MeetupMatchService {
         return matches.map(this::toMatchResponseWithMeetup);
     }
 
+    /**
+     * Get meetup history (completed, cancelled, expired) for a user
+     */
+    @Transactional(readOnly = true)
+    public Page<MeetupResponse> getMeetupHistory(UUID userId, Pageable pageable) {
+        Page<Meetup> meetups = meetupRepository.findMeetupHistory(userId, pageable);
+        return meetups.map(m -> toResponse(m, userId));
+    }
+
+    /**
+     * Get meetups awaiting confirmation for a user
+     */
+    @Transactional(readOnly = true)
+    public Page<MeetupResponse> getAwaitingConfirmation(UUID userId, Pageable pageable) {
+        Page<Meetup> meetups = meetupRepository.findMeetupsAwaitingConfirmation(userId, pageable);
+        return meetups.map(m -> toResponse(m, userId));
+    }
+
     private MeetupMatchResponse toMatchResponseWithMeetup(MeetupMatch match) {
         return new MeetupMatchResponse(
                 match.getId(),

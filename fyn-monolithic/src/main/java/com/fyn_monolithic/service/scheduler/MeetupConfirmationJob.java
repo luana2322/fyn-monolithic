@@ -2,7 +2,9 @@ package com.fyn_monolithic.service.scheduler;
 
 import com.fyn_monolithic.model.date.Meetup;
 import com.fyn_monolithic.model.date.MeetupStatus;
+import com.fyn_monolithic.model.user.User;
 import com.fyn_monolithic.repository.date.MeetupRepository;
+import com.fyn_monolithic.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,7 +22,7 @@ import java.util.List;
 public class MeetupConfirmationJob {
 
     private final MeetupRepository meetupRepository;
-    // TODO: Inject NotificationService
+    private final NotificationService notificationService;
 
     /**
      * Runs every hour to check for meetups needing confirmation
@@ -62,13 +64,16 @@ public class MeetupConfirmationJob {
         log.info("Requesting confirmation for meetup: {} that occurred at {}",
                 meetup.getTitle(), meetup.getScheduledAt());
 
-        // TODO: Send push notifications asking for confirmation
-        // notificationService.requestMeetupConfirmation(meetup.getOrganizer(), meetup);
-        // for (User participant : meetup.getAcceptedParticipants()) {
-        // notificationService.requestMeetupConfirmation(participant, meetup);
-        // }
+        // Send notification to organizer
+        notificationService.notifyMeetupConfirmation(meetup.getOrganizer(), meetup);
 
-        // Mark as confirmation sent
+        // Send notification to all accepted participants
+        for (User participant : meetup.getAcceptedParticipants()) {
+            notificationService.notifyMeetupConfirmation(participant, meetup);
+        }
+
+        // Update meetup status to WAITING_CONFIRMATION
+        meetup.setStatus(MeetupStatus.WAITING_CONFIRMATION);
         meetup.setConfirmationSentAt(ZonedDateTime.now());
         meetupRepository.save(meetup);
 
@@ -88,16 +93,16 @@ public class MeetupConfirmationJob {
         ZonedDateTime now = ZonedDateTime.now();
         ZonedDateTime fortyEightHoursAgo = now.minusHours(48);
 
-        // Find meetups scheduled 48+ hours ago still in MATCHED state
-        List<Meetup> overdueMediation = meetupRepository
-                .findByStatusAndScheduledAtBefore(MeetupStatus.MATCHED, fortyEightHoursAgo);
+        // Find meetups scheduled 48+ hours ago still in WAITING_CONFIRMATION state
+        List<Meetup> overdueConfirmation = meetupRepository
+                .findByStatusAndScheduledAtBefore(MeetupStatus.WAITING_CONFIRMATION, fortyEightHoursAgo);
 
-        log.info("Found {} meetups to auto-mark as NO_SHOW", overdueMediation.size());
+        log.info("Found {} meetups to auto-mark as NO_SHOW", overdueConfirmation.size());
 
-        for (Meetup meetup : overdueMediation) {
-            log.info("Auto-marking meetup {} as NO_SHOW due to no confirmation", meetup.getId());
+        for (Meetup meetup : overdueConfirmation) {
+            log.info("Auto-marking meetup {} as CANCELLED due to no confirmation", meetup.getId());
 
-            // Mark status
+            // Mark status as cancelled due to no confirmation
             meetup.setStatus(MeetupStatus.CANCELLED);
             // TODO: Apply reputation penalty
 

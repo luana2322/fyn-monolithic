@@ -211,7 +211,9 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
               const Divider(height: 24),
               Text(
                 meetup.description!,
-                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ],
@@ -281,9 +283,11 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
       return aDate.compareTo(bDate);
     });
     final earliest = pending.first;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Card(
-      color: Colors.blue.shade50,
+      color: isDark ? Colors.amber.withOpacity(0.15) : Colors.amber.shade50,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -313,10 +317,13 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
   }
 
   Widget _buildSuggestionItem(String label, String name, String? avatarUrl, VoidCallback onAccept) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -331,7 +338,7 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+                Text(label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
                 Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
@@ -439,6 +446,8 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
   Widget _buildConfirmationSection(MeetupModel meetup) {
     final hoursSinceMeet = DateTime.now().difference(meetup.scheduledAt).inHours;
     final confirmDeadline = 24 - hoursSinceMeet;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,7 +456,7 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.amber.shade50,
+            color: isDark ? Colors.amber.withOpacity(0.15) : Colors.amber.shade50,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.amber.shade300),
           ),
@@ -469,7 +478,7 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
                 confirmDeadline > 0 
                     ? 'Còn $confirmDeadline giờ để xác nhận'
                     : 'Hết hạn xác nhận',
-                style: TextStyle(color: Colors.amber[800]),
+                style: TextStyle(color: Colors.amber[isDark ? 500 : 800]),
               ),
               const SizedBox(height: 16),
               
@@ -513,11 +522,11 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.person_off, size: 64, color: Colors.grey[400]),
+                  Icon(Icons.person_off, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   const SizedBox(height: 16),
                   Text(
                     'Chưa có ai đăng ký',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 16),
                   ),
                 ],
               ),
@@ -606,13 +615,13 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.format_quote, size: 16, color: Colors.grey[500]),
+                    Icon(Icons.format_quote, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(

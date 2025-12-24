@@ -5,7 +5,8 @@ public enum NotificationType {
     LIKE,
     COMMENT,
     MESSAGE,
-    SYSTEM
+    SYSTEM,
+    MEETUP_CONFIRMATION, // Request to confirm meetup outcome
+    MEETUP_REMINDER, // Upcoming meetup reminder
+    MEETUP_MATCH // When someone applies/accepts meetup
 }
-
-

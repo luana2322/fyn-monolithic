@@ -157,6 +157,50 @@ public class MeetupController {
         }
 
         /**
+         * Get meetup history (completed, cancelled, expired) for the current user
+         */
+        @GetMapping("/history")
+        public ResponseEntity<Map<String, Object>> getMeetupHistory(
+                        @AuthenticationPrincipal CustomUserDetails userDetails,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size) {
+
+                Pageable pageable = PageRequest.of(page, size);
+                Page<MeetupResponse> history = meetupMatchService.getMeetupHistory(
+                                userDetails.getUser().getId(),
+                                pageable);
+
+                return ResponseEntity.ok(Map.of(
+                                "success", true,
+                                "data", Map.of(
+                                                "content", history.getContent(),
+                                                "page", history.getNumber(),
+                                                "totalElements", history.getTotalElements())));
+        }
+
+        /**
+         * Get meetups awaiting confirmation for the current user
+         */
+        @GetMapping("/awaiting-confirmation")
+        public ResponseEntity<Map<String, Object>> getAwaitingConfirmation(
+                        @AuthenticationPrincipal CustomUserDetails userDetails,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size) {
+
+                Pageable pageable = PageRequest.of(page, size);
+                Page<MeetupResponse> awaiting = meetupMatchService.getAwaitingConfirmation(
+                                userDetails.getUser().getId(),
+                                pageable);
+
+                return ResponseEntity.ok(Map.of(
+                                "success", true,
+                                "data", Map.of(
+                                                "content", awaiting.getContent(),
+                                                "page", awaiting.getNumber(),
+                                                "totalElements", awaiting.getTotalElements())));
+        }
+
+        /**
          * Apply/Match to a meetup
          */
         @PostMapping("/{id}/match")

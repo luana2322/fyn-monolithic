@@ -1,0 +1,482 @@
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+
+> Task :gradle:compileKotlin
+w: file:///C:/Users/nguye/flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterPlugin.kt:11:37 'ApkVariant' is deprecated. Deprecated in Java
+w: file:///C:/Users/nguye/flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterPlugin.kt:614:69 'ApkVariant' is deprecated. Deprecated in Java
+w: file:///C:/Users/nguye/flutter/packages/flutter_tools/gradle/src/main/kotlin/plugins/PluginHandler.kt:186:64 Unchecked cast: NamedDomainObjectContainer<out BuildType> to NamedDomainObjectContainer<BuildType>
+w: file:///C:/Users/nguye/flutter/packages/flutter_tools/gradle/src/main/kotlin/plugins/PluginHandler.kt:187:69 Unchecked cast: NamedDomainObjectContainer<out BuildType> to NamedDomainObjectContainer<BuildType>
+
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+> Task :clean
+> Task :app:externalNativeBuildCleanDebug
+> Task :app:externalNativeBuildCleanProfile
+> Task :app:externalNativeBuildCleanRelease
+> Task :app:clean UP-TO-DATE
+> Task :cloud_firestore:clean UP-TO-DATE
+> Task :file_picker:clean UP-TO-DATE
+> Task :firebase_core:clean UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:clean UP-TO-DATE
+> Task :flutter_secure_storage:clean UP-TO-DATE
+> Task :flutter_webrtc:clean UP-TO-DATE
+> Task :geocoding_android:clean UP-TO-DATE
+> Task :geolocator_android:clean UP-TO-DATE
+> Task :image_picker_android:clean UP-TO-DATE
+> Task :path_provider_android:clean UP-TO-DATE
+> Task :permission_handler_android:clean UP-TO-DATE
+> Task :shared_preferences_android:clean UP-TO-DATE
+> Task :sqflite_android:clean UP-TO-DATE
+> Task :url_launcher_android:clean UP-TO-DATE
+> Task :video_player_android:clean UP-TO-DATE
+> Task :video_thumbnail:clean UP-TO-DATE
+> Task :app:DebugMinSdkCheck
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+
+> Task :app:compileFlutterBuildDebug
+Package file_picker:linux references file_picker:linux as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: linux: default_package: file_picker` or add an inline implementation to file_picker via `platforms: linux:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:macos references file_picker:macos as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: macos: default_package: file_picker` or add an inline implementation to file_picker via `platforms: macos:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:windows references file_picker:windows as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: windows: default_package: file_picker` or add an inline implementation to file_picker via `platforms: windows:` `pluginClass` or `dartPluginClass`.
+
+
+> Task :app:packJniLibsflutterBuildDebug
+> Task :cloud_firestore:preBuild UP-TO-DATE
+> Task :cloud_firestore:preDebugBuild UP-TO-DATE
+> Task :file_picker:preBuild UP-TO-DATE
+> Task :file_picker:preDebugBuild UP-TO-DATE
+> Task :firebase_core:preBuild UP-TO-DATE
+> Task :firebase_core:preDebugBuild UP-TO-DATE
+> Task :cloud_firestore:writeDebugAarMetadata
+> Task :file_picker:writeDebugAarMetadata
+> Task :flutter_plugin_android_lifecycle:preBuild UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:preDebugBuild UP-TO-DATE
+> Task :firebase_core:writeDebugAarMetadata
+> Task :flutter_secure_storage:preBuild UP-TO-DATE
+> Task :flutter_secure_storage:preDebugBuild UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:writeDebugAarMetadata
+> Task :flutter_webrtc:preBuild UP-TO-DATE
+> Task :flutter_webrtc:preDebugBuild UP-TO-DATE
+> Task :flutter_secure_storage:writeDebugAarMetadata
+> Task :geocoding_android:preBuild UP-TO-DATE
+> Task :geocoding_android:preDebugBuild UP-TO-DATE
+> Task :flutter_webrtc:writeDebugAarMetadata
+> Task :geolocator_android:preBuild UP-TO-DATE
+> Task :geolocator_android:preDebugBuild UP-TO-DATE
+> Task :geocoding_android:writeDebugAarMetadata
+> Task :image_picker_android:preBuild UP-TO-DATE
+> Task :image_picker_android:preDebugBuild UP-TO-DATE
+> Task :geolocator_android:writeDebugAarMetadata
+> Task :path_provider_android:preBuild UP-TO-DATE
+> Task :path_provider_android:preDebugBuild UP-TO-DATE
+> Task :image_picker_android:writeDebugAarMetadata
+> Task :permission_handler_android:preBuild UP-TO-DATE
+> Task :permission_handler_android:preDebugBuild UP-TO-DATE
+> Task :path_provider_android:writeDebugAarMetadata
+> Task :shared_preferences_android:preBuild UP-TO-DATE
+> Task :shared_preferences_android:preDebugBuild UP-TO-DATE
+> Task :permission_handler_android:writeDebugAarMetadata
+> Task :sqflite_android:preBuild UP-TO-DATE
+> Task :sqflite_android:preDebugBuild UP-TO-DATE
+> Task :shared_preferences_android:writeDebugAarMetadata
+> Task :url_launcher_android:preBuild UP-TO-DATE
+> Task :url_launcher_android:preDebugBuild UP-TO-DATE
+> Task :sqflite_android:writeDebugAarMetadata
+> Task :video_player_android:preBuild UP-TO-DATE
+> Task :video_player_android:preDebugBuild UP-TO-DATE
+> Task :url_launcher_android:writeDebugAarMetadata
+> Task :video_thumbnail:preBuild UP-TO-DATE
+> Task :video_thumbnail:preDebugBuild UP-TO-DATE
+> Task :video_player_android:writeDebugAarMetadata
+> Task :app:cleanMergeDebugAssets UP-TO-DATE
+> Task :video_thumbnail:writeDebugAarMetadata
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :cloud_firestore:mergeDebugShaders
+> Task :cloud_firestore:compileDebugShaders NO-SOURCE
+> Task :cloud_firestore:generateDebugAssets UP-TO-DATE
+> Task :cloud_firestore:mergeDebugAssets
+> Task :file_picker:mergeDebugShaders
+> Task :file_picker:compileDebugShaders NO-SOURCE
+> Task :file_picker:generateDebugAssets UP-TO-DATE
+> Task :app:checkDebugAarMetadata
+> Task :file_picker:mergeDebugAssets
+> Task :firebase_core:mergeDebugShaders
+> Task :firebase_core:compileDebugShaders NO-SOURCE
+> Task :firebase_core:generateDebugAssets UP-TO-DATE
+> Task :firebase_core:mergeDebugAssets
+> Task :flutter_plugin_android_lifecycle:mergeDebugShaders
+> Task :flutter_plugin_android_lifecycle:compileDebugShaders NO-SOURCE
+> Task :flutter_plugin_android_lifecycle:generateDebugAssets UP-TO-DATE
+> Task :flutter_plugin_android_lifecycle:mergeDebugAssets
+> Task :flutter_secure_storage:mergeDebugShaders
+> Task :flutter_secure_storage:compileDebugShaders NO-SOURCE
+> Task :flutter_secure_storage:generateDebugAssets UP-TO-DATE
+> Task :flutter_secure_storage:mergeDebugAssets
+> Task :flutter_webrtc:mergeDebugShaders
+> Task :flutter_webrtc:compileDebugShaders NO-SOURCE
+> Task :flutter_webrtc:generateDebugAssets UP-TO-DATE
+> Task :flutter_webrtc:mergeDebugAssets
+> Task :geocoding_android:mergeDebugShaders
+> Task :geocoding_android:compileDebugShaders NO-SOURCE
+> Task :geocoding_android:generateDebugAssets UP-TO-DATE
+> Task :geocoding_android:mergeDebugAssets
+> Task :geolocator_android:mergeDebugShaders
+> Task :geolocator_android:compileDebugShaders NO-SOURCE
+> Task :geolocator_android:generateDebugAssets UP-TO-DATE
+> Task :geolocator_android:mergeDebugAssets
+> Task :image_picker_android:mergeDebugShaders
+> Task :image_picker_android:compileDebugShaders NO-SOURCE
+> Task :image_picker_android:generateDebugAssets UP-TO-DATE
+> Task :image_picker_android:mergeDebugAssets
+> Task :path_provider_android:mergeDebugShaders
+> Task :path_provider_android:compileDebugShaders NO-SOURCE
+> Task :path_provider_android:generateDebugAssets UP-TO-DATE
+> Task :path_provider_android:mergeDebugAssets
+> Task :permission_handler_android:mergeDebugShaders
+> Task :permission_handler_android:compileDebugShaders NO-SOURCE
+> Task :permission_handler_android:generateDebugAssets UP-TO-DATE
+> Task :permission_handler_android:mergeDebugAssets
+> Task :shared_preferences_android:mergeDebugShaders
+> Task :shared_preferences_android:compileDebugShaders NO-SOURCE
+> Task :shared_preferences_android:generateDebugAssets UP-TO-DATE
+> Task :shared_preferences_android:mergeDebugAssets
+> Task :sqflite_android:mergeDebugShaders
+> Task :sqflite_android:compileDebugShaders NO-SOURCE
+> Task :sqflite_android:generateDebugAssets UP-TO-DATE
+> Task :sqflite_android:mergeDebugAssets
+> Task :url_launcher_android:mergeDebugShaders
+> Task :url_launcher_android:compileDebugShaders NO-SOURCE
+> Task :url_launcher_android:generateDebugAssets UP-TO-DATE
+> Task :url_launcher_android:mergeDebugAssets
+> Task :video_player_android:mergeDebugShaders
+> Task :video_player_android:compileDebugShaders NO-SOURCE
+> Task :video_player_android:generateDebugAssets UP-TO-DATE
+> Task :video_player_android:mergeDebugAssets
+> Task :video_thumbnail:mergeDebugShaders
+> Task :video_thumbnail:compileDebugShaders NO-SOURCE
+> Task :video_thumbnail:generateDebugAssets UP-TO-DATE
+> Task :video_thumbnail:mergeDebugAssets
+> Task :app:mergeDebugAssets
+> Task :app:copyFlutterAssetsDebug
+> Task :app:generateDebugResValues
+> Task :cloud_firestore:generateDebugResValues
+> Task :cloud_firestore:generateDebugResources
+> Task :cloud_firestore:packageDebugResources
+> Task :file_picker:generateDebugResValues
+> Task :file_picker:generateDebugResources
+> Task :file_picker:packageDebugResources
+> Task :firebase_core:generateDebugResValues
+> Task :firebase_core:generateDebugResources
+> Task :firebase_core:packageDebugResources
+> Task :flutter_plugin_android_lifecycle:generateDebugResValues
+> Task :flutter_plugin_android_lifecycle:generateDebugResources
+> Task :flutter_plugin_android_lifecycle:packageDebugResources
+> Task :flutter_secure_storage:generateDebugResValues
+> Task :flutter_secure_storage:generateDebugResources
+> Task :flutter_secure_storage:packageDebugResources
+> Task :flutter_webrtc:generateDebugResValues
+> Task :flutter_webrtc:generateDebugResources
+> Task :flutter_webrtc:packageDebugResources
+> Task :geocoding_android:generateDebugResValues
+> Task :geocoding_android:generateDebugResources
+> Task :geocoding_android:packageDebugResources
+> Task :geolocator_android:generateDebugResValues
+> Task :geolocator_android:generateDebugResources
+> Task :geolocator_android:packageDebugResources
+> Task :image_picker_android:generateDebugResValues
+> Task :image_picker_android:generateDebugResources
+> Task :image_picker_android:packageDebugResources
+> Task :path_provider_android:generateDebugResValues
+> Task :path_provider_android:generateDebugResources
+> Task :path_provider_android:packageDebugResources
+> Task :permission_handler_android:generateDebugResValues
+> Task :permission_handler_android:generateDebugResources
+> Task :permission_handler_android:packageDebugResources
+> Task :shared_preferences_android:generateDebugResValues
+> Task :shared_preferences_android:generateDebugResources
+> Task :shared_preferences_android:packageDebugResources
+> Task :sqflite_android:generateDebugResValues
+> Task :sqflite_android:generateDebugResources
+> Task :sqflite_android:packageDebugResources
+> Task :url_launcher_android:generateDebugResValues
+> Task :url_launcher_android:generateDebugResources
+> Task :url_launcher_android:packageDebugResources
+> Task :video_player_android:generateDebugResValues
+> Task :video_player_android:generateDebugResources
+> Task :video_player_android:packageDebugResources
+> Task :video_thumbnail:generateDebugResValues
+> Task :video_thumbnail:generateDebugResources
+> Task :video_thumbnail:packageDebugResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :cloud_firestore:extractDeepLinksDebug
+> Task :file_picker:extractDeepLinksDebug
+> Task :firebase_core:extractDeepLinksDebug
+> Task :flutter_plugin_android_lifecycle:extractDeepLinksDebug
+> Task :flutter_secure_storage:extractDeepLinksDebug
+> Task :flutter_webrtc:extractDeepLinksDebug
+
+> Task :flutter_webrtc:processDebugManifest
+package="com.cloudwebrtc.webrtc" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_webrtc-0.11.7\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.cloudwebrtc.webrtc" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_webrtc-0.11.7\android\src\main\AndroidManifest.xml.
+
+> Task :file_picker:processDebugManifest
+package="com.mr.flutter.plugin.filepicker" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\file_picker-6.2.1\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.mr.flutter.plugin.filepicker" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\file_picker-6.2.1\android\src\main\AndroidManifest.xml.
+
+> Task :cloud_firestore:processDebugManifest
+package="io.flutter.plugins.firebase.firestore" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\cloud_firestore-4.17.5\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.firebase.firestore" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\cloud_firestore-4.17.5\android\src\main\AndroidManifest.xml.
+
+> Task :geocoding_android:extractDeepLinksDebug
+
+> Task :firebase_core:processDebugManifest
+package="io.flutter.plugins.firebase.core" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\firebase_core-2.32.0\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.firebase.core" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\firebase_core-2.32.0\android\src\main\AndroidManifest.xml.
+
+> Task :app:parseDebugLocalResources
+
+> Task :flutter_plugin_android_lifecycle:processDebugManifest
+package="io.flutter.plugins.flutter_plugin_android_lifecycle" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_plugin_android_lifecycle-2.0.33\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.flutter_plugin_android_lifecycle" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_plugin_android_lifecycle-2.0.33\android\src\main\AndroidManifest.xml.
+
+> Task :flutter_secure_storage:processDebugManifest
+package="com.it_nomads.fluttersecurestorage" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_secure_storage-9.2.4\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.it_nomads.fluttersecurestorage" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_secure_storage-9.2.4\android\src\main\AndroidManifest.xml.
+
+> Task :geolocator_android:extractDeepLinksDebug
+> Task :geocoding_android:processDebugManifest
+> Task :image_picker_android:extractDeepLinksDebug
+
+> Task :geolocator_android:processDebugManifest
+package="com.baseflow.geolocator" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\geolocator_android-4.6.2\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.baseflow.geolocator" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\geolocator_android-4.6.2\android\src\main\AndroidManifest.xml.
+
+> Task :path_provider_android:extractDeepLinksDebug
+> Task :permission_handler_android:extractDeepLinksDebug
+
+> Task :image_picker_android:processDebugManifest
+package="io.flutter.plugins.imagepicker" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13+10\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.imagepicker" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\image_picker_android-0.8.13+10\android\src\main\AndroidManifest.xml.
+
+> Task :path_provider_android:processDebugManifest
+package="io.flutter.plugins.pathprovider" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\path_provider_android-2.2.22\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.pathprovider" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\path_provider_android-2.2.22\android\src\main\AndroidManifest.xml.
+
+> Task :shared_preferences_android:extractDeepLinksDebug
+> Task :sqflite_android:extractDeepLinksDebug
+
+> Task :shared_preferences_android:processDebugManifest
+package="io.flutter.plugins.sharedpreferences" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\shared_preferences_android-2.4.18\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.sharedpreferences" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\shared_preferences_android-2.4.18\android\src\main\AndroidManifest.xml.
+
+> Task :url_launcher_android:extractDeepLinksDebug
+
+> Task :sqflite_android:processDebugManifest
+package="com.tekartik.sqflite" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.2+2\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.tekartik.sqflite" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.2+2\android\src\main\AndroidManifest.xml.
+
+> Task :url_launcher_android:processDebugManifest
+package="io.flutter.plugins.urllauncher" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\url_launcher_android-6.3.28\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.urllauncher" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\url_launcher_android-6.3.28\android\src\main\AndroidManifest.xml.
+
+> Task :permission_handler_android:processDebugManifest
+package="com.baseflow.permissionhandler" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\permission_handler_android-12.1.0\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.baseflow.permissionhandler" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\permission_handler_android-12.1.0\android\src\main\AndroidManifest.xml.
+
+> Task :video_player_android:extractDeepLinksDebug
+> Task :video_thumbnail:extractDeepLinksDebug
+
+> Task :video_thumbnail:processDebugManifest
+package="xyz.justsoft.video_thumbnail" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\video_thumbnail-0.5.6\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="xyz.justsoft.video_thumbnail" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\video_thumbnail-0.5.6\android\src\main\AndroidManifest.xml.
+
+> Task :video_player_android:processDebugManifest
+package="io.flutter.plugins.videoplayer" found in source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\video_player_android-2.9.1\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.videoplayer" from the source AndroidManifest.xml: C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\video_player_android-2.9.1\android\src\main\AndroidManifest.xml.
+
+> Task :cloud_firestore:compileDebugLibraryResources
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:outputDebugAppLinkSettings
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :cloud_firestore:parseDebugLocalResources
+> Task :file_picker:compileDebugLibraryResources
+> Task :file_picker:parseDebugLocalResources
+> Task :firebase_core:compileDebugLibraryResources
+> Task :cloud_firestore:generateDebugRFile
+> Task :file_picker:generateDebugRFile
+> Task :firebase_core:parseDebugLocalResources
+> Task :flutter_plugin_android_lifecycle:compileDebugLibraryResources
+> Task :flutter_plugin_android_lifecycle:parseDebugLocalResources
+> Task :firebase_core:generateDebugRFile
+> Task :flutter_secure_storage:compileDebugLibraryResources
+> Task :flutter_plugin_android_lifecycle:generateDebugRFile
+> Task :flutter_secure_storage:parseDebugLocalResources
+> Task :flutter_webrtc:compileDebugLibraryResources
+> Task :geocoding_android:compileDebugLibraryResources
+> Task :flutter_webrtc:parseDebugLocalResources
+> Task :flutter_secure_storage:generateDebugRFile
+> Task :geocoding_android:parseDebugLocalResources
+> Task :flutter_webrtc:generateDebugRFile
+> Task :geolocator_android:compileDebugLibraryResources
+> Task :geolocator_android:parseDebugLocalResources
+> Task :geocoding_android:generateDebugRFile
+> Task :image_picker_android:compileDebugLibraryResources
+> Task :image_picker_android:parseDebugLocalResources
+> Task :geolocator_android:generateDebugRFile
+> Task :path_provider_android:compileDebugLibraryResources
+> Task :permission_handler_android:compileDebugLibraryResources
+> Task :path_provider_android:parseDebugLocalResources
+> Task :image_picker_android:generateDebugRFile
+> Task :shared_preferences_android:compileDebugLibraryResources
+> Task :permission_handler_android:parseDebugLocalResources
+> Task :shared_preferences_android:parseDebugLocalResources
+> Task :path_provider_android:generateDebugRFile
+> Task :shared_preferences_android:generateDebugRFile
+> Task :sqflite_android:compileDebugLibraryResources
+> Task :permission_handler_android:generateDebugRFile
+> Task :sqflite_android:parseDebugLocalResources
+> Task :url_launcher_android:compileDebugLibraryResources
+> Task :sqflite_android:generateDebugRFile
+> Task :video_player_android:compileDebugLibraryResources
+> Task :url_launcher_android:parseDebugLocalResources
+> Task :video_player_android:parseDebugLocalResources
+> Task :video_thumbnail:compileDebugLibraryResources
+> Task :url_launcher_android:generateDebugRFile
+> Task :video_player_android:generateDebugRFile
+> Task :video_thumbnail:parseDebugLocalResources
+> Task :cloud_firestore:generateDebugBuildConfig
+> Task :video_thumbnail:generateDebugRFile
+> Task :cloud_firestore:javaPreCompileDebug
+> Task :firebase_core:generateDebugBuildConfig
+> Task :firebase_core:javaPreCompileDebug
+> Task :file_picker:javaPreCompileDebug
+
+warning: [options] source value 8 is obsolete and will be removed in a future release
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+> Task :firebase_core:compileDebugJavaWithJavac
+Java compiler version 23 has deprecated support for compiling with source/target version 8.
+Try one of the following options:
+    1. [Recommended] Use Java toolchain with a lower language version
+    2. Set a higher source/target version
+    3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
+For more details on how to configure these settings, see https://developer.android.com/build/jdks.
+To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
+3 warnings
+
+> Task :flutter_plugin_android_lifecycle:javaPreCompileDebug
+> Task :flutter_secure_storage:generateDebugBuildConfig
+> Task :firebase_core:bundleLibCompileToJarDebug
+> Task :flutter_plugin_android_lifecycle:compileDebugJavaWithJavac
+> Task :app:processDebugResources
+
+> Task :cloud_firestore:compileDebugJavaWithJavac
+Java compiler version 23 has deprecated support for compiling with source/target version 8.
+Try one of the following options:
+    1. [Recommended] Use Java toolchain with a lower language version
+    2. Set a higher source/target version
+    3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
+For more details on how to configure these settings, see https://developer.android.com/build/jdks.
+To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
+warning: [options] source value 8 is obsolete and will be removed in a future release
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+3 warnings
+
+> Task :flutter_webrtc:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :flutter_plugin_android_lifecycle:bundleLibCompileToJarDebug
+> Task :flutter_secure_storage:javaPreCompileDebug
+> Task :cloud_firestore:bundleLibCompileToJarDebug
+
+> Task :file_picker:compileDebugJavaWithJavac FAILED
+Java compiler version 23 has deprecated support for compiling with source/target version 8.
+Try one of the following options:
+    1. [Recommended] Use Java toolchain with a lower language version
+    2. Set a higher source/target version
+    3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
+For more details on how to configure these settings, see https://developer.android.com/build/jdks.
+warning: [options] source value 8 is obsolete and will be removed in a future release
+To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\file_picker-6.2.1\android\src\main\java\com\mr\flutter\plugin\filepicker\FilePickerPlugin.java:122: error: cannot find symbol
+    public static void registerWith(final io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
+                                                                                 ^
+  symbol:   class Registrar
+  location: interface PluginRegistry
+C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\file_picker-6.2.1\android\src\main\java\com\mr\flutter\plugin\filepicker\FilePickerPlugin.java:251: error: cannot find symbol
+            final PluginRegistry.Registrar registrar,
+                                ^
+  symbol:   class Registrar
+  location: interface PluginRegistry
+2 errors
+3 warnings
+
+[Incubating] Problems report is available at: file:///D:/fyn-monolithic/fyn-flutter-app/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':file_picker:compileDebugJavaWithJavac'.
+> Compilation failed; see the compiler output below.
+  warning: [options] target value 8 is obsolete and will be removed in a future release
+  warning: [options] source value 8 is obsolete and will be removed in a future release
+  C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\file_picker-6.2.1\android\src\main\java\com\mr\flutter\plugin\filepicker\FilePickerPlugin.java:122: error: cannot find symbol
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+237 actionable tasks: 216 executed, 21 up-to-date
+      public static void registerWith(final io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
+                                                                                   ^
+    symbol:   class Registrar
+    location: interface PluginRegistry
+  C:\Users\nguye\AppData\Local\Pub\Cache\hosted\pub.dev\file_picker-6.2.1\android\src\main\java\com\mr\flutter\plugin\filepicker\FilePickerPlugin.java:251: error: cannot find symbol
+              final PluginRegistry.Registrar registrar,
+                                  ^
+    symbol:   class Registrar
+    location: interface PluginRegistry
+  warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+  2 errors
+  3 warnings
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights.
+
+BUILD FAILED in 1m 41s

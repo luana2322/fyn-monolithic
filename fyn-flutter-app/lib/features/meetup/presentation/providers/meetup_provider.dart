@@ -221,3 +221,48 @@ final confirmMeetupProvider = FutureProvider.family<void, ({String meetupId, Str
     );
   },
 );
+
+/// State notifier for meetup history
+class MeetupHistoryNotifier extends StateNotifier<AsyncValue<List<MeetupModel>>> {
+  final MeetupRepository _repository;
+
+  MeetupHistoryNotifier(this._repository) : super(const AsyncValue.loading());
+
+  Future<void> loadHistory() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _repository.getHistory());
+  }
+
+  void refresh() {
+    state = const AsyncValue.loading();
+  }
+}
+
+final meetupHistoryProvider =
+    StateNotifierProvider<MeetupHistoryNotifier, AsyncValue<List<MeetupModel>>>((ref) {
+  final repository = ref.watch(meetupRepositoryProvider);
+  return MeetupHistoryNotifier(repository);
+});
+
+/// State notifier for meetups awaiting confirmation
+class AwaitingConfirmationNotifier extends StateNotifier<AsyncValue<List<MeetupModel>>> {
+  final MeetupRepository _repository;
+
+  AwaitingConfirmationNotifier(this._repository) : super(const AsyncValue.loading());
+
+  Future<void> loadAwaitingConfirmation() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _repository.getAwaitingConfirmation());
+  }
+
+  void refresh() {
+    state = const AsyncValue.loading();
+  }
+}
+
+final awaitingConfirmationProvider =
+    StateNotifierProvider<AwaitingConfirmationNotifier, AsyncValue<List<MeetupModel>>>((ref) {
+  final repository = ref.watch(meetupRepositoryProvider);
+  return AwaitingConfirmationNotifier(repository);
+});
+
