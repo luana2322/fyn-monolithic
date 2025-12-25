@@ -192,12 +192,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     tooltip: 'Quản trị viên',
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ReportedPostsScreen(),
-                        ),
-                      );
+                      context.push('/admin/reported-posts');
                     },
                   ),
               ]

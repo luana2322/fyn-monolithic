@@ -247,6 +247,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             context.go('/chat');
           },
         ),
+        if (user?.role == 'ADMIN')
+          _buildAppBarButton(
+            icon: Icons.admin_panel_settings_outlined,
+            isDark: isDark,
+            onPressed: () {
+              context.push('/admin/reported-posts');
+            },
+          ),
         _buildAppBarButton(
           icon: Icons.logout,
           isDark: isDark,

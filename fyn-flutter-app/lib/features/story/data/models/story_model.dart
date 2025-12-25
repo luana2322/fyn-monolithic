@@ -138,6 +138,11 @@ class StoryUserWithStories {
   }
 
   String get displayName => fullName ?? username;
+  
+  /// Get avatar URL with proper host for current platform
+  String? get avatarDisplayUrl => avatarUrl != null 
+      ? ImageUtils.getAvatarUrl(avatarUrl)
+      : null;
 }
 
 /// Story feed response

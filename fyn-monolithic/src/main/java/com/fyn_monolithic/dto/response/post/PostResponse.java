@@ -2,6 +2,7 @@ package com.fyn_monolithic.dto.response.post;
 
 import com.fyn_monolithic.dto.response.user.UserResponse;
 import com.fyn_monolithic.model.post.PostVisibility;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Value
+@AllArgsConstructor
 @Builder(toBuilder = true)
 public class PostResponse {
     UUID id;

@@ -29,7 +29,7 @@ public class PostReportService {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
         if (postReportRepository.existsByPostAndReporter(post, reporter)) {
-            throw new IllegalStateException("You have already reported this post");
+            throw new com.fyn_monolithic.exception.BadRequestException("You have already reported this post");
         }
 
         PostReport report = new PostReport();

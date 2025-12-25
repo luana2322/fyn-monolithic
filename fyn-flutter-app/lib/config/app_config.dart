@@ -1,5 +1,6 @@
+import 'dart:async';
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, ChangeNotifier;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,9 @@ import '../features/meetup/presentation/screens/create_meetup_screen.dart';
 import '../features/meetup/presentation/screens/meetup_details_screen.dart';
 import '../features/meetup/presentation/screens/my_meets_screen.dart';
 import '../features/meetup/presentation/screens/match_requests_screen.dart';
+import '../features/admin/presentation/screens/reported_posts_screen.dart';
+import '../features/admin/presentation/screens/report_detail_screen.dart';
+import '../features/admin/data/models/post_report_model.dart';
 
 class AppConfig {
   static const String appName = 'FYN Social';
@@ -76,19 +80,28 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: '/login',
+    refreshListenable: GoRouterRefreshStream(ref.watch(authNotifierProvider.notifier).stream),
     redirect: (context, state) {
       final isLoggedIn = authState.isAuthenticated;
       final isGoingToAuth = state.matchedLocation == '/login' || 
                             state.matchedLocation == '/register';
       
-      // Nếu đã đăng nhập và đang cố vào login/register, redirect về feed
+      // Nếu đã đăng nhập và đang cố vào login/register, redirect về feed hoặc admin dashboard
       if (isLoggedIn && isGoingToAuth) {
+        if (authState.user?.role == 'ADMIN') {
+          return '/admin/reported-posts';
+        }
         return '/feed';
       }
       
       // Nếu chưa đăng nhập và đang cố vào protected routes, redirect về login
       if (!isLoggedIn && !isGoingToAuth) {
         return '/login';
+      }
+
+      // Special case: If user is ADMIN and just logged in, or is on feed, redirect to admin dashboard
+      if (isLoggedIn && authState.user?.role == 'ADMIN' && state.matchedLocation == '/feed') {
+        return '/admin/reported-posts';
       }
       
       return null; // Không redirect
@@ -228,7 +241,39 @@ final routerProvider = Provider<GoRouter>((ref) {
           return MatchRequestsScreen(meetupId: meetupId);
         },
       ),
+      // Admin routes
+      GoRoute(
+        path: '/admin/reported-posts',
+        name: 'admin-reported-posts',
+        builder: (context, state) => const ReportedPostsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/reports/:reportId',
+        name: 'admin-report-detail',
+        builder: (context, state) {
+          final report = state.extra as PostReportModel;
+          return ReportDetailScreen(report: report);
+        },
+      ),
     ],
   );
 });
+
+/// A [Listenable] that notifies when the [stream] emits a value.
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
 

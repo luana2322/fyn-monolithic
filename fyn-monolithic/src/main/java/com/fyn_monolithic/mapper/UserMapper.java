@@ -13,6 +13,7 @@ public interface UserMapper {
 
     @Named("toUserResponse")
     @Mapping(target = "profile", expression = "java(toProfileResponse(user.getProfile(), user.getSettings() != null && user.getSettings().isPrivate()))")
+    @Mapping(target = "role", expression = "java(user.getRole() != null ? user.getRole().name() : null)")
     UserResponse toUserResponse(User user);
 
     @Named("toPublicUserResponse")

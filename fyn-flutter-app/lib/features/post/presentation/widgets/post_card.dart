@@ -169,8 +169,12 @@ class _PostCardState extends State<PostCard> {
                                         const SnackBar(content: Text('Báo cáo đã được gửi. Cảm ơn bạn!')),
                                       );
                                     }).catchError((e) {
+                                      String message = 'Không thể gửi báo cáo: $e';
+                                      if (e.toString().contains('already reported')) {
+                                        message = 'Bạn đã báo cáo bài viết này rồi.';
+                                      }
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Không thể gửi báo cáo: $e')),
+                                        SnackBar(content: Text(message)),
                                       );
                                     });
                                   }

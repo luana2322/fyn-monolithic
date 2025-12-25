@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/image_utils.dart';
 import '../../../../theme/app_colors.dart';
 import '../../data/models/story_model.dart';
 import '../providers/story_provider.dart';
@@ -80,10 +81,10 @@ class StoryAvatar extends ConsumerWidget {
                     child: CircleAvatar(
                       radius: 27,
                       backgroundColor: AppColors.muted,
-                      backgroundImage: storyUser.avatarUrl != null
-                          ? NetworkImage(storyUser.avatarUrl!)
+                      backgroundImage: storyUser.avatarDisplayUrl != null
+                          ? NetworkImage(storyUser.avatarDisplayUrl!)
                           : null,
-                      child: storyUser.avatarUrl == null
+                      child: storyUser.avatarDisplayUrl == null
                           ? Text(
                               storyUser.username.isNotEmpty
                                   ? storyUser.username[0].toUpperCase()

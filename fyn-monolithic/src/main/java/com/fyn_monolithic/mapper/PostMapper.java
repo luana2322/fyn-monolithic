@@ -2,10 +2,12 @@ package com.fyn_monolithic.mapper;
 
 import com.fyn_monolithic.dto.response.post.CommentResponse;
 import com.fyn_monolithic.dto.response.post.PostMediaResponse;
+import com.fyn_monolithic.dto.response.post.PostReportResponse;
 import com.fyn_monolithic.dto.response.post.PostResponse;
 import com.fyn_monolithic.model.post.Post;
 import com.fyn_monolithic.model.post.PostComment;
 import com.fyn_monolithic.model.post.PostMedia;
+import com.fyn_monolithic.model.post.PostReport;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -23,6 +25,9 @@ public interface PostMapper {
     @Mapping(target = "location", expression = "java(toLocationInfo(post.getLocation()))")
     @Mapping(target = "place", expression = "java(toPlaceInfo(post.getPlaceCode(), post.getPlaceName()))")
     PostResponse toPostResponse(Post post);
+
+    @Mapping(target = "reporter", source = "reporter", qualifiedByName = "toUserResponse")
+    PostReportResponse toPostReportResponse(PostReport report);
 
     default List<PostMediaResponse> toMediaResponses(Iterable<PostMedia> media) {
         if (media == null) {

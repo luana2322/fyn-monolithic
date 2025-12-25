@@ -11,6 +11,7 @@ import com.fyn_monolithic.model.message.ConversationType;
 import com.fyn_monolithic.model.user.User;
 import com.fyn_monolithic.repository.message.ConversationMemberRepository;
 import com.fyn_monolithic.repository.message.ConversationRepository;
+import com.fyn_monolithic.service.storage.MinioService;
 import com.fyn_monolithic.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class ConversationService {
     private final ConversationMemberRepository memberRepository;
     private final UserService userService;
     private final MessageMapper messageMapper;
+    private final MinioService minioService;
 
     @Transactional
     public ConversationResponse createConversation(CreateConversationRequest request) {
@@ -115,10 +117,10 @@ public class ConversationService {
                     .orElse(null);
 
             if (otherUser != null) {
-                // Get avatar URL - avatarObjectKey is stored in profile
+                // Get avatar URL - use MinioService to get full URL from object key
                 String avatarUrl = null;
                 if (otherUser.getProfile() != null && otherUser.getProfile().getAvatarObjectKey() != null) {
-                    avatarUrl = otherUser.getProfile().getAvatarObjectKey();
+                    avatarUrl = minioService.getPresignedUrl(otherUser.getProfile().getAvatarObjectKey());
                 }
 
                 // Get display name - use fullName if available, fallback to username

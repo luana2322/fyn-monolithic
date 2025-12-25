@@ -3,6 +3,8 @@ package com.fyn_monolithic.controller.moderation;
 import com.fyn_monolithic.dto.request.moderation.ModerationActionRequest;
 import com.fyn_monolithic.dto.response.common.ApiResponse;
 import com.fyn_monolithic.dto.response.common.PageResponse;
+import com.fyn_monolithic.dto.response.post.PostReportResponse;
+import com.fyn_monolithic.mapper.PostMapper;
 import com.fyn_monolithic.model.post.Post;
 import com.fyn_monolithic.model.post.PostReport;
 import com.fyn_monolithic.repository.post.PostReportRepository;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -24,14 +27,16 @@ public class ModerationController {
 
     private final ModerationService moderationService;
     private final PostReportRepository postReportRepository;
+    private final PostMapper postMapper;
 
     @GetMapping("/reported-posts")
-    public ResponseEntity<ApiResponse<PageResponse<Object[]>>> getReportedPosts(
+    @Transactional(readOnly = true)
+    public ResponseEntity<ApiResponse<PageResponse<PostReportResponse>>> getReportedPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Object[]> result = postReportRepository.findReportedPosts(PageRequest.of(page, size));
-        return ResponseEntity.ok(ApiResponse.ok(PageResponse.<Object[]>builder()
-                .content(result.getContent())
+        Page<PostReport> result = postReportRepository.findAll(PageRequest.of(page, size));
+        return ResponseEntity.ok(ApiResponse.ok(PageResponse.<PostReportResponse>builder()
+                .content(result.getContent().stream().map(postMapper::toPostReportResponse).toList())
                 .page(page)
                 .size(size)
                 .totalElements(result.getTotalElements())
@@ -40,15 +45,16 @@ public class ModerationController {
     }
 
     @GetMapping("/posts/{postId}/reports")
-    public ResponseEntity<ApiResponse<PageResponse<PostReport>>> getReportsForPost(
+    @Transactional(readOnly = true)
+    public ResponseEntity<ApiResponse<PageResponse<PostReportResponse>>> getReportsForPost(
             @PathVariable UUID postId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Post post = new Post();
         post.setId(postId);
         Page<PostReport> result = postReportRepository.findByPost(post, PageRequest.of(page, size));
-        return ResponseEntity.ok(ApiResponse.ok(PageResponse.<PostReport>builder()
-                .content(result.getContent())
+        return ResponseEntity.ok(ApiResponse.ok(PageResponse.<PostReportResponse>builder()
+                .content(result.getContent().stream().map(postMapper::toPostReportResponse).toList())
                 .page(page)
                 .size(size)
                 .totalElements(result.getTotalElements())

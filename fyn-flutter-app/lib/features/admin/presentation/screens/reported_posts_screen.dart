@@ -125,12 +125,7 @@ class _ReportedPostsScreenState extends ConsumerState<ReportedPostsScreen> {
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ReportDetailScreen(report: report),
-            ),
-          );
+          context.push('/admin/reports/${report.id}', extra: report);
         },
       ),
     );

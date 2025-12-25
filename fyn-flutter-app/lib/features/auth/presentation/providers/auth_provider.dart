@@ -58,6 +58,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (isLoggedIn) {
       try {
         final user = await _authService.getCurrentUser();
+        print('CheckAuthStatus: User role = ${user.role}');
         state = state.copyWith(user: user);
       } catch (e) {
         // Not logged in or token expired
@@ -72,6 +73,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _authService.login(
         LoginRequest(identifier: identifier, password: password),
       );
+      print('Login Success: User role = ${response.user.role}');
       state = state.copyWith(
         user: response.user,
         isLoading: false,
