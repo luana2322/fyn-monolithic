@@ -423,6 +423,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                           .read(postFeedProvider.notifier)
                           .toggleReaction(post.id, post.likedByCurrentUser),
                       onOpenComments: () => _openCommentsSheet(post),
+                      onReport: (reason, description) => ref
+                          .read(postFeedProvider.notifier)
+                          .reportPost(post.id, reason, description),
                       onTapPlace: (placeCode, placeName) {
                         context.push(
                           '/posts/place/$placeCode',

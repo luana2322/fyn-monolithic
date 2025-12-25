@@ -10,6 +10,8 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/dating_colors.dart';
 import '../../data/models/post_media.dart';
 import '../../data/models/post_model.dart';
+import '../../data/models/report_reason.dart';
+import 'report_modal.dart';
 
 class PostCard extends StatefulWidget {
   final PostModel post;
@@ -21,6 +23,7 @@ class PostCard extends StatefulWidget {
   final String? currentUserAvatarUrl;
   final String? currentUsername;
   final void Function(String placeCode, String placeName)? onTapPlace;
+  final Future<void> Function(ReportReason reason, String? description)? onReport;
 
   const PostCard({
     super.key,
@@ -33,6 +36,7 @@ class PostCard extends StatefulWidget {
     this.currentUserAvatarUrl,
     this.currentUsername,
     this.onTapPlace,
+    this.onReport,
   });
 
   @override
@@ -148,9 +152,30 @@ class _PostCardState extends State<PostCard> {
                           );
                         }
                       : () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tính năng đang phát triển'),
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).scaffoldBackgroundColor,
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                              ),
+                              child: ReportModal(
+                                onReport: (reason, description) {
+                                  if (widget.onReport != null) {
+                                    widget.onReport!(reason, description).then((_) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Báo cáo đã được gửi. Cảm ơn bạn!')),
+                                      );
+                                    }).catchError((e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Không thể gửi báo cáo: $e')),
+                                      );
+                                    });
+                                  }
+                                },
+                              ),
                             ),
                           );
                         },

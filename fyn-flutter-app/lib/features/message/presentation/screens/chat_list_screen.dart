@@ -44,6 +44,16 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: isDark ? DatingColors.darkNavBackground : null,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: isDark ? DatingColors.darkPrimaryText : null),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/feed');
+            }
+          },
+        ),
         title: Text(
           'Tin nhắn',
           style: TextStyle(

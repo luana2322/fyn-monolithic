@@ -6,6 +6,7 @@ import '../data/models/create_comment_request.dart';
 import '../data/models/post_model.dart';
 import '../data/models/comment_model.dart';
 import '../data/models/post_reaction.dart';
+import '../data/models/report_post_request.dart';
 import '../data/repositories/post_repository.dart';
 
 class PostService {
@@ -59,6 +60,10 @@ class PostService {
 
   Future<void> deleteComment(String postId, String commentId) {
     return _postRepository.deleteComment(postId, commentId);
+  }
+
+  Future<void> reportPost(String postId, ReportPostRequest request) {
+    return _postRepository.reportPost(postId, request);
   }
 }
 

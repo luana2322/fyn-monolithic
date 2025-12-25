@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -8,6 +9,7 @@ import '../providers/user_provider.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/widgets/responsive_container.dart';
 import 'edit_profile_screen.dart';
+import '../../../admin/presentation/screens/reported_posts_screen.dart';
 import 'followers_following_screen.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/dating_colors.dart';
@@ -17,6 +19,8 @@ import '../../../post/data/models/post_model.dart';
 import '../../../post/presentation/widgets/post_card.dart';
 import '../../../post/presentation/widgets/post_comments_sheet.dart';
 import '../../../../shared/providers/theme_provider.dart';
+import '../widgets/user_qr_dialog.dart';
+import 'qr_scanner_screen.dart';
 
 class _PostsLoadTracker {
   final Set<String> loadedUserIds = <String>{};
@@ -95,8 +99,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     }
 
-    final shouldShowBack =
-        (widget.userId != null || widget.username != null) || canPop;
+    // Always show back button on profile screen
+    final shouldShowBack = true;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -144,6 +148,58 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
                   },
                 ),
+                IconButton(
+                  icon: Icon(
+                    Icons.qr_code,
+                    color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
+                  ),
+                  onPressed: () {
+                    if (profileState.user != null) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => UserQrDialog(
+                          userId: profileState.user!.id,
+                          username: profileState.user!.username,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.qr_code_scanner,
+                    color: isDark ? DatingColors.darkPrimaryText : DatingColors.lightPrimaryText,
+                  ),
+                  onPressed: () {
+                    if (kIsWeb) {
+                      // On web, show URL input dialog instead of camera scanner
+                      _showWebProfileUrlDialog(context);
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const QrScannerScreen(),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                if (authState.user?.role == 'ADMIN')
+                  IconButton(
+                    icon: const Icon(
+                      Icons.admin_panel_settings_outlined,
+                      color: DatingColors.rose,
+                    ),
+                    tooltip: 'Quản trị viên',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ReportedPostsScreen(),
+                        ),
+                      );
+                    },
+                  ),
               ]
             : null,
       ),
@@ -829,6 +885,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       .read(userPostsProvider(userId).notifier)
                       .toggleReaction(post.id, post.likedByCurrentUser),
                   onOpenComments: () => _openCommentsSheet(post),
+                  onReport: (reason, description) => ref
+                      .read(userPostsProvider(userId).notifier)
+                      .reportPost(post.id, reason, description),
                 ),
               );
             },
@@ -996,4 +1055,69 @@ class _PostDetailSheet extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Shows a dialog for web users to paste a profile URL instead of scanning QR
+void _showWebProfileUrlDialog(BuildContext context) {
+  final controller = TextEditingController();
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Nhập liên kết hồ sơ'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Dán liên kết hồ sơ từ mã QR của người dùng khác vào đây:',
+            style: TextStyle(fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: 'http://localhost:3000/#/u/...',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: isDark ? DatingColors.darkSurface : Colors.grey[100],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Hủy'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final url = controller.text.trim();
+            String? userId;
+            
+            // Extract userId from URL
+            if (url.contains('fyn.app/u/')) {
+              userId = url.split('fyn.app/u/').last.split('?').first;
+            } else if (url.contains('/u/')) {
+              userId = url.split('/u/').last.split('?').first;
+            }
+            
+            if (userId != null && userId.isNotEmpty) {
+              Navigator.pop(context);
+              GoRouter.of(context).push('/u/$userId');
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Liên kết không hợp lệ')),
+              );
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: DatingColors.rose,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Xem hồ sơ'),
+        ),
+      ],
+    ),
+  );
 }

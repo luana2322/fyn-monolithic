@@ -8,6 +8,7 @@ import java.util.UUID;
 
 @Value
 @Builder
+@lombok.AllArgsConstructor(access = lombok.AccessLevel.PUBLIC)
 public class UserResponse {
     UUID id;
     String username;

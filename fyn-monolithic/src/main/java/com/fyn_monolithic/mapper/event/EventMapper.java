@@ -23,7 +23,7 @@ public interface EventMapper {
     @Mapping(target = "version", ignore = true)
     Event toEntity(CreateEventRequest request);
 
-    @Mapping(target = "createdBy", source = "createdBy") // Uses UserMapper
+    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "toUserResponse") // Uses UserMapper
     EventResponse toResponse(Event event);
 
     default java.time.LocalDateTime map(java.time.Instant instant) {

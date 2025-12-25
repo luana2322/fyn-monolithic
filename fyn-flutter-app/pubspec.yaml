@@ -59,8 +59,7 @@ dependencies:
   # Environment
   flutter_dotenv: ^5.1.0
   
-  # WebRTC for video calls
-  flutter_webrtc: ^0.11.7
+  # Removed: flutter_webrtc (video call feature not needed)
   
   # Firebase for signaling (compatible versions)
   firebase_core: ^2.15.0
@@ -71,6 +70,11 @@ dependencies:
   
   # Location
   geolocator: ^11.0.0
+  
+  # QR Code
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.1.1
+  share_plus: ^10.1.0
 
 dev_dependencies:
   flutter_test:

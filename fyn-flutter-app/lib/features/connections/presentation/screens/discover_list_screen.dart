@@ -386,7 +386,7 @@ class _DiscoverListScreenState extends ConsumerState<DiscoverListScreen> {
                           crossAxisCount: crossAxisCount,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: 0.75,
+                          childAspectRatio: 0.62, // Reduced to prevent overflow
                         ),
                         itemCount: users.length,
                         itemBuilder: (context, index) {

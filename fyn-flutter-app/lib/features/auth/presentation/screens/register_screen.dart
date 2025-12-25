@@ -50,7 +50,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       phone = Validators.formatPhone(_phoneController.text.trim());
     }
     
-    final success = await authNotifier.register(
+    // Register user
+    final registerSuccess = await authNotifier.register(
       email: _emailController.text.trim(),
       username: _usernameController.text.trim(),
       password: _passwordController.text,
@@ -60,11 +61,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           : _fullNameController.text.trim(),
     );
 
-    if (success && mounted) {
-      // Navigate to feed
-      context.go('/feed');
+    if (registerSuccess && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🎉 Đăng ký thành công! Chào mừng bạn đến với FYN Social'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        context.go('/feed');
+      }
     } else if (mounted) {
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -248,6 +258,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             validator: Validators.validateFullName,
                           ),
 
+
                           // Email
                           _buildTextField(
                             controller: _emailController,
@@ -258,6 +269,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             textInputAction: TextInputAction.next,
                             validator: Validators.validateEmail,
                           ),
+
 
                           // Username
                           _buildTextField(

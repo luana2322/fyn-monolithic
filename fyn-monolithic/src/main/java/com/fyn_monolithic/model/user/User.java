@@ -48,6 +48,10 @@ public class User extends AbstractAuditableEntity {
     @Column(name = "status", nullable = false)
     private UserStatus status = UserStatus.PENDING_VERIFICATION;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private UserRole role = UserRole.USER;
+
     @Column(name = "latitude")
     private Double latitude;
 

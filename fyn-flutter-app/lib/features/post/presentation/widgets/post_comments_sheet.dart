@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/post_model.dart';
 import '../providers/comment_provider.dart';
+import '../../../../theme/dating_colors.dart';
 
 class PostCommentsSheet extends ConsumerStatefulWidget {
   final PostModel post;
@@ -42,6 +43,7 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
     final state = ref.watch(postCommentsProvider(_args));
     final authState = ref.watch(authNotifierProvider);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SafeArea(
       child: Padding(
@@ -54,9 +56,9 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
           expand: false,
           builder: (context, scrollController) {
             return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                color: isDark ? DatingColors.darkSurface : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 children: [
@@ -65,13 +67,15 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
                     height: 4,
                     margin: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   Expanded(
                     child: state.isLoading
-                        ? const Center(child: CircularProgressIndicator())
+                        ? Center(child: CircularProgressIndicator(
+                            color: isDark ? DatingColors.rose : null,
+                          ))
                         : state.error != null
                             ? Center(
                                 child: Text(
@@ -87,7 +91,7 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
                             ),
                             itemCount: state.comments.length,
                             separatorBuilder: (_, __) =>
-                                const Divider(height: 24),
+                                Divider(height: 24, color: isDark ? DatingColors.darkBorder : null),
                             itemBuilder: (context, index) {
                               final comment = state.comments[index];
                               final canDelete =
@@ -97,10 +101,14 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
                                 children: [
                                   CircleAvatar(
                                     radius: 18,
+                                    backgroundColor: isDark ? DatingColors.darkSurfaceElevated : null,
                                     child: Text(
                                       comment.author.username
                                           .substring(0, 1)
                                           .toUpperCase(),
+                                      style: TextStyle(
+                                        color: isDark ? DatingColors.darkPrimaryText : null,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -113,8 +121,9 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
                                           children: [
                                             Text(
                                               comment.author.username,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.bold,
+                                                color: isDark ? DatingColors.darkPrimaryText : null,
                                               ),
                                             ),
                                             if (canDelete) ...[
@@ -136,7 +145,12 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
                                           ],
                                         ),
                                         const SizedBox(height: 4),
-                                        Text(comment.content),
+                                        Text(
+                                          comment.content,
+                                          style: TextStyle(
+                                            color: isDark ? DatingColors.darkPrimaryText : null,
+                                          ),
+                                        ),
                                         if (comment.createdAt != null)
                                           Padding(
                                             padding:
@@ -145,9 +159,9 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
                                               comment.createdAt
                                                   .toString()
                                                   .substring(0, 16),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 11,
-                                                color: Colors.grey,
+                                                color: isDark ? DatingColors.darkSecondaryText : Colors.grey,
                                               ),
                                             ),
                                           ),
@@ -159,7 +173,7 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
                             },
                           ),
                   ),
-                  const Divider(height: 1),
+                  Divider(height: 1, color: isDark ? DatingColors.darkBorder : null),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -170,9 +184,31 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
                         Expanded(
                           child: TextField(
                             controller: _controller,
-                            decoration: const InputDecoration(
+                            style: TextStyle(
+                              color: isDark ? DatingColors.darkPrimaryText : null,
+                            ),
+                            decoration: InputDecoration(
                               hintText: 'Viết bình luận...',
-                              border: OutlineInputBorder(),
+                              hintStyle: TextStyle(
+                                color: isDark ? DatingColors.darkSecondaryText : null,
+                              ),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: isDark ? DatingColors.darkBorder : Colors.grey,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: isDark ? DatingColors.darkBorder : Colors.grey.shade400,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: isDark ? DatingColors.rose : Colors.blue,
+                                ),
+                              ),
+                              filled: isDark,
+                              fillColor: isDark ? DatingColors.darkSurfaceElevated : null,
                             ),
                             minLines: 1,
                             maxLines: 3,
@@ -180,13 +216,19 @@ class _PostCommentsSheetState extends ConsumerState<PostCommentsSheet> {
                         ),
                         const SizedBox(width: 8),
                         state.isSubmitting
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 24,
                                 height: 24,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: isDark ? DatingColors.rose : null,
+                                ),
                               )
                             : IconButton(
-                                icon: const Icon(Icons.send),
+                                icon: Icon(
+                                  Icons.send,
+                                  color: isDark ? DatingColors.rose : null,
+                                ),
                                 onPressed: () async {
                                   final text = _controller.text.trim();
                                   if (text.isEmpty) return;

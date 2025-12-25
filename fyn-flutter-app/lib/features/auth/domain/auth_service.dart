@@ -2,6 +2,7 @@ import '../data/repositories/auth_repository.dart';
 import '../data/models/auth_response.dart';
 import '../data/models/login_request.dart';
 import '../data/models/register_request.dart';
+import '../data/models/verify_otp_request.dart';
 import '../data/models/refresh_token_request.dart';
 import '../data/models/token_response.dart';
 import '../data/models/user_response.dart';
@@ -15,8 +16,21 @@ class AuthService {
   /// Đăng ký
   Future<AuthResponse> register(RegisterRequest request) async {
     final response = await _repository.register(request);
+    // Don't save tokens yet, user needs to verify OTP
+    // await _saveTokens(response); 
+    return response;
+  }
+
+  /// Xác thực OTP
+  Future<AuthResponse> verifyOtp(VerifyOtpRequest request) async {
+    final response = await _repository.verifyOtp(request);
     await _saveTokens(response);
     return response;
+  }
+
+  /// Gửi lại OTP
+  Future<void> resendOtp(String email) async {
+    await _repository.sendOtp(email);
   }
 
   /// Đăng nhập
@@ -61,8 +75,12 @@ class AuthService {
 
   /// Lưu tokens
   Future<void> _saveTokens(AuthResponse response) async {
-    await SecureStorage.saveAccessToken(response.accessToken);
-    await SecureStorage.saveRefreshToken(response.refreshToken);
+    if (response.accessToken != null) {
+      await SecureStorage.saveAccessToken(response.accessToken!);
+    }
+    if (response.refreshToken != null) {
+      await SecureStorage.saveRefreshToken(response.refreshToken!);
+    }
     await SecureStorage.saveUserId(response.user.id);
   }
 }

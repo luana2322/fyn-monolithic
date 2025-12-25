@@ -9,6 +9,8 @@ class ApiEndpoints {
   static const String login = '/api/auth/login';
   static const String refresh = '/api/auth/refresh';
   static const String logout = '/api/auth/logout';
+  static const String verifyAuthOtp = '/api/auth/verify';
+  static const String sendAuthOtp = '/api/auth/send-otp';
   
   // Password endpoints
   static const String changePassword = '/api/auth/password/change';
@@ -38,6 +40,16 @@ class ApiEndpoints {
   static String postsByUser(String userId) => '/api/posts/user/$userId';
   static String postsByPlace(String placeCode) => '/api/posts/place/$placeCode';
   static String deletePost(String postId) => '/api/posts/$postId';
+  static String reportPost(String postId) => '/api/posts/$postId/report';
+  
+  // Admin endpoints
+  static const String adminReportedPosts = '/api/admin/reported-posts';
+  static String adminReportsForPost(String postId) => '/api/admin/posts/$postId/reports';
+  static String adminHidePost(String postId) => '/api/admin/posts/$postId/hide';
+  static String adminDeletePost(String postId) => '/api/admin/posts/$postId/delete';
+  static String adminRestorePost(String postId) => '/api/admin/posts/$postId/restore';
+  static String adminMarkReportValid(String reportId) => '/api/admin/reports/$reportId/mark-valid';
+  static String adminMarkReportInvalid(String reportId) => '/api/admin/reports/$reportId/mark-invalid';
   
   // Place endpoints
   static const String places = '/api/places';

@@ -8,6 +8,7 @@ import com.fyn_monolithic.exception.ResourceNotFoundException;
 import com.fyn_monolithic.mapper.PostMapper;
 import com.fyn_monolithic.mapper.UserMapper;
 import com.fyn_monolithic.model.post.Post;
+import com.fyn_monolithic.model.post.PostStatus;
 import com.fyn_monolithic.model.post.PostMedia;
 import com.fyn_monolithic.model.search.Hashtag;
 import com.fyn_monolithic.model.search.PostHashtag;
@@ -110,7 +111,7 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> getFeed(int page, int size) {
-        Page<Post> result = postRepository.findAll(PageRequest.of(page, size));
+        Page<Post> result = postRepository.findByStatus(PostStatus.ACTIVE, PageRequest.of(page, size));
         return PageResponse.<PostResponse>builder()
                 .content(applyUserContext(result.getContent()))
                 .page(page)
@@ -140,7 +141,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public PageResponse<PostResponse> getPostsOfUser(UUID userId, int page, int size) {
         User user = userService.findEntity(userId);
-        Page<Post> result = postRepository.findByAuthor(user, PageRequest.of(page, size));
+        Page<Post> result = postRepository.findByAuthorAndStatus(user, PostStatus.ACTIVE, PageRequest.of(page, size));
         return PageResponse.<PostResponse>builder()
                 .content(applyUserContext(result.getContent()))
                 .page(page)
@@ -157,7 +158,8 @@ public class PostService {
             throw new IllegalArgumentException("Invalid place code: " + placeCode);
         }
 
-        Page<Post> result = postRepository.findByPlaceCode(placeCode, PageRequest.of(page, size));
+        Page<Post> result = postRepository.findByPlaceCodeAndStatus(placeCode, PostStatus.ACTIVE,
+                PageRequest.of(page, size));
         return PageResponse.<PostResponse>builder()
                 .content(applyUserContext(result.getContent()))
                 .page(page)

@@ -17,7 +17,7 @@ public class CustomUserDetails implements UserDetails {
 
     public CustomUserDetails(User user) {
         this.user = user;
-        this.authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
 
     @Override
@@ -52,8 +52,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        // You might want to map this to user.getStatus()
-        return true;
+        return user.getStatus() == com.fyn_monolithic.model.user.UserStatus.ACTIVE;
     }
 
     public User getUser() {

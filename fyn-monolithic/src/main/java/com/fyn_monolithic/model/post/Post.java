@@ -34,6 +34,10 @@ public class Post extends AbstractAuditableEntity {
     @Column(name = "visibility", nullable = false)
     private PostVisibility visibility = PostVisibility.PUBLIC;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private PostStatus status = PostStatus.ACTIVE;
+
     @Column(name = "comment_count", nullable = false)
     private long commentCount = 0;
 

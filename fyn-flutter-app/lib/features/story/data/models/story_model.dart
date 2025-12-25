@@ -61,15 +61,9 @@ class StoryModel {
   }
   
   /// Get display URL for media - handles both full presigned URLs and object keys
+  /// Uses ImageUtils to fix localhost URLs for Android devices
   String get mediaDisplayUrl {
-    // If it's already a full URL (starts with http:// or https://), return as is
-    if (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://')) {
-      return mediaUrl;
-    }
-    
-    // Otherwise, it's an old object key - build MinIO URL
-    // This is for backwards compatibility with stories created before presigned URL implementation
-    return 'http://localhost:9000/fyn-data/$mediaUrl';
+    return ImageUtils.buildImageUrl(mediaUrl) ?? '';
   }
 }
 

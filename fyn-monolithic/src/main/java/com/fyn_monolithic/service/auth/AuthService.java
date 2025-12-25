@@ -62,7 +62,7 @@ public class AuthService {
                     });
         }
 
-        // 1️⃣ Tạo User
+        // 1️⃣ Tạo User - Set ACTIVE immediately (no OTP verification)
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
@@ -83,9 +83,8 @@ public class AuthService {
         // 3️⃣ Lưu User (cascade tự lưu profile & settings)
         User savedUser = userRepository.save(user);
 
-        // 4️⃣ Tạo token
+        // 4️⃣ Tạo token và trả về (auto-login after registration)
         TokenResponse tokenResponse = tokenService.createSession(savedUser);
-
         return AuthResponse.builder()
                 .accessToken(tokenResponse.getAccessToken())
                 .refreshToken(tokenResponse.getRefreshToken())
@@ -162,6 +161,8 @@ public class AuthService {
             throw new BadRequestException("Invalid credentials");
         }
 
+        // No status check - allow login for all accounts
+
         TokenResponse tokenResponse = tokenService.createSession(user);
         return AuthResponse.builder()
                 .accessToken(tokenResponse.getAccessToken())
@@ -194,13 +195,35 @@ public class AuthService {
         // Placeholder for OTP or email-based recovery.
     }
 
-    public boolean verifyOtp(VerifyOtpRequest verifyOtpRequest) {
-        String cachedOtp = otpCache.get(verifyOtpRequest.getEmail());
-        if (cachedOtp != null && cachedOtp.equals(verifyOtpRequest.getOtp())) {
-            otpCache.remove(verifyOtpRequest.getEmail()); // xóa sau khi verify thành công
-            return true;
+    @Transactional
+    public AuthResponse verifyOtp(VerifyOtpRequest verifyOtpRequest) {
+        User user = userRepository.findByEmail(verifyOtpRequest.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (user.getOtp() != null && user.getOtp().equals(verifyOtpRequest.getOtp())) {
+            user.setStatus(UserStatus.ACTIVE);
+            user.setOtp(null); // xóa sau khi verify thành công
+            userRepository.save(user);
+
+            // Tự động log in sau khi verify thành công
+            TokenResponse tokenResponse = tokenService.createSession(user);
+            return AuthResponse.builder()
+                    .accessToken(tokenResponse.getAccessToken())
+                    .refreshToken(tokenResponse.getRefreshToken())
+                    .expiresIn(tokenResponse.getExpiresIn())
+                    .user(userMapper.toUserResponse(user))
+                    .build();
         }
-        return false;
+        throw new BadRequestException("Invalid OTP");
+    }
+
+    private void sendOtpEmail(String email, String otp) throws MessagingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(email);
+        helper.setSubject("Your OTP Code");
+        helper.setText("Your OTP code is: <b>" + otp + "</b>", true);
+        javaMailSender.send(message);
     }
 
     public void sendOtp(String email) throws MessagingException {

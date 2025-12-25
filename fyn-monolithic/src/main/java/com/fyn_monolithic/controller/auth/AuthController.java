@@ -26,7 +26,6 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(authService.register(request)));
     }
 
-
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(authService.login(request)));
@@ -42,22 +41,11 @@ public class AuthController {
         authService.logout(request.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.message("Logged out"));
     }
+
     @PostMapping("/verify")
-    public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
-        boolean verified = authService.verifyOtp(request);
-
-        if (verified) {
-            return ResponseEntity.ok(
-                    ApiResponse.message("OTP verified successfully, user is now ACTIVE")
-            );
-        }
-
-        return ResponseEntity.badRequest().body(
-                ApiResponse.<Void>builder()
-                        .success(false)
-                        .message("Invalid OTP or email")
-                        .build()
-        );
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        AuthResponse response = authService.verifyOtp(request);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PostMapping("/send-otp")
@@ -68,8 +56,6 @@ public class AuthController {
         authService.sendOtp(request.getEmail().trim());
 
         return ResponseEntity.ok(
-                ApiResponse.message("OTP has been sent to your email")
-        );
+                ApiResponse.message("OTP has been sent to your email"));
     }
-    }
-
+}

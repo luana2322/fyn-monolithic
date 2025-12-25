@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/models/post_model.dart';
+import '../../data/models/report_post_request.dart';
 import '../providers/post_provider.dart';
 import '../widgets/post_card.dart';
 import '../../../../core/utils/image_utils.dart';
@@ -206,6 +207,11 @@ class _PostsByPlaceScreenState extends ConsumerState<PostsByPlaceScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Comments coming soon')),
                           );
+                        },
+                        onReport: (reason, description) async {
+                          final repository = ref.read(postRepositoryProvider);
+                          final request = ReportPostRequest(reason: reason, description: description);
+                          await repository.reportPost(post.id, request);
                         },
                         onTapPlace: (placeCode, placeName) {
                           // Navigate to another place

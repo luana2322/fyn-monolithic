@@ -94,7 +94,47 @@ public class ConversationService {
     public List<ConversationResponse> listConversations() {
         User user = userService.getCurrentUser();
         List<Conversation> conversations = conversationRepository.findDistinctByMembers_Member(user);
-        return conversations.stream().map(messageMapper::toConversationResponse).toList();
+        return conversations.stream()
+                .map(conv -> enrichConversationResponse(conv, user))
+                .toList();
+    }
+
+    /**
+     * Enrich ConversationResponse with otherUser info for direct messages
+     */
+    private ConversationResponse enrichConversationResponse(Conversation conversation, User currentUser) {
+        ConversationResponse base = messageMapper.toConversationResponse(conversation);
+
+        // For DIRECT conversations, populate otherUser info
+        if (conversation.getType() == ConversationType.DIRECT && conversation.getMembers() != null) {
+            // Find the other member (not current user)
+            User otherUser = conversation.getMembers().stream()
+                    .map(ConversationMember::getMember)
+                    .filter(member -> !member.getId().equals(currentUser.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (otherUser != null) {
+                // Get avatar URL - avatarObjectKey is stored in profile
+                String avatarUrl = null;
+                if (otherUser.getProfile() != null && otherUser.getProfile().getAvatarObjectKey() != null) {
+                    avatarUrl = otherUser.getProfile().getAvatarObjectKey();
+                }
+
+                // Get display name - use fullName if available, fallback to username
+                String displayName = otherUser.getFullName() != null && !otherUser.getFullName().isBlank()
+                        ? otherUser.getFullName()
+                        : otherUser.getUsername();
+
+                return base.toBuilder()
+                        .otherUserId(otherUser.getId().toString())
+                        .otherUserAvatar(avatarUrl)
+                        .otherUserName(displayName)
+                        .build();
+            }
+        }
+
+        return base;
     }
 
     @Transactional(readOnly = true)

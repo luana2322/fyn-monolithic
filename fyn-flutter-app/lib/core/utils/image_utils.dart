@@ -1,9 +1,26 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../config/app_config.dart';
 
 /// Utility functions for handling image URLs
 class ImageUtils {
+  // MinIO server hostname to use based on platform
+  static String get _minioHost {
+    if (kIsWeb) {
+      return 'localhost:9000';
+    }
+    try {
+      if (Platform.isAndroid) {
+        // Use the same IP as the backend server for Android
+        return '192.168.1.175:9000';
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return 'localhost:9000';
+  }
+
   /// Build full URL for avatar/image from object key or partial URL
   /// Handles encoding of special characters
   static String? buildImageUrl(String? urlOrKey) {
@@ -13,18 +30,30 @@ class ImageUtils {
 
     // If it's already a full URL (starts with http:// or https://)
     if (urlOrKey.startsWith('http://') || urlOrKey.startsWith('https://')) {
-      // Fix Docker internal hostname for browser access
-      // Replace fyn-minio:9000 with localhost:9000 for MinIO presigned URLs
+      // Fix Docker internal hostname for access from current platform
       String fixedUrl = urlOrKey;
+      
+      // Replace Docker internal hostnames with actual accessible host
+      final minioHost = _minioHost;
       if (fixedUrl.contains('fyn-minio:9000')) {
-        fixedUrl = fixedUrl.replaceAll('fyn-minio:9000', 'localhost:9000');
+        fixedUrl = fixedUrl.replaceAll('fyn-minio:9000', minioHost);
       }
       if (fixedUrl.contains('fyn-minio:9001')) {
-        fixedUrl = fixedUrl.replaceAll('fyn-minio:9001', 'localhost:9001');
+        fixedUrl = fixedUrl.replaceAll('fyn-minio:9001', minioHost.replaceAll(':9000', ':9001'));
       }
       // Also handle minio container name without prefix
       if (fixedUrl.contains('minio:9000')) {
-        fixedUrl = fixedUrl.replaceAll('minio:9000', 'localhost:9000');
+        fixedUrl = fixedUrl.replaceAll('minio:9000', minioHost);
+      }
+      // Handle localhost for Android (in case backend returns localhost URLs)
+      if (!kIsWeb) {
+        try {
+          if (Platform.isAndroid && fixedUrl.contains('localhost:9000')) {
+            fixedUrl = fixedUrl.replaceAll('localhost:9000', minioHost);
+          }
+        } catch (e) {
+          // Ignore
+        }
       }
       return fixedUrl;
     }
@@ -36,15 +65,7 @@ class ImageUtils {
     // Remove leading slash if present
     final cleanKey = urlOrKey.startsWith('/') ? urlOrKey.substring(1) : urlOrKey;
     
-    // Try different possible endpoints
-    // Option 1: /api/files/{key} (most common)
-    // Option 2: /api/storage/{key}
-    // Option 3: /api/files/download/{key}
-    // For now, try /api/files/{key} - if this doesn't work, backend might need
-    // to provide a file serving endpoint or return full MinIO URLs
-    
     // Build URL with proper encoding of the key
-    // Encode only the key part, not the entire path
     final encodedKey = Uri.encodeComponent(cleanKey);
     final fullUrl = '$baseUrl/api/files/$encodedKey';
     

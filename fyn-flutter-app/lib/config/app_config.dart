@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,9 +12,7 @@ import '../features/user/presentation/screens/edit_profile_screen.dart';
 import '../features/user/presentation/screens/followers_following_screen.dart';
 import '../features/message/presentation/screens/chat_list_screen.dart';
 import '../features/notification/presentation/screens/notification_screen.dart';
-import '../features/video_call/presentation/screens/outgoing_call_screen.dart';
-import '../features/video_call/presentation/screens/incoming_call_screen.dart';
-import '../features/video_call/presentation/screens/active_call_screen.dart';
+// Removed: video_call feature (not needed)
 import '../features/events/presentation/screens/event_list_screen.dart';
 import '../features/events/presentation/screens/create_event_screen.dart';
 import '../features/events/presentation/screens/event_detail_screen.dart';
@@ -28,9 +28,45 @@ import '../features/meetup/presentation/screens/match_requests_screen.dart';
 class AppConfig {
   static const String appName = 'FYN Social';
   
-  // Base URL từ .env hoặc default
+  // Default URLs cho từng platform
+  static const String _webBaseUrl = 'http://localhost:8080';
+  static const String _androidEmulatorBaseUrl = 'http://192.168.1.175:8080';
+  static const String _iosSimulatorBaseUrl = 'http://localhost:8080';
+  
+  // Base URL tự động detect theo platform
   static String get baseUrl {
-    return dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
+    // Auto-detect based on platform
+    if (kIsWeb) {
+      return _webBaseUrl;
+    }
+    
+    // Mobile platforms
+    try {
+      if (Platform.isAndroid) {
+        return _androidEmulatorBaseUrl;
+      } else if (Platform.isIOS) {
+        return _iosSimulatorBaseUrl;
+      }
+    } catch (e) {
+      // Fallback for any platform detection issues
+    }
+    
+    return _webBaseUrl;
+  }
+  
+  // Getter để debug - kiểm tra platform hiện tại
+  static String get currentPlatform {
+    if (kIsWeb) return 'Web';
+    try {
+      if (Platform.isAndroid) return 'Android';
+      if (Platform.isIOS) return 'iOS';
+      if (Platform.isWindows) return 'Windows';
+      if (Platform.isMacOS) return 'macOS';
+      if (Platform.isLinux) return 'Linux';
+    } catch (e) {
+      return 'Unknown';
+    }
+    return 'Unknown';
   }
 }
 
@@ -105,6 +141,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/u/:userId',
+        name: 'profile-deeplink',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return ProfileScreen(userId: userId);
+        },
+      ),
+      GoRoute(
         path: '/edit-profile',
         name: 'edit-profile',
         builder: (context, state) => const EditProfileScreen(),
@@ -130,36 +174,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'notifications',
         builder: (context, state) => const NotificationScreen(),
       ),
-      // Video call routes
-      GoRoute(
-        path: '/video-call/outgoing',
-        name: 'outgoing-call',
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
-          return OutgoingCallScreen(callId: extra['callId']);
-        },
-      ),
-      GoRoute(
-        path: '/video-call/incoming',
-        name: 'incoming-call',
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
-          return IncomingCallScreen(
-            callId: extra['callId'],
-            callerId: extra['callerId'],
-            callerName: extra['callerName'],
-            callerAvatar: extra['callerAvatar'],
-          );
-        },
-      ),
-      GoRoute(
-        path: '/video-call/active',
-        name: 'active-call',
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
-          return ActiveCallScreen(callId: extra['callId']);
-        },
-      ),
+      // Removed: video_call routes (feature not needed)
       GoRoute(
         path: '/events',
         name: 'events',

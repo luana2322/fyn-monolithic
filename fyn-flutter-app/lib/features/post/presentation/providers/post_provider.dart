@@ -6,6 +6,8 @@ import '../../../../core/network/dio_provider.dart';
 import '../../data/models/create_post_request.dart';
 import '../../data/models/post_model.dart';
 import '../../data/models/post_reaction.dart';
+import '../../data/models/report_post_request.dart';
+import '../../data/models/report_reason.dart';
 import '../../data/repositories/post_repository.dart';
 import '../../domain/post_service.dart';
 
@@ -153,6 +155,11 @@ class FeedNotifier extends StateNotifier<FeedState> {
         );
       }).toList(),
     );
+  }
+
+  Future<void> reportPost(String postId, ReportReason reason, String? description) async {
+    final request = ReportPostRequest(reason: reason, description: description);
+    await _postService.reportPost(postId, request);
   }
 
   void _applyReaction(PostReaction reaction) {
@@ -307,6 +314,11 @@ class UserPostsNotifier extends StateNotifier<UserPostsState> {
         );
       }).toList(),
     );
+  }
+
+  Future<void> reportPost(String postId, ReportReason reason, String? description) async {
+    final request = ReportPostRequest(reason: reason, description: description);
+    await _postService.reportPost(postId, request);
   }
 
   void _applyReaction(PostReaction reaction) {

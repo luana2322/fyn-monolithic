@@ -1,5 +1,6 @@
 import '../../../../core/network/api_client.dart';
 import '../models/story_model.dart';
+import 'package:flutter/foundation.dart';
 
 /// Repository for story operations
 class StoryRepository {
@@ -12,12 +13,16 @@ class StoryRepository {
     try {
       final response = await _apiClient.get('/api/v1/stories');
       final data = response.data;
+      debugPrint('Story API Response: $data');
       // Handle both direct response and wrapped response
       final feedData = data is Map && data.containsKey('data') 
           ? data['data'] 
           : data;
+      debugPrint('Story Feed Data: $feedData');
+      debugPrint('Story users count: ${(feedData?['users'] as List?)?.length ?? 0}');
       return StoryFeedModel.fromJson(feedData ?? {});
     } catch (e) {
+      debugPrint('Story API Error: $e');
       throw Exception('Failed to load stories: $e');
     }
   }

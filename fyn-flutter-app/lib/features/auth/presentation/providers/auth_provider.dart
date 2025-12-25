@@ -4,6 +4,7 @@ import '../../domain/auth_service.dart';
 import '../../data/models/user_response.dart';
 import '../../data/models/login_request.dart';
 import '../../data/models/register_request.dart';
+import '../../data/models/verify_otp_request.dart';
 import '../../../../core/network/dio_provider.dart';
 
 // Providers
@@ -113,6 +114,39 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
+        error: e.toString().replaceAll('Exception: ', ''),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> verifyOtp(String email, String otp) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await _authService.verifyOtp(
+        VerifyOtpRequest(email: email, otp: otp),
+      );
+      state = state.copyWith(
+        user: response.user,
+        isLoading: false,
+        error: null,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceAll('Exception: ', ''),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> resendOtp(String email) async {
+    try {
+      await _authService.resendOtp(email);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
         error: e.toString().replaceAll('Exception: ', ''),
       );
       return false;

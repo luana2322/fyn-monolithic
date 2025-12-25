@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/dating_colors.dart';
@@ -51,6 +52,16 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       backgroundColor: isDark ? DatingColors.darkBackground : AppColors.background,
       appBar: AppBar(
         backgroundColor: isDark ? DatingColors.darkNavBackground : null,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: isDark ? DatingColors.darkPrimaryText : null),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              GoRouter.of(context).go('/feed');
+            }
+          },
+        ),
         title: Text(
           'Thông báo',
           style: TextStyle(color: isDark ? DatingColors.darkPrimaryText : null),

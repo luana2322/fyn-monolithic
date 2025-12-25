@@ -8,6 +8,7 @@ import '../models/register_request.dart';
 import '../models/refresh_token_request.dart';
 import '../models/token_response.dart';
 import '../models/user_response.dart';
+import '../models/verify_otp_request.dart';
 
 class AuthRepository {
   final ApiClient _apiClient;
@@ -203,10 +204,63 @@ class AuthRepository {
     return error.message ?? 'Có lỗi xảy ra';
   }
 
+  /// Xác thực OTP
+  Future<AuthResponse> verifyOtp(VerifyOtpRequest request) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.verifyAuthOtp,
+        data: request.toJson(),
+      );
+
+      final apiResponse = ApiResponse<AuthResponse>.fromJson(
+        response.data,
+        (data) => AuthResponse.fromJson(data as Map<String, dynamic>),
+      );
+
+      if (!apiResponse.success || apiResponse.data == null) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: apiResponse.message ?? 'Xác thực OTP thất bại',
+        );
+      }
+
+      return apiResponse.data!;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Gửi lại OTP
+  Future<void> sendOtp(String email) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.sendAuthOtp,
+        data: {'email': email},
+      );
+
+      final apiResponse = ApiResponse<void>.fromJson(
+        response.data,
+        (data) => null,
+      );
+
+      if (!apiResponse.success) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: apiResponse.message ?? 'Gửi OTP thất bại',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   /// Translate common error messages to Vietnamese
   String _translateErrorMessage(String message) {
     final lowerMessage = message.toLowerCase();
     
+    // Authentication errors
     if (lowerMessage.contains('invalid credentials') || 
         lowerMessage.contains('bad credentials')) {
       return 'Email/Username hoặc mật khẩu không chính xác';
@@ -214,21 +268,55 @@ class AuthRepository {
     if (lowerMessage.contains('user not found')) {
       return 'Tài khoản không tồn tại';
     }
+    
+    // Duplicate data errors
     if (lowerMessage.contains('email already exists') ||
-        lowerMessage.contains('email already registered')) {
+        lowerMessage.contains('email already registered') ||
+        lowerMessage.contains('duplicate') && lowerMessage.contains('email')) {
       return 'Email đã được đăng ký';
     }
     if (lowerMessage.contains('username already exists') ||
-        lowerMessage.contains('username already taken')) {
+        lowerMessage.contains('username already taken') ||
+        lowerMessage.contains('duplicate') && lowerMessage.contains('username')) {
       return 'Username đã được sử dụng';
     }
+    if (lowerMessage.contains('phone already') ||
+        lowerMessage.contains('duplicate') && lowerMessage.contains('phone')) {
+      return 'Số điện thoại đã được sử dụng';
+    }
+    
+    // Password errors
     if (lowerMessage.contains('password') && lowerMessage.contains('weak')) {
       return 'Mật khẩu quá yếu';
     }
+    if (lowerMessage.contains('password') && lowerMessage.contains('incorrect')) {
+      return 'Mật khẩu không đúng';
+    }
+    
+    // Account status errors
     if (lowerMessage.contains('account disabled') || 
         lowerMessage.contains('account locked')) {
       return 'Tài khoản đã bị khóa';
     }
+    if (lowerMessage.contains('account is not active') ||
+        lowerMessage.contains('not active')) {
+      return 'Tài khoản chưa được kích hoạt. Vui lòng xác thực email';
+    }
+    if (lowerMessage.contains('pending verification') ||
+        lowerMessage.contains('not verified') ||
+        lowerMessage.contains('verify your email')) {
+      return 'Tài khoản chưa được xác thực. Vui lòng kiểm tra email để lấy mã OTP';
+    }
+    
+    // OTP errors
+    if (lowerMessage.contains('otp') && lowerMessage.contains('invalid')) {
+      return 'Mã OTP không đúng';
+    }
+    if (lowerMessage.contains('otp') && lowerMessage.contains('expired')) {
+      return 'Mã OTP đã hết hạn. Vui lòng gửi lại mã mới';
+    }
+    
+    // Session errors
     if (lowerMessage.contains('token expired') ||
         lowerMessage.contains('session expired')) {
       return 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại';

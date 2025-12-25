@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../config/app_config.dart';
 
 /// Service for SerpAPI place search via backend proxy
 /// Avoids CORS issues by routing through backend
 class SerpApiService {
-  static final String _baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:8080';
+  String get _baseUrl => AppConfig.baseUrl;
 
   /// Search for places using backend proxy
   Future<List<PlaceSearchResult>> searchPlaces(String query, {String? location}) async {

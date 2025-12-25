@@ -87,9 +87,20 @@ public class PostRecommendationService {
         // Rank posts by similarity to user preference
         List<PostWithScore> rankedPosts = rankPostsBySimilarity(candidatePosts, userPreferenceVector);
 
+        // Get the final list of recommended posts
+        List<Post> recommendedPosts = rankedPosts.stream()
+                .limit(limit)
+                .map(PostWithScore::post)
+                .toList();
+
+        // Check which posts have been liked by current user
+        Set<UUID> currentlyLikedPostIds = postLikeRepository.findPostIdsLikedByUser(currentUser, recommendedPosts);
+
         return rankedPosts.stream()
                 .limit(limit)
-                .map(pws -> postMapper.toPostResponse(pws.post()))
+                .map(pws -> postMapper.toPostResponse(pws.post()).toBuilder()
+                        .likedByCurrentUser(currentlyLikedPostIds.contains(pws.post().getId()))
+                        .build())
                 .toList();
     }
 
@@ -149,10 +160,19 @@ public class PostRecommendationService {
      * Fallback to chronological feed when personalization is not possible.
      */
     private List<PostResponse> getFallbackPosts(int limit) {
-        return postRepository.findAll(PageRequest.of(0, limit))
-                .getContent()
-                .stream()
-                .map(postMapper::toPostResponse)
+        User currentUser = userService.getCurrentUser();
+        List<Post> posts = postRepository.findAll(PageRequest.of(0, limit)).getContent();
+
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        Set<UUID> likedPostIds = postLikeRepository.findPostIdsLikedByUser(currentUser, posts);
+
+        return posts.stream()
+                .map(post -> postMapper.toPostResponse(post).toBuilder()
+                        .likedByCurrentUser(likedPostIds.contains(post.getId()))
+                        .build())
                 .toList();
     }
 

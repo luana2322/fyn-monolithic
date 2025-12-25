@@ -7,20 +7,23 @@ part 'user_response.g.dart';
 class UserResponse {
   final String id;
   final String username;
-  final String email;
+  final String? email; // Nullable: hidden when viewing other users' profiles
   final String? phone;
   final String? fullName;
+  @JsonKey(defaultValue: 'ACTIVE')
   final String status;
+  final String? role;
   @JsonKey(fromJson: _profileFromJson)
   final ProfileResponse profile;
 
   UserResponse({
     required this.id,
     required this.username,
-    required this.email,
+    this.email,
     this.phone,
     this.fullName,
-    required this.status,
+    this.status = 'ACTIVE',
+    this.role,
     required this.profile,
   });
 

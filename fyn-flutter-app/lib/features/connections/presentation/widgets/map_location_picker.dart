@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/models/location_info.dart';
 import '../../../../core/services/serpapi_service.dart';
 
@@ -106,11 +107,12 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
                   // OpenStreetMap tiles (FREE!)
                   TileLayer(
                     urlTemplate: isDark
-                        ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
+                        ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=${dotenv.get('STADIA_MAPS_API_KEY', fallback: '')}'
                         : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                     subdomains: const ['a', 'b', 'c'],
                     userAgentPackageName: 'com.fyn.app',
                     maxZoom: 19,
+                    retinaMode: RetinaMode.isHighDensity(context),
                   ),
                   
                   // Marker for selected location

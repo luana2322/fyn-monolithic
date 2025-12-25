@@ -1,0 +1,7 @@
+enum AdminActionType {
+  HIDE_POST,
+  DELETE_POST,
+  RESTORE_POST,
+  MARK_REPORT_VALID,
+  MARK_REPORT_INVALID,
+}

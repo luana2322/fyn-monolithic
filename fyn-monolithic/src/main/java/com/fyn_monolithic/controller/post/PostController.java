@@ -4,6 +4,8 @@ import com.fyn_monolithic.dto.request.post.CreatePostRequest;
 import com.fyn_monolithic.dto.response.common.ApiResponse;
 import com.fyn_monolithic.dto.response.common.PageResponse;
 import com.fyn_monolithic.dto.response.post.PostResponse;
+import com.fyn_monolithic.dto.request.post.ReportPostRequest;
+import com.fyn_monolithic.service.post.PostReportService;
 import com.fyn_monolithic.service.post.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class PostController {
 
     private final PostService postService;
+    private final PostReportService postReportService;
 
     // @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     // public ResponseEntity<ApiResponse<PostResponse>> createPost(
@@ -85,5 +88,13 @@ public class PostController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID postId) {
         postService.deletePost(postId);
         return ResponseEntity.ok(ApiResponse.message("Post deleted"));
+    }
+
+    @PostMapping("/{postId}/report")
+    public ResponseEntity<ApiResponse<Void>> report(
+            @PathVariable UUID postId,
+            @Valid @RequestBody ReportPostRequest request) {
+        postReportService.reportPost(postId, request.getReason(), request.getDescription());
+        return ResponseEntity.ok(ApiResponse.message("Post reported successfully"));
     }
 }

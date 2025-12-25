@@ -14,6 +14,7 @@ import '../models/create_comment_request.dart';
 import '../models/post_model.dart';
 import '../models/comment_model.dart';
 import '../models/post_reaction.dart';
+import '../models/report_post_request.dart';
 
 class PostRepository {
   final ApiClient _apiClient;
@@ -200,6 +201,21 @@ class PostRepository {
         requestOptions: response.requestOptions,
         response: response,
         message: apiResponse.message ?? 'Không thể xóa bài viết',
+      );
+    }
+  }
+
+  Future<void> reportPost(String postId, ReportPostRequest request) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.reportPost(postId),
+      data: request.toJson(),
+    );
+    final apiResponse = ApiResponse.fromJson(response.data, null);
+    if (!apiResponse.success) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        message: apiResponse.message ?? 'Không thể báo cáo bài viết',
       );
     }
   }

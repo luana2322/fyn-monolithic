@@ -6,12 +6,20 @@ import com.fyn_monolithic.model.user.User;
 import com.fyn_monolithic.model.user.UserProfile;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    @Named("toUserResponse")
     @Mapping(target = "profile", expression = "java(toProfileResponse(user.getProfile(), user.getSettings() != null && user.getSettings().isPrivate()))")
     UserResponse toUserResponse(User user);
+
+    @Named("toPublicUserResponse")
+    @Mapping(target = "email", ignore = true)
+    @Mapping(target = "phone", ignore = true)
+    @Mapping(target = "profile", expression = "java(toProfileResponse(user.getProfile(), user.getSettings() != null && user.getSettings().isPrivate()))")
+    UserResponse toPublicUserResponse(User user);
 
     default ProfileResponse toProfileResponse(UserProfile profile, boolean isPrivate) {
         if (profile == null) {

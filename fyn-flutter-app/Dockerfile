@@ -1,4 +1,4 @@
-# Build stage
+        # Build stage
 # syntax=docker/dockerfile:1.6
 
 FROM ghcr.io/cirruslabs/flutter:stable AS build

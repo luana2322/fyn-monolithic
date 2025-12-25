@@ -17,6 +17,7 @@ import java.util.stream.StreamSupport;
 @Mapper(componentModel = "spring", uses = { UserMapper.class })
 public interface PostMapper {
 
+    @Mapping(target = "author", source = "author", qualifiedByName = "toUserResponse")
     @Mapping(target = "media", expression = "java(toMediaResponses(post.getMedia()))")
     @Mapping(target = "likedByCurrentUser", constant = "false")
     @Mapping(target = "location", expression = "java(toLocationInfo(post.getLocation()))")
@@ -45,6 +46,7 @@ public interface PostMapper {
     @Mapping(target = "mediaUrl", source = "objectKey")
     PostMediaResponse toMediaResponse(PostMedia media);
 
+    @Mapping(target = "author", source = "author", qualifiedByName = "toUserResponse")
     @Mapping(target = "parentId", expression = "java(comment.getParentComment() != null ? comment.getParentComment().getId() : null)")
     CommentResponse toCommentResponse(PostComment comment);
 

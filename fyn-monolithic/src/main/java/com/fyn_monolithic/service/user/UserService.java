@@ -44,7 +44,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponse getUser(UUID userId) {
-        return userMapper.toUserResponse(findEntity(userId));
+        return userMapper.toPublicUserResponse(findEntity(userId));
     }
 
     @Transactional(readOnly = true)

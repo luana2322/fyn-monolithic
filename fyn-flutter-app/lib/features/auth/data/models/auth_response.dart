@@ -5,15 +5,15 @@ part 'auth_response.g.dart';
 
 @JsonSerializable()
 class AuthResponse {
-  final String accessToken;
-  final String refreshToken;
-  final int expiresIn;
+  final String? accessToken;
+  final String? refreshToken;
+  final int? expiresIn;
   final UserResponse user;
 
   AuthResponse({
-    required this.accessToken,
-    required this.refreshToken,
-    required this.expiresIn,
+    this.accessToken,
+    this.refreshToken,
+    this.expiresIn,
     required this.user,
   });
 

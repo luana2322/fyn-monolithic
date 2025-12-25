@@ -650,30 +650,38 @@ class _OwnerMeetupDetailScreenState extends ConsumerState<OwnerMeetupDetailScree
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(
+                  Flexible(
                     child: OutlinedButton.icon(
                       onPressed: () => _rejectApplicant(applicant),
-                      icon: const Icon(Icons.close, size: 18),
-                      label: const Text('Từ chối'),
-                      style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                      icon: const Icon(Icons.close, size: 16),
+                      label: const Text('Từ\nchối', textAlign: TextAlign.center, style: TextStyle(fontSize: 11)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Added Chat button for pending
-                  Expanded(
+                  const SizedBox(width: 6),
+                  Flexible(
                     child: OutlinedButton.icon(
                       onPressed: () => _openChat(applicant),
-                      icon: const Icon(Icons.chat, size: 18),
-                      label: const Text('Chat'),
+                      icon: const Icon(Icons.chat, size: 16),
+                      label: const Text('Cha\nt', textAlign: TextAlign.center, style: TextStyle(fontSize: 11)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
+                  const SizedBox(width: 6),
+                  Flexible(
                     child: FilledButton.icon(
                       onPressed: () => _acceptApplicant(applicant),
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text('Nhận'),
-                      style: FilledButton.styleFrom(backgroundColor: Colors.green),
+                      icon: const Icon(Icons.check, size: 16),
+                      label: const Text('Nhận', style: TextStyle(fontSize: 11)),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      ),
                     ),
                   ),
                 ],

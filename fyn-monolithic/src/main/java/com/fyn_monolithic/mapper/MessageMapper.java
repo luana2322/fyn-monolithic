@@ -15,6 +15,12 @@ import java.util.stream.Collectors;
 public interface MessageMapper {
 
     @Mapping(target = "memberIds", expression = "java(memberIds(conversation.getMembers()))")
+    @Mapping(target = "memberCount", expression = "java(conversation.getMembers() != null ? conversation.getMembers().size() : 0)")
+    @Mapping(target = "otherUserId", ignore = true)
+    @Mapping(target = "otherUserAvatar", ignore = true)
+    @Mapping(target = "otherUserName", ignore = true)
+    @Mapping(target = "lastMessage", ignore = true)
+    @Mapping(target = "lastMessageAt", ignore = true)
     ConversationResponse toConversationResponse(Conversation conversation);
 
     @Mapping(target = "conversationId", source = "conversation.id")
