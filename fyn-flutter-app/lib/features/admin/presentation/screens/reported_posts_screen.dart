@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/moderation_provider.dart';
 import '../../data/models/post_report_model.dart';
 import '../../data/models/report_status.dart';
@@ -36,6 +37,10 @@ class _ReportedPostsScreenState extends ConsumerState<ReportedPostsScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.read(moderationProvider.notifier).loadReportedPosts(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => ref.read(authNotifierProvider.notifier).logout(),
           ),
         ],
       ),
