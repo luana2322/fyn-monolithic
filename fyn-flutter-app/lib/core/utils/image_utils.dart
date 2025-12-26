@@ -6,20 +6,7 @@ import '../../config/app_config.dart';
 /// Utility functions for handling image URLs
 class ImageUtils {
   // MinIO server hostname to use based on platform
-  static String get _minioHost {
-    if (kIsWeb) {
-      return 'localhost:9000';
-    }
-    try {
-      if (Platform.isAndroid) {
-        // Use the same IP as the backend server for Android
-        return '192.168.1.175:9000';
-      }
-    } catch (e) {
-      // Fallback
-    }
-    return 'localhost:9000';
-  }
+  static String get _minioHost => AppConfig.minioHost;
 
   /// Build full URL for avatar/image from object key or partial URL
   /// Handles encoding of special characters

@@ -32,30 +32,50 @@ import '../features/admin/data/models/post_report_model.dart';
 class AppConfig {
   static const String appName = 'FYN Social';
   
-  // Default URLs cho từng platform
-  static const String _webBaseUrl = 'http://localhost:8080';
-  static const String _androidEmulatorBaseUrl = 'http://192.168.1.175:8080';
-  static const String _iosSimulatorBaseUrl = 'http://localhost:8080';
-  
-  // Base URL tự động detect theo platform
+  // Default values
+  static const String _defaultWebBaseUrl = 'http://localhost:8080';
+  static const String _defaultIosBaseUrl = 'http://localhost:8080';
+
+  // Fixed IP for your current environment (use ipconfig value)
+  // Your Machine IP is 172.26.27.3. The Phone IP (172.26.15.225) should not be used here.
+  static const String _currentDevIp = '172.26.27.3'; 
+
   static String get baseUrl {
-    // Auto-detect based on platform
+    // Falls back to platform-specific defaults
     if (kIsWeb) {
-      return _webBaseUrl;
+      return _defaultWebBaseUrl;
     }
     
-    // Mobile platforms
     try {
       if (Platform.isAndroid) {
-        return _androidEmulatorBaseUrl;
+        // Use the fixed Dev IP for physical Android devices
+        return 'http://$_currentDevIp:8080';
       } else if (Platform.isIOS) {
-        return _iosSimulatorBaseUrl;
+        return _defaultIosBaseUrl;
       }
     } catch (e) {
-      // Fallback for any platform detection issues
+      // Fallback
     }
     
-    return _webBaseUrl;
+    return _defaultWebBaseUrl;
+  }
+
+  // Get only the host part (IP:Port) for MinIO
+  static String get minioHost {
+    if (kIsWeb) {
+      return 'localhost:9000';
+    }
+
+    try {
+      if (Platform.isAndroid) {
+        // Use the same fixed Dev IP for MinIO
+        return '$_currentDevIp:9000';
+      }
+    } catch (e) {
+      // Ignore
+    }
+
+    return 'localhost:9000';
   }
   
   // Getter để debug - kiểm tra platform hiện tại

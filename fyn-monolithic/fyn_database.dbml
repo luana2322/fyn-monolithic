@@ -1,0 +1,1219 @@
+Enum "activity_type" {
+  "coffee"
+  "breakfast"
+  "brunch"
+  "lunch"
+  "dinner"
+  "drinks"
+  "sports"
+  "gym"
+  "hiking"
+  "cycling"
+  "running"
+  "swimming"
+  "movie"
+  "concert"
+  "theater"
+  "museum"
+  "exhibition"
+  "study"
+  "tutoring"
+  "workshop"
+  "seminar"
+  "conference"
+  "gaming"
+  "board_games"
+  "esports"
+  "travel"
+  "road_trip"
+  "camping"
+  "networking"
+  "meetup"
+  "coworking"
+  "volunteer"
+  "charity"
+  "party"
+  "celebration"
+  "other"
+}
+
+Enum "connection_status" {
+  "pending"
+  "accepted"
+  "rejected"
+  "blocked"
+  "expired"
+}
+
+Enum "connection_type" {
+  "friend"
+  "romantic"
+  "activity_partner"
+  "study_partner"
+  "tutor"
+  "mentor"
+  "mentee"
+  "colleague"
+  "business"
+  "roommate"
+  "acquaintance"
+  "service_provider"
+}
+
+Enum "event_status" {
+  "draft"
+  "open"
+  "waiting_list"
+  "full"
+  "ongoing"
+  "completed"
+  "cancelled"
+  "expired"
+}
+
+Enum "event_visibility" {
+  "public"
+  "friends_only"
+  "group_only"
+  "invite_only"
+}
+
+Enum "group_type" {
+  "sport"
+  "study"
+  "hangout"
+  "gaming"
+  "travel"
+  "hobby"
+  "professional"
+  "support"
+  "community"
+  "other"
+}
+
+Enum "group_visibility" {
+  "public"
+  "private"
+  "event_based"
+  "invite_only"
+}
+
+Enum "member_role" {
+  "owner"
+  "admin"
+  "moderator"
+  "member"
+  "pending"
+}
+
+Enum "participant_status" {
+  "pending"
+  "approved"
+  "rejected"
+  "waitlisted"
+  "cancelled"
+  "attended"
+  "no_show"
+}
+
+Enum "recurrence_frequency" {
+  "daily"
+  "weekly"
+  "biweekly"
+  "monthly"
+  "custom"
+}
+
+Enum "report_reason" {
+  "inappropriate_content"
+  "harassment"
+  "spam"
+  "fake_profile"
+  "scam"
+  "violence"
+  "hate_speech"
+  "impersonation"
+  "underage"
+  "other"
+}
+
+Enum "report_status" {
+  "pending"
+  "reviewing"
+  "resolved"
+  "dismissed"
+  "escalated"
+}
+
+Enum "review_context" {
+  "event"
+  "connection"
+  "group"
+  "service"
+}
+
+Enum "verification_type" {
+  "phone"
+  "email"
+  "government_id"
+  "social"
+  "photo"
+}
+
+Table "admin_action_logs" {
+  "id" UUID
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "action_type" VARCHAR(255)
+  "note" VARCHAR(255)
+  "target_id" UUID
+  "admin_id" UUID
+}
+
+Table "ai_suggestions" {
+  "id" UUID
+  "user_id" UUID
+  "suggestion_type" VARCHAR(255)
+  "target_id" UUID
+  "content" TEXT
+  "confidence_score" DECIMAL
+  "is_shown" BOOLEAN
+  "is_used" BOOLEAN
+  "user_feedback" VARCHAR(255)
+  "created_at" TIMESTAMP
+  "expires_at" TIMESTAMP
+}
+
+Table "audit_logs" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "action" VARCHAR(255)
+  "actor_id" VARCHAR(255)
+  "payload" JSON
+  "resource" VARCHAR(255)
+}
+
+Table "chat_messages" {
+  "id" UUID
+  "room_id" UUID
+  "sender_id" UUID
+  "content" TEXT
+  "message_type" VARCHAR(255)
+  "media_urls" TEXT
+  "media_thumbnails" TEXT
+  "location_lat" DECIMAL
+  "location_lng" DECIMAL
+  "location_name" VARCHAR(255)
+  "reply_to_id" UUID
+  "thread_id" UUID
+  "reactions" JSON
+  "is_edited" BOOLEAN
+  "edited_at" TIMESTAMP
+  "is_deleted" BOOLEAN
+  "deleted_at" TIMESTAMP
+  "metadata" JSON
+  "created_at" TIMESTAMP
+}
+
+Table "chat_room_members" {
+  "id" UUID
+  "room_id" UUID
+  "user_id" UUID
+  "role" VARCHAR(255)
+  "is_muted" BOOLEAN
+  "muted_until" TIMESTAMP
+  "notifications_enabled" BOOLEAN
+  "last_read_at" TIMESTAMP
+  "last_read_message_id" UUID
+  "unread_count" INT
+  "joined_at" TIMESTAMP
+}
+
+Table "chat_rooms" {
+  "id" UUID
+  "room_type" VARCHAR(255)
+  "name" VARCHAR(255)
+  "description" TEXT
+  "avatar_url" VARCHAR(255)
+  "event_id" UUID
+  "group_id" UUID
+  "is_active" BOOLEAN
+  "is_muted_all" BOOLEAN
+  "slow_mode_seconds" INT
+  "message_count" INT
+  "member_count" INT
+  "created_by" UUID
+  "created_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+}
+
+Table "connection_type_metadata" {
+  "connection_type" CONNECTION_TYPE
+  "requires_mutual_consent" BOOLEAN
+  "supports_group" BOOLEAN
+  "is_business_related" BOOLEAN
+  "max_pending_days" INT
+  "allows_intro_message" BOOLEAN
+  "display_name_en" VARCHAR(255)
+  "display_name_vi" VARCHAR(255)
+}
+
+Table "connections" {
+  "match_score" DECIMAL
+  "receiver_follows_requester" BOOLEAN
+  "requester_follows_receiver" BOOLEAN
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "expires_at" TIMESTAMP
+  "requested_at" TIMESTAMP
+  "responded_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "receiver_id" UUID
+  "requester_id" UUID
+  "connection_type" VARCHAR(255)
+  "intro_message" VARCHAR(255)
+  "match_source" VARCHAR(255)
+  "response_message" VARCHAR(255)
+  "status" VARCHAR(255)
+  "matched_interests" TEXT
+  "date_created_at" TIMESTAMP
+  "date_description" TEXT
+  "date_latitude" DECIMAL
+  "date_location_address" TEXT
+  "date_location_name" VARCHAR(255)
+  "date_longitude" DECIMAL
+  "date_scheduled_at" TIMESTAMP
+  "date_status" VARCHAR(255)
+  "feedback_status" VARCHAR(255)
+}
+
+Table "content_reports" {
+  "id" UUID
+  "reporter_id" UUID
+  "content_type" VARCHAR(255)
+  "content_id" UUID
+  "reason" REPORT_REASON
+  "description" TEXT
+  "status" REPORT_STATUS
+  "created_at" TIMESTAMP
+  "resolved_at" TIMESTAMP
+}
+
+Table "conversation_members" {
+  "is_admin" BOOLEAN
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "conversation_id" UUID
+  "id" UUID
+  "member_id" UUID
+  "role" VARCHAR(255)
+  "joined_at" TIMESTAMP
+  "left_at" TIMESTAMP
+}
+
+Table "conversations" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "title" VARCHAR(255)
+  "type" VARCHAR(255)
+  "meet_match_id" UUID
+  "meetup_id" UUID
+  "is_archived" BOOLEAN
+}
+
+Table "date_feedback" {
+  "id" UUID
+  "did_meet" BOOLEAN
+  "feedback_text" TEXT
+  "no_show_reason" VARCHAR(255)
+  "rating" VARCHAR(255)
+  "submitted_at" TIMESTAMP
+  "connection_id" UUID
+  "user_id" UUID
+}
+
+Table "date_plans" {
+  "id" UUID
+  "connection_type" VARCHAR(255)
+  "created_at" TIMESTAMP
+  "description" TEXT
+  "duration_minutes" INT
+  "is_public" BOOLEAN
+  "latitude" DECIMAL
+  "longitude" DECIMAL
+  "max_proposals" INT
+  "place_address" TEXT
+  "place_name" VARCHAR(255)
+  "place_type" VARCHAR(255)
+  "proposal_count" INT
+  "scheduled_at" TIMESTAMP
+  "status" VARCHAR(255)
+  "title" VARCHAR(255)
+  "updated_at" TIMESTAMP
+  "owner_id" UUID
+  "partner_id" UUID
+}
+
+Table "date_proposals" {
+  "id" UUID
+  "created_at" TIMESTAMP
+  "message" TEXT
+  "proposed_time" TIMESTAMP
+  "status" VARCHAR(255)
+  "updated_at" TIMESTAMP
+  "date_id" UUID
+  "proposer_id" UUID
+}
+
+Table "emergency_contacts" {
+  "id" UUID
+  "user_id" UUID
+  "name" VARCHAR(255)
+  "phone" VARCHAR(255)
+  "email" VARCHAR(255)
+  "relationship" VARCHAR(255)
+  "is_primary" BOOLEAN
+  "created_at" TIMESTAMP
+}
+
+Table "event_invitations" {
+  "id" UUID
+  "event_id" UUID
+  "occurrence_id" UUID
+  "invited_user_id" UUID
+  "invited_by" UUID
+  "status" VARCHAR(255)
+  "message" TEXT
+  "invited_at" TIMESTAMP
+  "responded_at" TIMESTAMP
+}
+
+Table "event_occurrences" {
+  "id" UUID
+  "event_id" UUID
+  "occurrence_number" INT
+  "start_time" TIMESTAMP
+  "end_time" TIMESTAMP
+  "status" EVENT_STATUS
+  "max_participants" INT
+  "current_participants" INT
+  "waitlist_count" INT
+  "override_fields" JSON
+  "chat_room_id" UUID
+  "is_cancelled" BOOLEAN
+  "cancelled_at" TIMESTAMP
+  "cancellation_reason" TEXT
+  "created_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+}
+
+Table "event_participants" {
+  "id" UUID
+  "event_id" UUID
+  "occurrence_id" UUID
+  "user_id" UUID
+  "status" PARTICIPANT_STATUS
+  "intro_message" TEXT
+  "requested_at" TIMESTAMP
+  "responded_at" TIMESTAMP
+  "responded_by" UUID
+  "response_message" TEXT
+  "proposed_alternative_time" TIMESTAMP
+  "alternative_message" TEXT
+  "waitlist_position" INT
+  "promoted_from_waitlist_at" TIMESTAMP
+  "recurring_signup_type" VARCHAR(255)
+}
+
+Table "events" {
+  "age_max" INT
+  "age_min" INT
+  "allow_waitlist" BOOLEAN
+  "auto_approve_verified" BOOLEAN
+  "current_participants" INT
+  "duration_minutes" INT
+  "is_online" BOOLEAN
+  "is_recurring" BOOLEAN
+  "join_deadline_hours" INT
+  "location_lat" DECIMAL
+  "location_lng" DECIMAL
+  "max_participants" INT
+  "min_participants" INT
+  "min_reputation_score" DECIMAL
+  "requires_approval" BOOLEAN
+  "waitlist_count" INT
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "end_time" TIMESTAMP
+  "start_time" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "created_by" UUID
+  "id" UUID
+  "activity_type" VARCHAR(255)
+  "cover_image_url" VARCHAR(255)
+  "description" TEXT
+  "gender_preference" VARCHAR(255)
+  "location_address" TEXT
+  "location_name" VARCHAR(255)
+  "location_place_id" VARCHAR(255)
+  "online_meeting_url" VARCHAR(255)
+  "recurrence_rule" VARCHAR(255)
+  "slug" VARCHAR(255)
+  "status" VARCHAR(255)
+  "timezone" VARCHAR(255)
+  "title" VARCHAR(255)
+  "visibility" VARCHAR(255)
+  "required_verifications" TEXT
+}
+
+Table "file_storage" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "size_bytes" BIGINT
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "bucket" VARCHAR(255)
+  "content_type" VARCHAR(255)
+  "file_name" VARCHAR(255)
+  "media_type" VARCHAR(255)
+  "object_key" VARCHAR(255)
+}
+
+Table "flyway_schema_history" {
+  "installed_rank" INT
+  "version" VARCHAR(255)
+  "description" VARCHAR(255)
+  "type" VARCHAR(255)
+  "script" VARCHAR(255)
+  "installed_by" VARCHAR(255)
+  "installed_on" TIMESTAMP
+  "execution_time" INT
+  "success" BOOLEAN
+}
+
+Table "group_join_requests" {
+  "id" UUID
+  "group_id" UUID
+  "user_id" UUID
+  "status" VARCHAR(255)
+  "message" TEXT
+  "requested_at" TIMESTAMP
+  "responded_at" TIMESTAMP
+  "responded_by" UUID
+  "response_message" TEXT
+}
+
+Table "group_members" {
+  "id" UUID
+  "group_id" UUID
+  "user_id" UUID
+  "role" MEMBER_ROLE
+  "joined_at" TIMESTAMP
+  "invited_by" UUID
+  "approved_by" UUID
+  "notifications_enabled" BOOLEAN
+  "is_muted" BOOLEAN
+  "nickname" VARCHAR(255)
+  "last_active_at" TIMESTAMP
+  "messages_count" INT
+  "events_attended" INT
+}
+
+Table "groups" {
+  "id" UUID
+  "name" VARCHAR(255)
+  "slug" VARCHAR(255)
+  "description" TEXT
+  "cover_image_url" VARCHAR(255)
+  "icon_url" VARCHAR(255)
+  "group_type" GROUP_TYPE
+  "visibility" GROUP_VISIBILITY
+  "location_lat" DECIMAL
+  "location_lng" DECIMAL
+  "location_name" VARCHAR(255)
+  "rules" TEXT
+  "welcome_message" TEXT
+  "max_members" INT
+  "requires_approval" BOOLEAN
+  "min_age" INT
+  "allowed_genders" VARCHAR(255)
+  "min_reputation_score" DECIMAL
+  "min_events_attended" INT
+  "member_count" INT
+  "active_member_count" INT
+  "total_events" INT
+  "chat_enabled" BOOLEAN
+  "chat_room_id" UUID
+  "tags" TEXT
+  "is_featured" BOOLEAN
+  "is_verified" BOOLEAN
+  "created_by" UUID
+  "created_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+}
+
+Table "hashtags" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "usage_count" BIGINT
+  "version" BIGINT
+  "id" UUID
+  "tag" VARCHAR(255)
+}
+
+Table "match_scores" {
+  "activity_score" DECIMAL
+  "interest_score" DECIMAL
+  "location_score" DECIMAL
+  "total_score" DECIMAL
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "user_id_1" UUID
+  "user_id_2" UUID
+  "common_interests" TEXT
+}
+
+Table "meetup_attendance" {
+  "id" UUID
+  "meetup_id" UUID
+  "user_id" UUID
+  "status" VARCHAR(255)
+  "confirmed_at" TIMESTAMP
+  "feedback" TEXT
+  "rating" REAL
+  "created_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "version" BIGINT
+}
+
+Table "meetup_confirmations" {
+  "id" UUID
+  "confirmed_at" TIMESTAMP
+  "notes" TEXT
+  "result" VARCHAR(255)
+  "meetup_match_id" UUID
+  "user_id" UUID
+  "comment" TEXT
+  "rating" DECIMAL
+}
+
+Table "meetup_matches" {
+  "id" UUID
+  "conversation_id" UUID
+  "created_at" TIMESTAMP
+  "message" TEXT
+  "responded_at" TIMESTAMP
+  "status" VARCHAR(255)
+  "meetup_id" UUID
+  "user_id" UUID
+}
+
+Table "meetup_participants" {
+  "meetup_id" UUID
+  "user_id" UUID
+}
+
+Table "meetups" {
+  "id" UUID
+  "category" VARCHAR(255)
+  "created_at" TIMESTAMP
+  "description" TEXT
+  "duration_minutes" INT
+  "latitude" DECIMAL
+  "location" VARCHAR(255)
+  "longitude" DECIMAL
+  "max_participants" INT
+  "scheduled_at" TIMESTAMP
+  "status" VARCHAR(255)
+  "title" VARCHAR(255)
+  "updated_at" TIMESTAMP
+  "organizer_id" UUID
+  "confirmation_sent_at" TIMESTAMP
+  "confirmation_status" VARCHAR(255)
+  "expires_at" TIMESTAMP
+  "meet_type" VARCHAR(255)
+  "organizer_confirmed" BOOLEAN
+  "participant_confirmed" BOOLEAN
+}
+
+Table "message_media" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "message_id" UUID
+  "media_type" VARCHAR(255)
+  "object_key" VARCHAR(255)
+}
+
+Table "messages" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "reaction" VARCHAR(255)
+  "conversation_id" UUID
+  "id" UUID
+  "sender_id" UUID
+  "content" VARCHAR(255)
+  "status" VARCHAR(255)
+}
+
+Table "moderation_actions" {
+  "id" UUID
+  "target_user_id" UUID
+  "action_type" VARCHAR(255)
+  "action_reason" TEXT
+  "duration_hours" INT
+  "expires_at" TIMESTAMP
+  "performed_by" UUID
+  "related_report_id" UUID
+  "created_at" TIMESTAMP
+}
+
+Table "notifications" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "recipient_id" UUID
+  "reference_id" UUID
+  "message" VARCHAR(255)
+  "status" VARCHAR(255)
+  "type" VARCHAR(255)
+}
+
+Table "pending_reviews" {
+  "id" UUID
+  "reviewer_id" UUID
+  "reviewed_user_id" UUID
+  "context_type" TEXT
+  "context_id" UUID
+  "created_at" TIMESTAMP
+  "expires_at" TIMESTAMP
+  "reminder_sent_at" TIMESTAMP
+}
+
+Table "post_comments" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "author_id" UUID
+  "id" UUID
+  "parent_comment_id" UUID
+  "post_id" UUID
+  "content" VARCHAR(255)
+}
+
+Table "post_hashtags" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "hashtag_id" UUID
+  "id" UUID
+  "post_id" UUID
+}
+
+Table "post_likes" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "post_id" UUID
+  "user_id" UUID
+}
+
+Table "post_media" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "post_id" UUID
+  "description" VARCHAR(255)
+  "media_type" VARCHAR(255)
+  "object_key" VARCHAR(255)
+  "order_index" INT
+}
+
+Table "post_reports" {
+  "id" UUID
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "description" VARCHAR(255)
+  "moderation_comment" VARCHAR(255)
+  "reason" VARCHAR(255)
+  "status" VARCHAR(255)
+  "post_id" UUID
+  "reporter_id" UUID
+}
+
+Table "posts" {
+  "comment_count" BIGINT
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "like_count" BIGINT
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "author_id" UUID
+  "id" UUID
+  "content" VARCHAR(255)
+  "visibility" VARCHAR(255)
+  "location" TEXT
+  "place_code" VARCHAR(255)
+  "place_name" VARCHAR(255)
+  "status" VARCHAR(255)
+}
+
+Table "review_responses" {
+  "id" UUID
+  "review_id" UUID
+  "response_text" TEXT
+  "created_at" TIMESTAMP
+}
+
+Table "reviews" {
+  "id" UUID
+  "reviewer_id" UUID
+  "reviewed_user_id" UUID
+  "context_type" TEXT
+  "context_id" UUID
+  "rating" INT
+  "punctuality_rating" INT
+  "communication_rating" INT
+  "friendliness_rating" INT
+  "respectfulness_rating" INT
+  "feedback" TEXT
+  "tags" VARCHAR(255)
+  "photo_urls" TEXT
+  "is_public" BOOLEAN
+  "is_anonymous" BOOLEAN
+  "is_flagged" BOOLEAN
+  "is_hidden" BOOLEAN
+  "created_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+}
+
+Table "safety_checkins" {
+  "id" UUID
+  "user_id" UUID
+  "event_id" UUID
+  "location_lat" DECIMAL
+  "location_lng" DECIMAL
+  "location_accuracy" DECIMAL
+  "is_sos" BOOLEAN
+  "sos_message" TEXT
+  "emergency_contacts_notified" BOOLEAN
+  "notified_at" TIMESTAMP
+  "responded_at" TIMESTAMP
+  "created_at" TIMESTAMP
+}
+
+Table "stories" {
+  "id" UUID
+  "background_color" VARCHAR(255)
+  "created_at" TIMESTAMP
+  "expires_at" TIMESTAMP
+  "media_type" VARCHAR(255)
+  "media_url" VARCHAR(255)
+  "text_content" VARCHAR(255)
+  "view_count" INT
+  "user_id" UUID
+}
+
+Table "story_views" {
+  "id" UUID
+  "viewed_at" TIMESTAMP
+  "story_id" UUID
+  "viewer_id" UUID
+}
+
+Table "swipe_actions" {
+  "is_mutual" BOOLEAN
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "actor_id" UUID
+  "id" UUID
+  "target_id" UUID
+  "action_type" VARCHAR(255)
+}
+
+Table "user_activity_logs" {
+  "id" UUID
+  "user_id" UUID
+  "action_type" VARCHAR(255)
+  "target_type" VARCHAR(255)
+  "target_id" UUID
+  "metadata" JSON
+  "session_id" VARCHAR(255)
+  "device_type" VARCHAR(255)
+  "created_at" TIMESTAMP
+}
+
+Table "user_blocks" {
+  "id" UUID
+  "blocker_id" UUID
+  "blocked_id" UUID
+  "reason" TEXT
+  "created_at" TIMESTAMP
+}
+
+Table "user_followers" {
+  "muted" BOOLEAN
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "follower_id" UUID
+  "id" UUID
+  "user_id" UUID
+}
+
+Table "user_login_history" {
+  "success" BOOLEAN
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "user_id" UUID
+  "ip_address" VARCHAR(255)
+  "user_agent" VARCHAR(255)
+}
+
+Table "user_photos" {
+  "id" UUID
+  "user_id" UUID
+  "photo_url" VARCHAR(255)
+  "thumbnail_url" VARCHAR(255)
+  "display_order" INT
+  "is_primary" BOOLEAN
+  "is_verified" BOOLEAN
+  "caption" TEXT
+  "created_at" TIMESTAMP
+}
+
+Table "user_profiles" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "user_id" UUID
+  "bio" VARCHAR(255)
+  "avatar_object_key" VARCHAR(255)
+  "location" VARCHAR(255)
+  "website" VARCHAR(255)
+  "reputation_score" DECIMAL
+  "date_of_birth" DATE
+  "education_level" VARCHAR(255)
+  "gender" VARCHAR(255)
+  "total_meets_cancelled" INT
+  "total_meets_completed" INT
+  "total_no_shows" INT
+}
+
+Table "user_profiles_extended" {
+  "date_of_birth" DATE
+  "is_online" BOOLEAN
+  "is_verified" BOOLEAN
+  "location_approximate" BOOLEAN
+  "location_lat" DECIMAL
+  "location_lng" DECIMAL
+  "max_distance_km" INT
+  "preferred_age_max" INT
+  "preferred_age_min" INT
+  "profile_completeness" INT
+  "reputation_score" DECIMAL
+  "total_reviews" INT
+  "verification_level" INT
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "last_active_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "verified_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "user_id" UUID
+  "company" VARCHAR(255)
+  "diet" VARCHAR(255)
+  "drinking" VARCHAR(255)
+  "education" VARCHAR(255)
+  "education_level" VARCHAR(255)
+  "exercise_frequency" VARCHAR(255)
+  "gender" VARCHAR(255)
+  "gender_identity" VARCHAR(255)
+  "location_city" VARCHAR(255)
+  "location_country" VARCHAR(255)
+  "location_district" VARCHAR(255)
+  "occupation" VARCHAR(255)
+  "personality_type" VARCHAR(255)
+  "pronouns" VARCHAR(255)
+  "relationship_status" VARCHAR(255)
+  "smoking" VARCHAR(255)
+  "timezone" VARCHAR(255)
+  "available_days" VARCHAR(255)
+  "available_time_slots" JSON
+  "interests" TEXT
+  "languages" VARCHAR(255)
+  "looking_for" TEXT
+  "pets" VARCHAR(255)
+  "preferred_genders" VARCHAR(255)
+}
+
+Table "user_reports" {
+  "id" UUID
+  "reporter_id" UUID
+  "reported_user_id" UUID
+  "reason" REPORT_REASON
+  "description" TEXT
+  "evidence_urls" TEXT
+  "context_type" VARCHAR(255)
+  "context_id" UUID
+  "status" REPORT_STATUS
+  "priority" INT
+  "assigned_to" UUID
+  "reviewed_at" TIMESTAMP
+  "reviewed_by" UUID
+  "resolution_notes" TEXT
+  "action_taken" VARCHAR(255)
+  "created_at" TIMESTAMP
+  "resolved_at" TIMESTAMP
+}
+
+Table "user_settings" {
+  "allow_messages" BOOLEAN
+  "email_notifications" BOOLEAN
+  "is_private" BOOLEAN
+  "push_notifications" BOOLEAN
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "user_id" UUID
+}
+
+Table "user_stats" {
+  "id" UUID
+  "user_id" UUID
+  "total_connections" INT
+  "friends_count" INT
+  "romantic_connections" INT
+  "activity_partners" INT
+  "events_created" INT
+  "events_joined" INT
+  "events_completed" INT
+  "events_cancelled" INT
+  "events_no_show" INT
+  "groups_joined" INT
+  "groups_created" INT
+  "reviews_given" INT
+  "reviews_received" INT
+  "average_rating" DECIMAL
+  "reports_received" INT
+  "blocks_received" INT
+  "warnings_received" INT
+  "profile_views" INT
+  "messages_sent" INT
+  "match_rate" DECIMAL
+  "updated_at" TIMESTAMP
+}
+
+Table "user_tokens" {
+  "revoked" BOOLEAN
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "expires_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "user_id" UUID
+  "refresh_token" VARCHAR(255)
+  "ip_address" VARCHAR(255)
+  "user_agent" VARCHAR(255)
+}
+
+Table "user_verifications" {
+  "id" UUID
+  "user_id" UUID
+  "verification_type" VERIFICATION_TYPE
+  "verification_data" JSON
+  "verified_at" TIMESTAMP
+  "expires_at" TIMESTAMP
+  "is_valid" BOOLEAN
+  "verified_by" VARCHAR(255)
+  "created_at" TIMESTAMP
+}
+
+Table "users" {
+  "created_at" TIMESTAMP
+  "deleted_at" TIMESTAMP
+  "updated_at" TIMESTAMP
+  "version" BIGINT
+  "id" UUID
+  "email" VARCHAR(255)
+  "full_name" VARCHAR(255)
+  "otp" VARCHAR(255)
+  "password_hash" VARCHAR(255)
+  "phone" VARCHAR(255)
+  "status" VARCHAR(255)
+  "username" VARCHAR(255)
+  "no_show_count" INT
+  "latitude" DECIMAL
+  "longitude" DECIMAL
+  "role" VARCHAR(255)
+}
+
+Ref "chat_messages_reply_to_id_fkey":"chat_messages"."id" < "chat_messages"."reply_to_id" [delete: set null]
+
+Ref "chat_messages_room_id_fkey":"chat_rooms"."id" < "chat_messages"."room_id" [delete: cascade]
+
+Ref "chat_room_members_room_id_fkey":"chat_rooms"."id" < "chat_room_members"."room_id" [delete: cascade]
+
+Ref "chat_rooms_group_id_fkey":"groups"."id" < "chat_rooms"."group_id" [delete: cascade]
+
+Ref "conversations_meetup_id_fkey":"meetups"."id" < "conversations"."meetup_id"
+
+Ref "event_invitations_occurrence_id_fkey":"event_occurrences"."id" < "event_invitations"."occurrence_id" [delete: cascade]
+
+Ref "event_participants_occurrence_id_fkey":"event_occurrences"."id" < "event_participants"."occurrence_id" [delete: cascade]
+
+Ref "fk146fxgvmv8yyp7c71mgc86c2v":"users"."id" < "date_feedback"."user_id"
+
+Ref "fk1urcum9dtf0vgul7k405f4r2d":"posts"."id" < "post_media"."post_id"
+
+Ref "fk21q7y8a124im4g0l4aaxn4ol1":"post_comments"."id" < "post_comments"."parent_comment_id"
+
+Ref "fk2byeer5agddu83bij66e3204h":"meetup_matches"."id" < "meetup_confirmations"."meetup_match_id"
+
+Ref "fk2y4acyhro3w5xrmku47osiry9":"users"."id" < "story_views"."viewer_id"
+
+Ref "fk3l8n9mvo9y4416kye4lfl7ame":"users"."id" < "date_plans"."owner_id"
+
+Ref "fk3vssajpmbeq5vbxsaioir4f29":"users"."id" < "swipe_actions"."target_id"
+
+Ref "fk4ui4nnwntodh6wjvck53dbk9m":"users"."id" < "messages"."sender_id"
+
+Ref "fk61iiu6gfevpvo2v3yl76sar7r":"users"."id" < "user_tokens"."user_id"
+
+Ref "fk6xvn0811tkyo3nfjk2xvqx6ns":"users"."id" < "posts"."author_id"
+
+Ref "fk7ccpkj5jys037f9pq98l31ya2":"posts"."id" < "post_reports"."post_id"
+
+Ref "fk8v82nj88rmai0nyck19f873dw":"users"."id" < "user_settings"."user_id"
+
+Ref "fk91j0v3mph9xj4mbx7flwdesbk":"users"."id" < "conversation_members"."member_id"
+
+Ref "fk9dofr3ed1b29u3g5rkf4bgypi":"messages"."id" < "message_media"."message_id"
+
+Ref "fk9uedrlupih4x9c9qk1ntwdpie":"users"."id" < "post_comments"."author_id"
+
+Ref "fka5wxsgl4doibhbed9gm7ikie2":"posts"."id" < "post_likes"."post_id"
+
+Ref "fkaawaqxjs3br8dw5v90w7uu514":"posts"."id" < "post_comments"."post_id"
+
+Ref "fkaubkanrrl5tn4jqqxaanb0iw":"date_plans"."id" < "date_proposals"."date_id"
+
+Ref "fkb8j4xx456a7584d8blc604pqg":"hashtags"."id" < "post_hashtags"."hashtag_id"
+
+Ref "fkbmfuq6o0n8wugbsm6gcqg4mq0":"connections"."id" < "date_feedback"."connection_id"
+
+Ref "fkcgp592vydgfp5fruikg0mmnm3":"users"."id" < "admin_action_logs"."admin_id"
+
+Ref "fkg1fpyfrlugt3ocs6km9lbjo8p":"users"."id" < "swipe_actions"."actor_id"
+
+Ref "fkimdttbhs2shefo103atkloing":"users"."id" < "match_scores"."user_id_1"
+
+Ref "fkjcad5nfve11khsnpwj1mv8frj":"users"."id" < "user_profiles"."user_id"
+
+Ref "fkjqk1p1vyu8hqmjobmr63nu5mk":"users"."id" < "meetup_confirmations"."user_id"
+
+Ref "fkkgau5n0nlewg6o9lr4yibqgxj":"users"."id" < "post_likes"."user_id"
+
+Ref "fklutg9g52xi3p7i1kmfigig563":"users"."id" < "connections"."receiver_id"
+
+Ref "fkm376eeljwfai2hlpdih7ysmes":"users"."id" < "meetups"."organizer_id"
+
+Ref "fkmpv90a1lsx9lcxsj7xjcvvsxg":"users"."id" < "events"."created_by"
+
+Ref "fkmrwaqamem13p6gynbehk2c26d":"users"."id" < "connections"."requester_id"
+
+Ref "fkn09ehbc5vejow69wk1jq03nlt":"users"."id" < "meetup_matches"."user_id"
+
+Ref "fknpayqngtq4lo8dgqqpo01vcrv":"stories"."id" < "story_views"."story_id"
+
+Ref "fknxfbup81m9td8l03se3rg2icf":"conversations"."id" < "conversation_members"."conversation_id"
+
+Ref "fkomjwovbef1e8rs1b5uh8kjtxy":"users"."id" < "user_profiles_extended"."user_id"
+
+Ref "fkomu0xp0wcr6g3b2l20yi21qef":"users"."id" < "match_scores"."user_id_2"
+
+Ref "fkooa6dp747686bmd5bhtdhyq2a":"meetups"."id" < "meetup_participants"."meetup_id"
+
+Ref "fkox7c2m7d9qhhpu45d83luq19q":"users"."id" < "user_followers"."user_id"
+
+Ref "fkp72gnmqfmnw630a6cycblw5q1":"users"."id" < "meetup_participants"."user_id"
+
+Ref "fkqi5fmh45u32i63971en0rmrvo":"users"."id" < "post_reports"."reporter_id"
+
+Ref "fkqqnsjxlwleyjbxlmm213jaj3f":"users"."id" < "notifications"."recipient_id"
+
+Ref "fkqwgkxi6y088pv4ch2qjn61nut":"users"."id" < "date_plans"."partner_id"
+
+Ref "fkrrlq793bvaswhomm900i71ac5":"posts"."id" < "post_hashtags"."post_id"
+
+Ref "fksauvjgnbgys3gbeharkga2omh":"users"."id" < "user_followers"."follower_id"
+
+Ref "fksbq7u5957ll2op5dcn2yrkjl4":"users"."id" < "date_proposals"."proposer_id"
+
+Ref "fksdtd03157lbb4o4h2mxobuhd4":"meetup_matches"."id" < "conversations"."meet_match_id"
+
+Ref "fkshv2ytgbsn9w9mpu43mc6ln6j":"users"."id" < "stories"."user_id"
+
+Ref "fkt492th6wsovh1nush5yl5jj8e":"conversations"."id" < "messages"."conversation_id"
+
+Ref "fkthvsfa8x1rhm6fbi1ysbsnsac":"users"."id" < "user_login_history"."user_id"
+
+Ref "fktid3liii4g5jgjb02k9c9kcoc":"meetups"."id" < "meetup_matches"."meetup_id"
+
+Ref "group_join_requests_group_id_fkey":"groups"."id" < "group_join_requests"."group_id" [delete: cascade]
+
+Ref "group_members_group_id_fkey":"groups"."id" < "group_members"."group_id" [delete: cascade]
+
+Ref "meetup_attendance_meetup_id_fkey":"meetups"."id" < "meetup_attendance"."meetup_id" [delete: cascade]
+
+Ref "meetup_attendance_user_id_fkey":"users"."id" < "meetup_attendance"."user_id" [delete: cascade]
+
+Ref "moderation_actions_related_report_id_fkey":"user_reports"."id" < "moderation_actions"."related_report_id"
+
+Ref "review_responses_review_id_fkey":"reviews"."id" < "review_responses"."review_id" [delete: cascade]
+

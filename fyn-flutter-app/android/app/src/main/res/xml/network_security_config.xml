@@ -4,6 +4,10 @@
     <domain-config cleartextTrafficPermitted="true">
         <!-- Local development server -->
         <domain includeSubdomains="true">192.168.1.175</domain>
+        <domain includeSubdomains="true">172.26.27.3</domain>
+        <domain includeSubdomains="true">172.26.26.255</domain>
+        <domain includeSubdomains="true">172.26.26.225</domain>
+        <domain includeSubdomains="true">172.26.15.225</domain>
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
         <!-- MinIO storage -->
