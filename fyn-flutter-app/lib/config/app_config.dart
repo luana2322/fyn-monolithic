@@ -38,7 +38,7 @@ class AppConfig {
 
   // Fixed IP for your current environment (use ipconfig value)
   // Your Machine IP is 172.26.27.3. The Phone IP (172.26.15.225) should not be used here.
-  static const String _currentDevIp = '172.26.27.3'; 
+  static const String _currentDevIp = '172.16.0.252'; 
 
   static String get baseUrl {
     // Falls back to platform-specific defaults
