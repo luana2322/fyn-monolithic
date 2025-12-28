@@ -8,13 +8,47 @@ Dự án **FYN** là một ứng dụng mạng xã hội và hẹn hò hiện đ
 
 ## 📱 Hình Ảnh Ứng Dụng (Screenshots)
 
+### 🔐 Khởi Đầu & Bảo Mật
+<p align="center">
+  <img src="fyn-monolithic/img/z7373925443629_0fd31585711b4b072e955a29b003874c.jpg" width="200" title="Đăng nhập"/>
+  <img src="fyn-monolithic/img/z7373925445064_8793432c5d333365f286e4a4feba30fc.jpg" width="200" title="Đăng ký"/>
+  <img src="fyn-monolithic/img/z7373925356088_0b2e43109bead60181d6838fa4e7b8ae.jpg" width="200" title="Mã QR cá nhân"/>
+</p>
+
+### 📱 Bảng Tin & Khám Phá
 <p align="center">
   <img src="fyn-monolithic/img/z7373925435416_9a7ce70c36d6329ef43f82433e87cea5.jpg" width="200" title="Trang chủ Feed"/>
-  <img src="fyn-monolithic/img/z7373925393851_1b837e94a9ab5124cf9b3d396b4f700a.jpg" width="200" title="Chọn địa điểm Meetup"/>
   <img src="fyn-monolithic/img/z7373925317167_8280059ca8cb2bacc35fd2738cbde2cd.jpg" width="200" title="Tạo bài viết"/>
+  <img src="fyn-monolithic/img/z7373925439871_59a0e8ab841808cce4b13da70ecaec17.jpg" width="200" title="Khám phá & Bộ lọc"/>
+</p>
+
+### ❤️ Hệ Thống Meetup (Hẹn Hò)
+<p align="center">
+  <img src="fyn-monolithic/img/z7373925393851_1b837e94a9ab5124cf9b3d396b4f700a.jpg" width="200" title="Chọn địa điểm Meetup"/>
+  <img src="fyn-monolithic/img/z7373925394854_ac0eb51e6d62482d65047b023bae823e.jpg" width="200" title="Tạo Meetup"/>
+  <img src="fyn-monolithic/img/z7373925428090_846a0d2d0beb4771ad088302be799cd9.jpg" width="200" title="Danh sách Meetup"/>
+</p>
+
+### 💬 Trò Chuyện & Thông Báo
+<p align="center">
   <img src="fyn-monolithic/img/z7373925344611_9d86a3686ca0b613a203c41c5157c5e5.jpg" width="200" title="Danh sách tin nhắn"/>
+  <img src="fyn-monolithic/img/z7373925331570_3da57dd57c8f6216dd9eb532a3dff330.jpg" width="200" title="Chọn người nhắn tin"/>
   <img src="fyn-monolithic/img/z7373925334163_6524baf30d0383cc798d8c0f1b6f82d0.jpg" width="200" title="Phòng chat"/>
   <img src="fyn-monolithic/img/z7373925353247_5cb4f771ba1e877d3d01ccc47b082e46.jpg" width="200" title="Thông báo"/>
+</p>
+
+### 👤 Cá Nhân & Quản Trị
+<p align="center">
+  <img src="fyn-monolithic/img/z7373925389967_9fd5628223866c8dff6a6c8e1702e0da.jpg" width="200" title="Trang cá nhân"/>
+  <img src="fyn-monolithic/img/z7373925362465_c349b1e0d85706367ebf95a7c5a1c706.jpg" width="200" title="Chỉnh sửa profile"/>
+  <img src="fyn-monolithic/img/z7373925435312_d49583a081fcab31f0e0195eb4dd102a.jpg" width="200" title="Quản trị - Tổng quan"/>
+</p>
+
+### 📋 Chi Tiết Khác
+<p align="center">
+  <img src="fyn-monolithic/img/z7373925390059_055eb75a29091aa16f692ec11b2b34d9.jpg" width="200" title="Chi tiết Meetup"/>
+  <img src="fyn-monolithic/img/z7373925396319_9c2dbeca3de33b0fb05c1a178f33c059.jpg" width="200" title="Meetup của tôi"/>
+  <img src="fyn-monolithic/img/z7373925394631_5edee1ca8d4dbcbf22c107058f12ef42.jpg" width="200" title="Meetup đã tham gia"/>
 </p>
 
 ---
